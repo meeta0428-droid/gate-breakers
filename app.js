@@ -33,6 +33,7 @@ const els = {
     statInit: document.getElementById('stat-init'),
     passiveArea: document.getElementById('passive-area'),
     summonArea: document.getElementById('summon-area'),
+    maxHandSizeDisplay: document.getElementById('max-hand-size'),
     deckCount: document.getElementById('deck-count'),
     discardCount: document.getElementById('discard-count'),
     voidCount: document.getElementById('void-count'),
@@ -1103,6 +1104,7 @@ function updateUI() {
         comboArea.innerHTML = '<span style="color:#555; font-size:0.75rem;">まだカードが出されていません</span>';
     }
 
+    els.maxHandSizeDisplay.innerText = player.maxHandSize;
     els.deckCount.innerText = player.deck.mountain.length;
     els.discardCount.innerText = player.deck.discard.length;
     els.voidCount.innerText = player.deck.void.length;
