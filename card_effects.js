@@ -49,20 +49,20 @@ export const cardEffects = {
         onPlay: (context) => {
             let { player, logMsg, card } = context;
             let movedCount = 0;
-            const newDiscard = [];
-            // 捨札からコスト3以下のカードをすべて山札に戻す
-            for (const c of player.deck.discard) {
+            const newVoid = [];
+            // 廃棄札からコスト3以下のカードをすべて山札に戻す
+            for (const c of player.deck.void) {
                 if (c.cost <= 3) {
                     player.deck.mountain.push(c);
                     movedCount++;
                 } else {
-                    newDiscard.push(c);
+                    newVoid.push(c);
                 }
             }
-            player.deck.discard = newDiscard;
+            player.deck.void = newVoid;
             player.deck.shuffle();
             if (movedCount > 0 && logMsg) {
-                logMsg(`・【${card.name}】の効果！捨札からコスト3以下のカード ${movedCount} 枚を山札に戻しました。`);
+                logMsg(`・【${card.name}】の効果！廃棄札からコスト3以下のカード ${movedCount} 枚を山札に戻しました。`);
             }
         }
     }
