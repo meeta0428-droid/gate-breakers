@@ -976,7 +976,7 @@ function updateUI() {
             const sDiv = document.createElement('div');
             sDiv.className = 'summon-card';
             sDiv.innerHTML = `
-                <div class="summon-card-header">
+                <div class="summon-card-header" style="cursor: pointer;">
                     <span class="summon-card-name">${s.card.name}</span>
                     <span class="summon-card-stats">攻${atk}/防${def}</span>
                 </div>
@@ -986,6 +986,10 @@ function updateUI() {
                     <button class="summon-btn summon-btn-dismiss">廃棄</button>
                 </div>
             `;
+            
+            sDiv.querySelector('.summon-card-header').addEventListener('click', () => {
+                openCardModal(s.card, -1, true); // isPassive=trueとして扱い、「使用する」ボタンを非表示にする
+            });
             
             sDiv.querySelector('.btn-atk').addEventListener('click', () => {
                 s.stance = 'attack';
