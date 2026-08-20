@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects } from './game_logic.js?v=16';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects } from './game_logic.js?v=17';
 
 let cardPool = [];
 let player = null;
@@ -104,11 +104,10 @@ function logMsg(msg, type = '') {
 
 async function loadCards() {
     try {
-        const response = await fetch('cards.json?v=2');
+        const response = await fetch('cards.json?v=3');
         cardPool = await response.json();
-    } catch (e) {
-        alert('カードデータの読み込みに失敗しました');
-        return;
+    } catch (error) {
+        console.error('Failed to load cards:', error);
     }
 }
 
