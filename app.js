@@ -101,14 +101,18 @@ function logMsg(msg, type = '') {
     els.log.prepend(p);
 }
 
-async function init() {
+async function loadCards() {
     try {
-        const res = await fetch('cards.json');
-        cardPool = await res.json();
+        const response = await fetch('cards.json?v=2');
+        cardPool = await response.json();
     } catch (e) {
         alert('カードデータの読み込みに失敗しました');
         return;
     }
+}
+
+async function init() {
+    await loadCards();
     
     player = new Character('プレイヤー');
     showCharaScreen();
