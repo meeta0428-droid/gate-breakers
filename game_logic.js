@@ -1,4 +1,4 @@
-import { cardEffects } from "./card_effects.js?v=1";
+import { cardEffects } from "./card_effects.js?v=2";
 
 export class Card {
     constructor(data) {
@@ -149,7 +149,13 @@ export class Character {
     }
     
     get maxHandSize() {
-        return 2 + this.level; // Lv1 = 3
+        let baseSize = 2 + this.level; // Lv1 = 3
+        if (this.deck) {
+            const activeCards = [...this.deck.passives, ...this.deck.summons];
+            const hookContext = triggerHook('onCalcMaxHandSize', { maxHandSize: baseSize, player: this }, activeCards);
+            return hookContext.maxHandSize;
+        }
+        return baseSize;
     }
     
     get totalStatPoints() {
