@@ -32,6 +32,7 @@ const els = {
     statMen: document.getElementById('stat-men'),
     statInit: document.getElementById('stat-init'),
     passiveArea: document.getElementById('passive-area'),
+    summonArea: document.getElementById('summon-area'),
     deckCount: document.getElementById('deck-count'),
     discardCount: document.getElementById('discard-count'),
     voidCount: document.getElementById('void-count'),
@@ -477,13 +478,35 @@ function setupEvents() {
             if (toVoid.has(idx)) detail += ` [廃棄へ]`;
             return `・「${c.name}」${detail}`;
         }).join('<br>');
-        logMsg(`使用カード:<br>${cardLogs}<br>コンボ発動！ 合計 <span class="damage">${dmg}</span> のダメージを与えた！`, 'important');
-        showDamagePopup(dmg);
-        enemyHp -= dmg;
+        // 召喚カードの追撃
+        let summonDmg = 0;
+        let summonLog = '';
+        player.deck.summons.forEach(s => {
+            if (s.stance === 'attack') {
+                const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
+                if (match) {
+                    const atk = parseInt(match[1]);
+                    summonDmg += atk;
+                    summonLog += `・召喚「${s.card.name}」の追撃 (＋${atk})<br>`;
+                }
+            }
+        });
         
-        // 廃棄札へ行くものと捨札へ行くものを分ける（※既に捨札にあるが、手札から出した時に一旦discardに入っているので再移動）
+        let totalDmg = dmg + summonDmg;
+
+        logMsg(`使用カード:<br>${cardLogs}<br>${summonLog}コンボ発動！ 合計 <span class="damage">${totalDmg}</span> のダメージを与えた！`, 'important');
+        showDamagePopup(totalDmg);
+        enemyHp -= totalDmg;
+        
+        // 廃棄札へ行くものと捨札へ行くものを分ける
         currentCombo.forEach((card, idx) => {
-            if (toVoid.has(idx)) {
+            if (card.category.includes('召喚')) {
+                const discardIdx = player.deck.discard.lastIndexOf(card);
+                if (discardIdx > -1) {
+                    player.deck.discard.splice(discardIdx, 1);
+                    player.deck.summons.push({ card: card, stance: 'attack' });
+                }
+            } else if (toVoid.has(idx)) {
                 // app.jsではカードを場に出す時に既にdiscardにpushしている
                 // そのため、discardの最後から探して抜くか、とりあえずそのまま残してvoidにpushするか
                 // 正確にはdiscardの末尾に積まれているので、それをpopしてvoidに入れる
@@ -510,7 +533,7 @@ function setupEvents() {
         
         const defense = calculateDefenseFromCards(currentCombo, player);
         const { toVoid } = executeCardEffects(currentCombo, player, logMsg);
-        const actualDmg = Math.max(0, inputDmg - defense);
+        let actualDmg = Math.max(0, inputDmg - defense);
         
         const cardLogs = currentCombo.map((c, idx) => {
             let detail = '';
@@ -528,12 +551,35 @@ function setupEvents() {
             return `・「${c.name}」${detail}`;
         }).join('<br>');
         
+        // 召喚の防御
+        let summonDef = 0;
+        let summonLog = '';
+        player.deck.summons.forEach(s => {
+            if (s.stance === 'defend') {
+                const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
+                if (match) {
+                    const defVal = parseInt(match[2]);
+                    summonDef += defVal;
+                    summonLog += `・召喚「${s.card.name}」の防御 (軽減 ${defVal})<br>`;
+                }
+            }
+        });
+        
+        let totalDef = defense + summonDef;
+        actualDmg = Math.max(0, inputDmg - totalDef);
+
         const cardStr = currentCombo.length > 0 ? `使用カード:<br>${cardLogs}<br>` : 'カード使用なし<br>';
         
-        logMsg(`${cardStr}敵からの攻撃！<br>元ダメージ: ${inputDmg}<br>カード軽減: ${defense}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
+        logMsg(`${cardStr}${summonLog}敵からの攻撃！<br>元ダメージ: ${inputDmg}<br>カード軽減: ${totalDef}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
         
         currentCombo.forEach((card, idx) => {
-            if (toVoid.has(idx)) {
+            if (card.category.includes('召喚')) {
+                const discardIdx = player.deck.discard.lastIndexOf(card);
+                if (discardIdx > -1) {
+                    player.deck.discard.splice(discardIdx, 1);
+                    player.deck.summons.push({ card: card, stance: 'attack' });
+                }
+            } else if (toVoid.has(idx)) {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
                     player.deck.discard.splice(discardIdx, 1);
@@ -915,6 +961,53 @@ function updateUI() {
         });
     } else {
         els.passiveArea.innerHTML = '<span style="color:#555; font-size:0.75rem;">なし</span>';
+    }
+    
+    // 召喚エリアの描画
+    els.summonArea.innerHTML = '';
+    if (player.deck.summons.length > 0) {
+        player.deck.summons.forEach((s, idx) => {
+            let atk = "?", def = "?";
+            const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
+            if (match) {
+                atk = match[1];
+                def = match[2];
+            }
+            
+            const sDiv = document.createElement('div');
+            sDiv.className = 'summon-card';
+            sDiv.innerHTML = `
+                <div class="summon-card-header">
+                    <span class="summon-card-name">${s.card.name}</span>
+                    <span class="summon-card-stats">攻${atk}/防${def}</span>
+                </div>
+                <div class="summon-controls">
+                    <button class="summon-btn btn-atk ${s.stance === 'attack' ? 'active-attack' : ''}">攻撃</button>
+                    <button class="summon-btn btn-def ${s.stance === 'defend' ? 'active-defend' : ''}">防御</button>
+                    <button class="summon-btn summon-btn-dismiss">廃棄</button>
+                </div>
+            `;
+            
+            sDiv.querySelector('.btn-atk').addEventListener('click', () => {
+                s.stance = 'attack';
+                updateUI();
+            });
+            sDiv.querySelector('.btn-def').addEventListener('click', () => {
+                s.stance = 'defend';
+                updateUI();
+            });
+            sDiv.querySelector('.summon-btn-dismiss').addEventListener('click', () => {
+                if (confirm(`${s.card.name} を廃棄してよろしいですか？`)) {
+                    player.deck.summons.splice(idx, 1);
+                    player.deck.discard.push(s.card);
+                    updateUI();
+                }
+            });
+            
+            els.summonArea.appendChild(sDiv);
+        });
+    } else {
+        els.summonArea.innerHTML = '<span style="color:#555; font-size:0.75rem;">なし</span>';
     }
 
     // コンボエリアの描画

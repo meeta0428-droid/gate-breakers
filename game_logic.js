@@ -54,6 +54,7 @@ export class Deck {
         this.discard = [];
         this.void = [];
         this.passives = [];
+        this.summons = [];
         this.hasRefreshed = false;
     }
     
