@@ -1,0 +1,994 @@
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects } from './game_logic.js?v=16';
+
+let cardPool = [];
+let player = null;
+let enemyHp = 100;
+let selectedCardsForDeck = [];
+
+const SAVE_KEY = 'gatebreakers_decks';
+const MAX_SLOTS = 10;
+
+// UI Elements
+const els = {
+    // Screens
+    deckBuilderScreen: document.getElementById('deck-builder-screen'),
+    battleScreen: document.getElementById('battle-screen'),
+    
+    // Deck Builder
+    builderCost: document.getElementById('builder-cost'),
+    builderMaxCost: document.getElementById('builder-max-cost'),
+    selectedCount: document.getElementById('selected-count'),
+    selectedDeckList: document.getElementById('selected-deck-list'),
+    cardPoolList: document.getElementById('card-pool-list'),
+    btnStartBattle: document.getElementById('btn-start-battle'),
+    btnSaveDeck: document.getElementById('btn-save-deck'),
+    btnLoadDeck: document.getElementById('btn-load-deck'),
+
+    // Battle
+    log: document.getElementById('battle-log'),
+    enemyHp: document.getElementById('enemy-hp-val'),
+    statBody: document.getElementById('stat-body'),
+    statInt: document.getElementById('stat-int'),
+    statMen: document.getElementById('stat-men'),
+    statInit: document.getElementById('stat-init'),
+    passiveArea: document.getElementById('passive-area'),
+    deckCount: document.getElementById('deck-count'),
+    discardCount: document.getElementById('discard-count'),
+    voidCount: document.getElementById('void-count'),
+    handContainer: document.getElementById('hand-container'),
+    
+    // Buttons
+    btnDraw: document.getElementById('btn-draw'),
+    btnDiscardView: document.getElementById('btn-discard-view'),
+    btnRefresh: document.getElementById('btn-refresh'),
+    btnAttack: document.getElementById('btn-attack'),
+    btnReact: document.getElementById('btn-react'),
+    incomingDmg: document.getElementById('incoming-dmg'),
+    
+    // Navigation
+    btnDeckToChara: document.getElementById('btn-deck-to-chara'),
+    btnBattleToChara: document.getElementById('btn-battle-to-chara'),
+    btnPrintDeck: document.getElementById('btn-print-deck'),
+    printArea: document.getElementById('print-area'),
+
+    // Modals
+    modal: document.getElementById('card-modal'),
+    mTitle: document.getElementById('modal-title'),
+    mCat: document.getElementById('modal-category'),
+    mCost: document.getElementById('modal-cost'),
+    mStr: document.getElementById('modal-str'),
+    mDesc: document.getElementById('modal-desc'),
+    btnUseCard: document.getElementById('btn-use-card'),
+    btnCloseModal: document.getElementById('btn-close-modal'),
+    
+    normalActions: document.getElementById('normal-actions'),
+    comboActions: document.getElementById('combo-actions'),
+    btnComboLeft: document.getElementById('btn-combo-left'),
+    btnComboReturn: document.getElementById('btn-combo-return'),
+    btnComboRight: document.getElementById('btn-combo-right'),
+    btnComboClose: document.getElementById('btn-combo-close'),
+    
+    discardModal: document.getElementById('discard-modal'),
+    discardList: document.getElementById('discard-list'),
+    btnCloseDiscard: document.getElementById('btn-close-discard'),
+    
+    saveModal: document.getElementById('save-modal'),
+    saveSlotList: document.getElementById('save-slot-list'),
+    btnCloseSave: document.getElementById('btn-close-save'),
+    
+    loadModal: document.getElementById('load-modal'),
+    loadSlotList: document.getElementById('load-slot-list'),
+    btnCloseLoad: document.getElementById('btn-close-load'),
+    
+    damageModal: document.getElementById('damage-modal'),
+    remainingDmgDisplay: document.getElementById('remaining-dmg-display'),
+    dmgHandList: document.getElementById('dmg-hand-list'),
+    dmgDiscardList: document.getElementById('dmg-discard-list'),
+    
+    zeroStatModal: document.getElementById('zero-stat-modal'),
+    zeroDiscardList: document.getElementById('zero-discard-list'),
+    zeroVoidList: document.getElementById('zero-void-list'),
+    btnSkipZeroRecovery: document.getElementById('btn-skip-zero-recovery')
+};
+
+let selectedCardIndex = null;
+let currentCombo = [];
+
+function logMsg(msg, type = '') {
+    const p = document.createElement('p');
+    p.innerHTML = msg;
+    if (type) p.classList.add(type);
+    els.log.prepend(p);
+}
+
+async function init() {
+    try {
+        const res = await fetch('cards.json');
+        cardPool = await res.json();
+    } catch (e) {
+        alert('カードデータの読み込みに失敗しました');
+        return;
+    }
+    
+    player = new Character('プレイヤー');
+    showCharaScreen();
+    setupCharaEvents();
+    setupEvents();
+}
+
+// ---------------------------
+// キャラクター作成画面のロジック
+// ---------------------------
+function showCharaScreen() {
+    document.getElementById('chara-screen').classList.remove('hidden');
+    els.deckBuilderScreen.classList.add('hidden');
+    els.battleScreen.classList.add('hidden');
+    updateCharaUI();
+}
+
+function updateCharaUI() {
+    document.getElementById('chara-level').innerText = player.level;
+    document.getElementById('chara-points').innerText = player.unspentPoints;
+    
+    const statMap = { body: '肉体', int: '知性', men: '精神' };
+    for (const [key, name] of Object.entries(statMap)) {
+        const s = player.stats[key];
+        document.getElementById(`chara-${key}-max`).innerText = s.maxVal;
+        document.getElementById(`chara-${key}-cur`).innerText = s.currentVal;
+        document.getElementById(`chara-${key}-spent`).innerText = s.spent;
+        document.getElementById(`chara-${key}-next`).innerText = s.upgradeCost;
+    }
+    
+    document.getElementById('chara-hand').innerText = player.maxHandSize;
+    document.getElementById('chara-deck-cost').innerText = player.deckCapacity;
+    document.getElementById('chara-init-val').innerText = player.baseInitiative;
+}
+
+function setupCharaEvents() {
+    // ＋ボタン（タップで上昇）
+    document.querySelectorAll('.chara-stat-btn-plus').forEach(btn => {
+        const statKey = btn.dataset.stat;
+        btn.addEventListener('click', () => {
+            if (player.upgradeStat(statKey)) {
+                updateCharaUI();
+            } else {
+                alert('ポイントが足りません！');
+            }
+        });
+    });
+
+    // －ボタン（タップで下降）
+    document.querySelectorAll('.chara-stat-btn-minus').forEach(btn => {
+        const statKey = btn.dataset.stat;
+        btn.addEventListener('click', () => {
+            if (player.downgradeStat(statKey)) {
+                updateCharaUI();
+            } else {
+                alert('これ以上下げられません！');
+            }
+        });
+    });
+    
+    // レベルアップボタン
+    document.getElementById('btn-levelup').addEventListener('click', () => {
+        player.levelUp();
+        alert(`レベル${player.level}になりました！ +${player.level}ポイント獲得！`);
+        updateCharaUI();
+    });
+    
+    // デッキ構築画面へ遷移
+    document.getElementById('btn-to-deck').addEventListener('click', () => {
+        document.getElementById('chara-screen').classList.add('hidden');
+        showDeckBuilder();
+    });
+}
+
+// ---------------------------
+// デッキ構築画面のロジック
+// ---------------------------
+function showDeckBuilder() {
+    els.battleScreen.classList.add('hidden');
+    els.deckBuilderScreen.classList.remove('hidden');
+    
+    els.builderMaxCost.innerText = player.deckCapacity;
+    renderCardPool();
+    renderSelectedDeck();
+}
+
+// ---------------------------
+// デッキ保存・読込（localStorage）
+// ---------------------------
+function getSavedDecks() {
+    try {
+        const data = localStorage.getItem(SAVE_KEY);
+        return data ? JSON.parse(data) : {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function saveDeckToSlot(slotIndex) {
+    const saved = getSavedDecks();
+    const cardNames = selectedCardsForDeck.map(c => c.name);
+    const totalCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
+    saved[slotIndex] = {
+        cards: cardNames,
+        cost: totalCost,
+        count: cardNames.length,
+        date: new Date().toLocaleString('ja-JP'),
+        chara: {
+            level: player.level,
+            unspentPoints: player.unspentPoints,
+            stats: {
+                body: { maxVal: player.stats.body.maxVal, currentVal: player.stats.body.currentVal, spent: player.stats.body.spent },
+                int: { maxVal: player.stats.int.maxVal, currentVal: player.stats.int.currentVal, spent: player.stats.int.spent },
+                men: { maxVal: player.stats.men.maxVal, currentVal: player.stats.men.currentVal, spent: player.stats.men.spent }
+            }
+        }
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(saved));
+}
+
+function loadDeckFromSlot(slotIndex) {
+    const saved = getSavedDecks();
+    const slot = saved[slotIndex];
+    if (!slot || !slot.cards || slot.cards.length === 0) return false;
+    
+    selectedCardsForDeck = [];
+    for (const name of slot.cards) {
+        const cardData = cardPool.find(c => c.name === name);
+        if (cardData) selectedCardsForDeck.push({ ...cardData });
+    }
+    
+    if (slot.chara) {
+        player.level = slot.chara.level;
+        player.unspentPoints = slot.chara.unspentPoints;
+        for (const key of ['body', 'int', 'men']) {
+            if (slot.chara.stats[key]) {
+                player.stats[key].maxVal = slot.chara.stats[key].maxVal;
+                player.stats[key].currentVal = slot.chara.stats[key].currentVal;
+                player.stats[key].spent = slot.chara.stats[key].spent;
+            }
+        }
+        updateCharaUI(); // 更新しておく
+    }
+    
+    renderSelectedDeck();
+    return true;
+}
+
+function deleteDeckSlot(slotIndex) {
+    const saved = getSavedDecks();
+    delete saved[slotIndex];
+    localStorage.setItem(SAVE_KEY, JSON.stringify(saved));
+}
+
+function openSaveModal() {
+    const saved = getSavedDecks();
+    els.saveSlotList.innerHTML = '';
+    
+    for (let i = 1; i <= MAX_SLOTS; i++) {
+        const slot = saved[i];
+        const item = document.createElement('div');
+        item.className = 'discard-item';
+        
+        if (slot) {
+            item.innerHTML = `
+                <div><strong>スロット${i}</strong><br><small style="color:#aaa;">${slot.count}枚 / コスト${slot.cost}</small><br><small style="color:#666;">${slot.date}</small></div>
+                <div style="color:#ff5252;">上書き</div>
+            `;
+        } else {
+            item.innerHTML = `
+                <div><strong>スロット${i}</strong><br><small style="color:#555;">── 空き ──</small></div>
+                <div style="color:#4caf50;">保存</div>
+            `;
+        }
+        
+        item.addEventListener('click', () => {
+            if (selectedCardsForDeck.length === 0) {
+                alert('保存するカードがありません。');
+                return;
+            }
+            if (slot && !confirm(`スロット${i} を上書きしますか？`)) return;
+            saveDeckToSlot(i);
+            alert(`スロット${i} に保存しました！`);
+            els.saveModal.classList.add('hidden');
+        });
+        els.saveSlotList.appendChild(item);
+    }
+    els.saveModal.classList.remove('hidden');
+}
+
+function openLoadModal() {
+    const saved = getSavedDecks();
+    els.loadSlotList.innerHTML = '';
+    
+    for (let i = 1; i <= MAX_SLOTS; i++) {
+        const slot = saved[i];
+        const item = document.createElement('div');
+        item.className = 'discard-item';
+        
+        if (slot) {
+            item.innerHTML = `
+                <div><strong>スロット${i}</strong><br><small style="color:#aaa;">${slot.count}枚 / コスト${slot.cost}</small><br><small style="color:#666;">${slot.date}</small></div>
+                <div style="color:#4caf50;">読込</div>
+            `;
+            item.addEventListener('click', () => {
+                if (loadDeckFromSlot(i)) {
+                    alert(`スロット${i} を読み込みました！`);
+                } else {
+                    alert('読込に失敗しました。');
+                }
+                els.loadModal.classList.add('hidden');
+            });
+        } else {
+            item.innerHTML = `
+                <div><strong>スロット${i}</strong><br><small style="color:#555;">── 空き ──</small></div>
+                <div style="color:#555;">──</div>
+            `;
+        }
+        els.loadSlotList.appendChild(item);
+    }
+    els.loadModal.classList.remove('hidden');
+}
+
+function renderCardPool() {
+    els.cardPoolList.innerHTML = '';
+    cardPool.forEach(card => {
+        const div = document.createElement('div');
+        div.className = 'pool-item';
+        div.innerHTML = `
+            <div class="pool-item-info">
+                <strong>${card.name}</strong>
+                <small style="color:#aaa;">${card.category}</small>
+            </div>
+            <div class="pool-item-stats">
+                コスト:${card.cost} / 強度:+${card.strength}
+            </div>
+        `;
+        div.addEventListener('click', () => {
+            const currentCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
+            if (currentCost + card.cost > player.deckCapacity) {
+                alert(`コストオーバーです！（上限: ${player.deckCapacity}）`);
+                return;
+            }
+            selectedCardsForDeck.push(card);
+            renderSelectedDeck();
+        });
+        els.cardPoolList.appendChild(div);
+    });
+}
+
+function renderSelectedDeck() {
+    const currentCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
+    els.builderCost.innerText = currentCost;
+    els.selectedCount.innerText = selectedCardsForDeck.length;
+    
+    if (currentCost > player.deckCapacity) els.builderCost.classList.add('over-cost');
+    else els.builderCost.classList.remove('over-cost');
+    
+    els.selectedDeckList.innerHTML = '';
+    selectedCardsForDeck.forEach((card, idx) => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'card';
+        cardDiv.innerHTML = `
+            <div class="card-name" style="font-size:0.8rem">${card.name}</div>
+            <div class="card-stats" style="margin-top:auto;"><span>C:${card.cost}</span></div>
+        `;
+        cardDiv.addEventListener('click', () => {
+            selectedCardsForDeck.splice(idx, 1);
+            renderSelectedDeck();
+        });
+        els.selectedDeckList.appendChild(cardDiv);
+    });
+}
+
+// ---------------------------
+// バトル画面のロジック
+// ---------------------------
+function setupEvents() {
+    // デッキ保存ボタン
+    els.btnSaveDeck.addEventListener('click', () => openSaveModal());
+    els.btnCloseSave.addEventListener('click', () => els.saveModal.classList.add('hidden'));
+    
+    // デッキ読込ボタン
+    els.btnLoadDeck.addEventListener('click', () => openLoadModal());
+    els.btnCloseLoad.addEventListener('click', () => els.loadModal.classList.add('hidden'));
+
+    // バトル開始ボタン
+    els.btnStartBattle.addEventListener('click', () => {
+        const currentCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
+        if (selectedCardsForDeck.length === 0) {
+            alert('カードを選択してください！');
+            return;
+        }
+        if (currentCost !== player.deckCapacity) {
+            if(!confirm(`現在のコスト合計(${currentCost})がデッキ上限(${player.deckCapacity})と等しくありません。このまま開始しますか？\n※仕様:コストが等しくなるように組むのが推奨されます。`)){
+                return;
+            }
+        }
+        
+        els.deckBuilderScreen.classList.add('hidden');
+        els.battleScreen.classList.remove('hidden');
+        
+        // デッキのセットアップ
+        const cardNames = selectedCardsForDeck.map(c => c.name);
+        player.deck.start(cardPool, cardNames);
+        
+        logMsg('戦闘開始！パッシブカードは自動的に装備されました。', 'important');
+        updateUI();
+    });
+
+    // ドロー（手札上限まで引く）
+    els.btnDraw.addEventListener('click', () => {
+        const drawAmount = Math.max(0, player.maxHandSize - player.deck.hand.length);
+        if (drawAmount === 0) {
+            logMsg('手札はすでに上限まであります。');
+            return;
+        }
+        const drawn = player.deck.draw(drawAmount);
+        if (drawn > 0) logMsg(`${drawn}枚ドローしました。`);
+        else logMsg('山札がありません！リフレッシュを使用してください。', 'damage');
+        updateUI();
+    });
+    
+    // 攻撃実行
+    els.btnAttack.addEventListener('click', () => {
+        if (currentCombo.length === 0) {
+            logMsg('出すカードがありません。手札からアクションカードを選んでください。');
+            return;
+        }
+        
+        const dmg = calculateDamageFromCards(currentCombo, player);
+        const { toVoid } = executeCardEffects(currentCombo, player, logMsg);
+        
+        let nextCardBonus = 0;
+        const cardLogs = currentCombo.map((c, idx) => {
+            let detail = '';
+            let currentCardDmg = 0;
+            
+            const match = c.effect.match(/ダメージ[＋\+](\d+)/);
+            if (match) currentCardDmg += parseInt(match[1]);
+            
+            const voidMatch = c.effect.match(/廃棄札1枚につき.*?ダメージ.*?[＋\+](\d+)/);
+            if (voidMatch) {
+                const bonus = parseInt(voidMatch[1]) * player.deck.void.length;
+                currentCardDmg += bonus;
+                detail += `（廃棄札ボーナス＋${bonus}）`;
+            }
+            
+            if ((currentCardDmg > 0 || c.effect.includes('ダメージ')) && nextCardBonus > 0) {
+                detail += `（直前カードのボーナス＋${nextCardBonus}）`;
+                nextCardBonus = 0;
+            }
+            
+            if (match) detail = `（基本ダメージ＋${match[1]}）` + detail;
+            
+            const nextMatch = c.effect.match(/この次のカードのダメージを[＋\+](\d+)/);
+            if (nextMatch) {
+                nextCardBonus += parseInt(nextMatch[1]);
+                detail += `（次カードのダメージ＋${nextMatch[1]}）`;
+            }
+            
+            if (toVoid.has(idx)) detail += ` [廃棄へ]`;
+            return `・「${c.name}」${detail}`;
+        }).join('<br>');
+        logMsg(`使用カード:<br>${cardLogs}<br>コンボ発動！ 合計 <span class="damage">${dmg}</span> のダメージを与えた！`, 'important');
+        showDamagePopup(dmg);
+        enemyHp -= dmg;
+        
+        // 廃棄札へ行くものと捨札へ行くものを分ける（※既に捨札にあるが、手札から出した時に一旦discardに入っているので再移動）
+        currentCombo.forEach((card, idx) => {
+            if (toVoid.has(idx)) {
+                // app.jsではカードを場に出す時に既にdiscardにpushしている
+                // そのため、discardの最後から探して抜くか、とりあえずそのまま残してvoidにpushするか
+                // 正確にはdiscardの末尾に積まれているので、それをpopしてvoidに入れる
+                const discardIdx = player.deck.discard.lastIndexOf(card);
+                if (discardIdx > -1) {
+                    player.deck.discard.splice(discardIdx, 1);
+                    player.deck.void.push(card);
+                }
+            }
+        });
+        
+        currentCombo = [];
+        updateUI();
+    });
+
+    // 防御/被弾（リアクション）
+    let pendingDamage = 0;
+    els.btnReact.addEventListener('click', () => {
+        let inputDmg = parseInt(els.incomingDmg.value);
+        if (isNaN(inputDmg) || inputDmg <= 0) {
+            alert('敵のダメージを入力してください。');
+            return;
+        }
+        
+        const defense = calculateDefenseFromCards(currentCombo, player);
+        const { toVoid } = executeCardEffects(currentCombo, player, logMsg);
+        const actualDmg = Math.max(0, inputDmg - defense);
+        
+        const cardLogs = currentCombo.map((c, idx) => {
+            let detail = '';
+            const match1 = c.effect.match(/(\d+)点軽減/);
+            const match2 = c.effect.match(/軽減[＋\+]?(\d+)/);
+            if (match1) detail = `（軽減 ${match1[1]}）`;
+            else if (match2) detail = `（軽減 ${match2[1]}）`;
+            
+            if (c.effect.includes('捨札と廃棄札の合計コストの半分ダメージを減少')) {
+                const d = player.deck.discard.reduce((sum, c) => sum + c.cost, 0);
+                const v = player.deck.void.reduce((sum, c) => sum + c.cost, 0);
+                detail += `（割合軽減 ${Math.floor((d + v) / 2)}）`;
+            }
+            if (toVoid.has(idx)) detail += ` [廃棄へ]`;
+            return `・「${c.name}」${detail}`;
+        }).join('<br>');
+        
+        const cardStr = currentCombo.length > 0 ? `使用カード:<br>${cardLogs}<br>` : 'カード使用なし<br>';
+        
+        logMsg(`${cardStr}敵からの攻撃！<br>元ダメージ: ${inputDmg}<br>カード軽減: ${defense}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
+        
+        currentCombo.forEach((card, idx) => {
+            if (toVoid.has(idx)) {
+                const discardIdx = player.deck.discard.lastIndexOf(card);
+                if (discardIdx > -1) {
+                    player.deck.discard.splice(discardIdx, 1);
+                    player.deck.void.push(card);
+                }
+            }
+        });
+        
+        currentCombo = [];
+        els.incomingDmg.value = '';
+        
+        if (actualDmg > 0) {
+            pendingDamage = actualDmg;
+            updateDamageModalUI();
+            els.damageModal.classList.remove('hidden');
+        }
+        updateUI();
+    });
+
+    document.querySelectorAll('.stat-dmg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const statKey = btn.dataset.stat;
+            const stat = player.stats[statKey];
+            
+            if (stat.currentVal <= 0) {
+                alert(`すでに${stat.name}の現在値は0です！別の能力値を選んでください。`);
+                return;
+            }
+            
+            const mitigation = stat.takeDamage();
+            pendingDamage -= mitigation;
+            logMsg(`${stat.name}で受けた！(現在値-1) ダメージを ${mitigation} 点軽減！`);
+            
+            if (pendingDamage <= 0) {
+                pendingDamage = 0;
+                logMsg('ダメージ処理が完了しました。');
+                els.damageModal.classList.add('hidden');
+            } else {
+                updateDamageModalUI();
+            }
+            updateUI();
+            
+            if (stat.currentVal === 0) {
+                logMsg(`【能力値ブレイク】${stat.name}の現在値が0になりました！`, 'important');
+                openZeroStatRecoveryModal();
+            }
+        });
+    });
+    
+    function openZeroStatRecoveryModal() {
+        const renderList = (container, cardArray, sourceName) => {
+            container.innerHTML = '';
+            if (cardArray.length === 0) {
+                container.innerHTML = '<span style="color:#555; font-size:0.75rem;">カードがありません</span>';
+                return;
+            }
+            cardArray.forEach((card, idx) => {
+                const cDiv = document.createElement('div');
+                cDiv.className = 'discard-item';
+                cDiv.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#111; padding:8px; border-radius:5px; margin-bottom:5px; cursor:pointer;';
+                cDiv.innerHTML = `
+                    <div><strong>${card.name}</strong><br><small style="color:#aaa;">コスト${card.cost} / ${card.category}</small></div>
+                    <div style="color:#4caf50;">回収</div>
+                `;
+                cDiv.addEventListener('click', () => {
+                    cardArray.splice(idx, 1);
+                    player.deck.hand.push(card);
+                    logMsg(`ブレイク効果で${sourceName}から「${card.name}」を手札に戻した！`, 'important');
+                    els.zeroStatModal.classList.add('hidden');
+                    updateUI();
+                });
+                container.appendChild(cDiv);
+            });
+        };
+        
+        renderList(els.zeroDiscardList, player.deck.discard, '捨札');
+        renderList(els.zeroVoidList, player.deck.void, '廃棄札');
+        
+        els.btnSkipZeroRecovery.onclick = () => {
+            els.zeroStatModal.classList.add('hidden');
+        };
+        
+        els.zeroStatModal.classList.remove('hidden');
+    }
+    
+    function updateDamageModalUI() {
+        els.remainingDmgDisplay.innerText = pendingDamage;
+        
+        // 廃棄用リストの描画
+        const renderList = (container, cardArray, sourceName) => {
+            container.innerHTML = '';
+            if (cardArray.length === 0) {
+                container.innerHTML = '<span style="color:#555; font-size:0.75rem;">カードがありません</span>';
+                return;
+            }
+            cardArray.forEach((card, idx) => {
+                const cDiv = document.createElement('div');
+                cDiv.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#111; padding:5px; border-radius:3px; font-size:0.8rem;';
+                cDiv.innerHTML = `<span>${card.name} (コスト${card.cost})</span> <button class="btn btn-primary" style="padding:2px 6px; font-size:0.7rem;">廃棄</button>`;
+                cDiv.querySelector('button').addEventListener('click', () => {
+                    const mitigation = card.cost;
+                    // 配列から削除して廃棄札へ
+                    cardArray.splice(idx, 1);
+                    player.deck.void.push(card);
+                    
+                    pendingDamage -= mitigation;
+                    if (pendingDamage <= 0) {
+                        pendingDamage = 0;
+                        logMsg(`${sourceName}の「${card.name}」を廃棄してダメージを防ぎ切った！`, 'important');
+                        els.damageModal.classList.add('hidden');
+                        updateUI();
+                    } else {
+                        logMsg(`${sourceName}の「${card.name}」を廃棄して ${mitigation} 点軽減！（残り: ${pendingDamage}）`);
+                        updateDamageModalUI(); // 再描画
+                    }
+                });
+                container.appendChild(cDiv);
+            });
+        };
+        
+        renderList(els.dmgHandList, player.deck.hand, '手札');
+        renderList(els.dmgDiscardList, player.deck.discard, '捨札');
+    }
+    
+    // ナビゲーション
+    els.btnDeckToChara.addEventListener('click', () => {
+        els.deckBuilderScreen.classList.add('hidden');
+        showCharaScreen();
+    });
+
+    els.btnPrintDeck.addEventListener('click', () => {
+        const cardsToPrint = selectedCardsForDeck.length > 0 ? selectedCardsForDeck : player.deck.mountain;
+        if (cardsToPrint.length === 0) {
+            alert('印刷するカードがありません。デッキにカードを追加してください。');
+            return;
+        }
+        
+        // 印刷用HTMLを構築（9枚ずつページ区切り）
+        let printHTML = '';
+        const cards = cardsToPrint;
+        
+        for (let i = 0; i < cards.length; i += 9) {
+            printHTML += '<div class="print-page">';
+            const pageCards = cards.slice(i, i + 9);
+            pageCards.forEach(card => {
+                printHTML += `
+                    <div class="print-card">
+                        <div class="print-card-title">${card.name}</div>
+                        <div class="print-card-cat">${card.category}</div>
+                        <div class="print-card-stats">
+                            <span>ｺｽﾄ:${card.cost}</span>
+                            <span>強度:${card.strength}</span>
+                        </div>
+                        <div class="print-card-effect">${card.effect}</div>
+                    </div>
+                `;
+            });
+            printHTML += '</div>';
+        }
+        
+        els.printArea.innerHTML = printHTML;
+        
+        // 印刷ダイアログを呼び出す
+        setTimeout(() => {
+            window.print();
+        }, 100);
+    });
+
+    els.btnBattleToChara.addEventListener('click', () => {
+        if (!confirm('バトルを中断してキャラクター作成に戻りますか？\n（※デッキや手札はリセットされます）')) return;
+        els.battleScreen.classList.add('hidden');
+        showCharaScreen();
+    });
+
+    // リフレッシュ
+    els.btnRefresh.addEventListener('click', () => {
+        if (player.deck.hasRefreshed) {
+            logMsg('リフレッシュは既に使われています（1ゲーム1回のみ）', 'damage');
+        } else {
+            const success = player.deck.refresh();
+            if (success) {
+                logMsg('【リフレッシュ発動】捨札をシャッフルして山札に戻しました！', 'important');
+                updateUI();
+            } else {
+                logMsg('捨札がないためリフレッシュできません。');
+            }
+        }
+    });
+
+    let recoveringCards = new Set();
+    
+    function updateDiscardModalUI() {
+        let costBody = 0, costInt = 0, costMen = 0;
+        recoveringCards.forEach(idx => {
+            const card = player.deck.discard[idx];
+            if (card.category.includes('肉体')) costBody += card.cost;
+            else if (card.category.includes('知性')) costInt += card.cost;
+            else if (card.category.includes('精神')) costMen += card.cost;
+        });
+
+        document.getElementById('recover-cost-body').innerText = costBody;
+        document.getElementById('recover-max-body').innerText = player.stats.body.currentVal;
+        document.getElementById('recover-cost-body').style.color = costBody > player.stats.body.currentVal ? '#ff5252' : '#fff';
+
+        document.getElementById('recover-cost-int').innerText = costInt;
+        document.getElementById('recover-max-int').innerText = player.stats.int.currentVal;
+        document.getElementById('recover-cost-int').style.color = costInt > player.stats.int.currentVal ? '#ff5252' : '#fff';
+
+        document.getElementById('recover-cost-men').innerText = costMen;
+        document.getElementById('recover-max-men').innerText = player.stats.men.currentVal;
+        document.getElementById('recover-cost-men').style.color = costMen > player.stats.men.currentVal ? '#ff5252' : '#fff';
+
+        const overLimit = costBody > player.stats.body.currentVal || 
+                          costInt > player.stats.int.currentVal || 
+                          costMen > player.stats.men.currentVal;
+        
+        const executeBtn = document.getElementById('btn-execute-recover');
+        executeBtn.disabled = overLimit || recoveringCards.size === 0;
+        executeBtn.style.opacity = executeBtn.disabled ? '0.5' : '1';
+
+        els.discardList.innerHTML = '';
+        if (player.deck.discard.length === 0) {
+            els.discardList.innerHTML = '<p style="color:#aaa;">捨札はありません</p>';
+        } else {
+            player.deck.discard.forEach((card, idx) => {
+                const item = document.createElement('div');
+                item.className = 'discard-item';
+                
+                let relatedStat = null;
+                if (card.category.includes('肉体')) relatedStat = player.stats.body;
+                else if (card.category.includes('知性')) relatedStat = player.stats.int;
+                else if (card.category.includes('精神')) relatedStat = player.stats.men;
+
+                if (!relatedStat) {
+                    item.style.opacity = '0.5';
+                    item.style.cursor = 'not-allowed';
+                    item.innerHTML = `
+                        <div><strong>${card.name}</strong><br><small style="color:#aaa;">${card.category}</small></div>
+                        <div style="text-align:right;">
+                            <div>コスト: ${card.cost}</div>
+                            <div style="color:#ff5252; font-size:0.7rem;">回収不可カテゴリ</div>
+                        </div>
+                    `;
+                } else {
+                    const isSelected = recoveringCards.has(idx);
+                    if (isSelected) {
+                        item.style.borderColor = '#1976d2';
+                        item.style.backgroundColor = 'rgba(25, 118, 210, 0.2)';
+                    }
+                    item.innerHTML = `
+                        <div><strong>${card.name}</strong><br><small style="color:#aaa;">${card.category}</small></div>
+                        <div style="text-align:right;">
+                            <div>コスト: ${card.cost}</div>
+                            ${isSelected ? '<div style="color:#4caf50; font-size:0.75rem;">✔ 選択中</div>' : ''}
+                        </div>
+                    `;
+                    item.addEventListener('click', () => {
+                        if (recoveringCards.has(idx)) recoveringCards.delete(idx);
+                        else recoveringCards.add(idx);
+                        updateDiscardModalUI();
+                    });
+                }
+                els.discardList.appendChild(item);
+            });
+        }
+    }
+
+    // 捨札回収モーダルを開く
+    els.btnDiscardView.addEventListener('click', () => {
+        recoveringCards.clear();
+        updateDiscardModalUI();
+        els.discardModal.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-execute-recover').addEventListener('click', () => {
+        if (recoveringCards.size === 0) return;
+        
+        // idxの降順で処理しないとspliceでズレるため、降順ソート
+        const sortedIndices = Array.from(recoveringCards).sort((a, b) => b - a);
+        let recoveredNames = [];
+        for (const idx of sortedIndices) {
+            const card = player.deck.discard[idx];
+            player.deck.discard.splice(idx, 1);
+            player.deck.hand.push(card);
+            recoveredNames.push(card.name);
+        }
+        logMsg(`捨札から ${recoveredNames.length}枚 回収しました！<br><small>(${recoveredNames.join(', ')})</small>`);
+        els.discardModal.classList.add('hidden');
+        updateUI();
+    });
+    
+    els.btnCloseDiscard.addEventListener('click', () => {
+        els.discardModal.classList.add('hidden');
+    });
+
+    // カード詳細モーダル
+    els.btnCloseModal.addEventListener('click', () => {
+        els.modal.classList.add('hidden');
+    });
+    
+    els.btnUseCard.addEventListener('click', () => {
+        if (selectedCardIndex !== null) {
+            const card = player.deck.hand[selectedCardIndex];
+            player.deck.hand.splice(selectedCardIndex, 1); 
+            player.deck.discard.push(card); 
+            currentCombo.push(card);
+            logMsg(`「${card.name}」を場に出した！`);
+            
+            els.modal.classList.add('hidden');
+            updateUI();
+        }
+    });
+
+    els.btnComboClose.addEventListener('click', () => els.modal.classList.add('hidden'));
+    
+    els.btnComboReturn.addEventListener('click', () => {
+        if (selectedCardIndex !== null) {
+            const card = currentCombo[selectedCardIndex];
+            currentCombo.splice(selectedCardIndex, 1);
+            player.deck.hand.push(card);
+            logMsg(`「${card.name}」を手札に戻しました。`);
+            els.modal.classList.add('hidden');
+            updateUI();
+        }
+    });
+
+    els.btnComboLeft.addEventListener('click', () => {
+        if (selectedCardIndex !== null && selectedCardIndex > 0) {
+            const temp = currentCombo[selectedCardIndex - 1];
+            currentCombo[selectedCardIndex - 1] = currentCombo[selectedCardIndex];
+            currentCombo[selectedCardIndex] = temp;
+            openCardModal(currentCombo[selectedCardIndex - 1], selectedCardIndex - 1, false, true);
+            updateUI();
+        }
+    });
+
+    els.btnComboRight.addEventListener('click', () => {
+        if (selectedCardIndex !== null && selectedCardIndex < currentCombo.length - 1) {
+            const temp = currentCombo[selectedCardIndex + 1];
+            currentCombo[selectedCardIndex + 1] = currentCombo[selectedCardIndex];
+            currentCombo[selectedCardIndex] = temp;
+            openCardModal(currentCombo[selectedCardIndex + 1], selectedCardIndex + 1, false, true);
+            updateUI();
+        }
+    });
+}
+
+function updateUI() {
+    els.statBody.innerText = `${player.stats.body.currentVal}/${player.stats.body.maxVal}`;
+    els.statInt.innerText = `${player.stats.int.currentVal}/${player.stats.int.maxVal}`;
+    els.statMen.innerText = `${player.stats.men.currentVal}/${player.stats.men.maxVal}`;
+    els.statInit.innerText = player.initiative;
+    
+    els.passiveArea.innerHTML = '';
+    if (player.deck.passives.length > 0) {
+        const groupedPassives = {};
+        player.deck.passives.forEach(card => {
+            if (!groupedPassives[card.name]) {
+                groupedPassives[card.name] = { 
+                    card: card,
+                    name: card.name,
+                    strength: card.strength,
+                    count: 1
+                };
+            } else {
+                groupedPassives[card.name].strength += card.strength;
+                groupedPassives[card.name].count++;
+            }
+        });
+
+        Object.values(groupedPassives).forEach(group => {
+            const pDiv = document.createElement('div');
+            pDiv.className = 'passive-card';
+            pDiv.innerHTML = `<strong>${group.name}${group.count > 1 ? ` x${group.count}` : ''}</strong> (強度+${group.strength})`;
+            pDiv.addEventListener('click', () => {
+                openCardModal(group.card, -1, true); // isPassive = true
+            });
+            els.passiveArea.appendChild(pDiv);
+        });
+    } else {
+        els.passiveArea.innerHTML = '<span style="color:#555; font-size:0.75rem;">なし</span>';
+    }
+
+    // コンボエリアの描画
+    const comboArea = document.getElementById('combo-area');
+    comboArea.innerHTML = '';
+    if (currentCombo.length > 0) {
+        currentCombo.forEach((card, comboIdx) => {
+            const cDiv = document.createElement('div');
+            cDiv.className = 'passive-card'; // 同じスタイルを流用
+            cDiv.style.borderColor = '#ff5252'; // 少し目立たせる
+            cDiv.innerHTML = `<strong>${card.name}</strong><br><small>コスト${card.cost}</small>`;
+            cDiv.addEventListener('click', () => {
+                openCardModal(card, comboIdx, false, true); // isCombo=true
+            });
+            comboArea.appendChild(cDiv);
+        });
+    } else {
+        comboArea.innerHTML = '<span style="color:#555; font-size:0.75rem;">まだカードが出されていません</span>';
+    }
+
+    els.deckCount.innerText = player.deck.mountain.length;
+    els.discardCount.innerText = player.deck.discard.length;
+    els.voidCount.innerText = player.deck.void.length;
+    
+    els.enemyHp.innerText = Math.max(0, enemyHp);
+    
+    els.handContainer.innerHTML = '';
+    player.deck.hand.forEach((card, index) => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'card';
+        cardDiv.innerHTML = `
+            <div class="card-name">${card.name}</div>
+            <div class="card-cat">${card.category}</div>
+            <div class="card-stats"><span>C:${card.cost}</span><span>S:+${card.strength}</span></div>
+            <div class="card-effect">${card.effect}</div>
+        `;
+        cardDiv.addEventListener('click', () => openCardModal(card, index));
+        cardDiv.style.zIndex = index;
+        els.handContainer.appendChild(cardDiv);
+    });
+}
+
+function showDamagePopup(dmg) {
+    const popup = document.createElement('div');
+    popup.className = 'damage-popup';
+    popup.innerText = `${dmg} DMG`;
+    document.body.appendChild(popup);
+    setTimeout(() => popup.remove(), 1300);
+}
+
+function openCardModal(card, index, isPassive = false, isCombo = false) {
+    selectedCardIndex = index;
+    els.mTitle.innerText = card.name;
+    els.mCat.innerText = card.category;
+    els.mCost.innerText = card.cost;
+    els.mStr.innerText = card.strength;
+    els.mDesc.innerHTML = card.effect;
+    
+    if (isCombo) {
+        els.normalActions.classList.add('hidden');
+        els.comboActions.classList.remove('hidden');
+        els.btnComboLeft.disabled = index === 0;
+        els.btnComboLeft.style.opacity = index === 0 ? '0.5' : '1';
+        els.btnComboRight.disabled = index === currentCombo.length - 1;
+        els.btnComboRight.style.opacity = index === currentCombo.length - 1 ? '0.5' : '1';
+    } else {
+        els.comboActions.classList.add('hidden');
+        els.normalActions.classList.remove('hidden');
+        if (isPassive) {
+            els.btnUseCard.classList.add('hidden');
+        } else {
+            els.btnUseCard.classList.remove('hidden');
+        }
+    }
+    
+    els.modal.classList.remove('hidden');
+}
+
+// Start
+init();
+

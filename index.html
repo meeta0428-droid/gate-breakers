@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ゲートブレイカーズ！</title>
+    <link rel="stylesheet" href="style.css?v=16">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app-container">
+
+        <!-- キャラクター作成画面 -->
+        <div id="chara-screen">
+            <header class="builder-header">
+                <div>
+                    <h2 style="font-size: 1.2rem;">キャラクター作成</h2>
+                    <div class="cost-info">Lv.<span id="chara-level">1</span> ｜ 残りpt: <span id="chara-points">11</span> ｜ イニシアチブ: <span id="chara-init-val">3</span></div>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button id="btn-levelup" class="btn" style="padding:8px 12px; flex:none; font-size:0.8rem;">Lv UP</button>
+                    <button id="btn-to-deck" class="btn btn-action" style="padding:8px 16px; flex:none;">デッキ構築へ</button>
+                </div>
+            </header>
+
+            <div style="padding: 15px; flex:1; overflow-y:auto;">
+                <p style="color:#aaa; font-size:0.85rem; margin-bottom:15px;">能力値を＋ボタンで上昇、－ボタンで下降させることができます。</p>
+
+                <!-- 肉体 -->
+                <div class="chara-stat-row" id="row-body">
+                    <div class="chara-stat-name">肉体</div>
+                    <div class="chara-stat-detail">
+                        <div class="chara-stat-vals">
+                            最高値: <b id="chara-body-max">1</b> ｜ 現在値: <b id="chara-body-cur">1</b>
+                        </div>
+                        <div class="chara-stat-cost">消費: <span id="chara-body-spent">0</span>pt ｜ 次: <span id="chara-body-next">2</span>pt</div>
+                    </div>
+                    <button class="btn chara-stat-btn-minus" data-stat="body" style="background-color:#555;">－</button>
+                    <button class="btn btn-primary chara-stat-btn-plus" data-stat="body">＋</button>
+                </div>
+
+                <!-- 知性 -->
+                <div class="chara-stat-row" id="row-int">
+                    <div class="chara-stat-name">知性</div>
+                    <div class="chara-stat-detail">
+                        <div class="chara-stat-vals">
+                            最高値: <b id="chara-int-max">1</b> ｜ 現在値: <b id="chara-int-cur">1</b>
+                        </div>
+                        <div class="chara-stat-cost">消費: <span id="chara-int-spent">0</span>pt ｜ 次: <span id="chara-int-next">2</span>pt</div>
+                    </div>
+                    <button class="btn chara-stat-btn-minus" data-stat="int" style="background-color:#555;">－</button>
+                    <button class="btn btn-primary chara-stat-btn-plus" data-stat="int">＋</button>
+                </div>
+
+                <!-- 精神 -->
+                <div class="chara-stat-row" id="row-men">
+                    <div class="chara-stat-name">精神</div>
+                    <div class="chara-stat-detail">
+                        <div class="chara-stat-vals">
+                            最高値: <b id="chara-men-max">1</b> ｜ 現在値: <b id="chara-men-cur">1</b>
+                        </div>
+                        <div class="chara-stat-cost">消費: <span id="chara-men-spent">0</span>pt ｜ 次: <span id="chara-men-next">2</span>pt</div>
+                    </div>
+                    <button class="btn chara-stat-btn-minus" data-stat="men" style="background-color:#555;">－</button>
+                    <button class="btn btn-primary chara-stat-btn-plus" data-stat="men">＋</button>
+                </div>
+
+                <div style="margin-top:20px; padding:12px; background:#111; border-radius:8px; font-size:0.85rem; color:#aaa;">
+                    <div>手札上限: <b id="chara-hand" style="color:#fff;">3</b>枚</div>
+                    <div>デッキコスト: <b id="chara-deck-cost" style="color:#fff;">30</b>点</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- デッキ構築画面 -->
+        <div id="deck-builder-screen" class="hidden">
+            <header class="builder-header">
+                <div>
+                    <h2 style="font-size: 1.2rem;">デッキ構築</h2>
+                    <div class="cost-info">コスト: <span id="builder-cost">0</span> / <span id="builder-max-cost">30</span></div>
+                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content: flex-end;">
+                    <button id="btn-deck-to-chara" class="btn" style="padding:8px 12px; flex:none; font-size:0.8rem;">キャラ変更</button>
+                    <button id="btn-save-deck" class="btn" style="padding:8px 12px; flex:none; font-size:0.8rem;">保存</button>
+                    <button id="btn-load-deck" class="btn" style="padding:8px 12px; flex:none; font-size:0.8rem;">読込</button>
+                    <button id="btn-print-deck" class="btn btn-secondary" style="padding:8px 12px; flex:none; font-size:0.8rem;">印刷</button>
+                    <button id="btn-start-battle" class="btn btn-action" style="padding:8px 16px; flex:none;">バトル開始</button>
+                </div>
+            </header>
+            
+            <div class="selected-deck-area">
+                <h3 style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">選択中のカード (<span id="selected-count">0</span>枚) - タップで外す</h3>
+                <div id="selected-deck-list" class="horizontal-list"></div>
+            </div>
+            
+            <div class="card-pool-area">
+                <h3 style="font-size: 0.9rem; color: #aaa; margin-bottom: 10px;">カード一覧 (タップで追加)</h3>
+                <div id="card-pool-list" class="vertical-list"></div>
+            </div>
+        </div>
+
+        <!-- バトル画面 -->
+        <div id="battle-screen" class="hidden">
+            <!-- 画面上部：敵ステータスやバトルログ -->
+            <header id="battle-header">
+                <div class="log-container" id="log-container">
+                    <div id="battle-log"></div>
+                </div>
+                <div class="enemy-area">
+                    <div class="enemy-sprite">👿</div>
+                    <div class="enemy-hp">HP: <span id="enemy-hp-val">100</span></div>
+                    <div style="margin-top:5px; display:flex; flex-direction:column; align-items:center; gap:3px;">
+                        <input type="number" id="incoming-dmg" placeholder="被ダメ入力" style="width:70px; padding:4px; font-size:0.9rem; text-align:center; border-radius:4px; border:1px solid #555; background:#222; color:#fff;">
+                        <button id="btn-react" class="btn btn-secondary" style="font-size:0.7rem; padding:4px 8px;">防御/被弾</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 画面中央：フィールド -->
+            <main id="field-area">
+                <div class="player-stats">
+                    <div class="stat-box">
+                        <span class="stat-label">肉体</span>
+                        <span class="stat-val" id="stat-body">3/3</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">知性</span>
+                        <span class="stat-val" id="stat-int">2/2</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">精神</span>
+                        <span class="stat-val" id="stat-men">1/1</span>
+                    </div>
+                    <div class="stat-box" style="border-color:#4caf50;">
+                        <span class="stat-label">ｲﾆｼｱﾁﾌﾞ</span>
+                        <span class="stat-val" id="stat-init" style="color:#4caf50;">3</span>
+                    </div>
+                </div>
+
+                <!-- パッシブカードエリア -->
+                <div class="passive-area-container">
+                    <div class="section-title">パッシブ装備</div>
+                    <div class="passive-area" id="passive-area"></div>
+                </div>
+
+                <!-- コンボエリア -->
+                <div class="passive-area-container" style="border-color:#ff5252;">
+                    <div class="section-title" style="color:#ff5252;">発動中のカード</div>
+                    <div class="passive-area" id="combo-area" style="min-height:35px;">
+                        <span style="color:#555; font-size:0.75rem;">まだカードが出されていません</span>
+                    </div>
+                </div>
+                
+                <div class="deck-info">
+                    山札: <span id="deck-count">0</span> | 捨札: <span id="discard-count">0</span> | 除外: <span id="void-count">0</span>
+                </div>
+                
+                <!-- コントロールボタン -->
+                <div class="controls">
+                    <button id="btn-battle-to-chara" class="btn" style="background:#333;">キャラ戻る</button>
+                    <button id="btn-draw" class="btn">手札補充</button>
+                    <button id="btn-discard-view" class="btn">捨札回収</button>
+                    <button id="btn-refresh" class="btn btn-secondary">リフレッシュ</button>
+                    <button id="btn-attack" class="btn btn-action" style="flex: 1 1 100%;">実行</button>
+                </div>
+            </main>
+
+            <!-- 画面下部：手札 -->
+            <footer id="hand-area">
+                <div class="hand-container" id="hand-container"></div>
+            </footer>
+        </div>
+    </div>
+    
+    <!-- カード詳細モーダル -->
+    <div id="card-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="modal-title">カード名</h2>
+            <div class="modal-category" id="modal-category">カテゴリ</div>
+            <div class="modal-stats">
+                <span>コスト: <b id="modal-cost">0</b></span>
+                <span>強度: <b id="modal-str">0</b></span>
+            </div>
+            <p id="modal-desc">効果テキスト</p>
+            <div class="modal-actions" id="normal-actions">
+                <button id="btn-use-card" class="btn btn-primary">このカードを使用</button>
+                <button id="btn-close-modal" class="btn btn-secondary">キャンセル</button>
+            </div>
+            <div class="modal-actions hidden" id="combo-actions" style="margin-top:10px; flex-wrap:wrap; gap:5px; justify-content:center;">
+                <button id="btn-combo-left" class="btn">◀ 左へ</button>
+                <button id="btn-combo-return" class="btn btn-secondary">手札へ戻す</button>
+                <button id="btn-combo-right" class="btn">右へ ▶</button>
+                <button id="btn-combo-close" class="btn" style="flex:1 1 100%; background:#444; margin-top:5px;">閉じる</button>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 捨札確認・回収モーダル -->
+    <div id="discard-modal" class="modal hidden">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <h2>捨札回収</h2>
+            <div id="discard-cost-info" style="font-size:0.85rem; margin-top:10px; margin-bottom:10px; background:#111; padding:10px; border-radius:6px; line-height:1.4;">
+                <div style="display:flex; justify-content:space-between;"><span>肉体コスト:</span> <span><b id="recover-cost-body">0</b> / <span id="recover-max-body">0</span></span></div>
+                <div style="display:flex; justify-content:space-between;"><span>知性コスト:</span> <span><b id="recover-cost-int">0</b> / <span id="recover-max-int">0</span></span></div>
+                <div style="display:flex; justify-content:space-between;"><span>精神コスト:</span> <span><b id="recover-cost-men">0</b> / <span id="recover-max-men">0</span></span></div>
+            </div>
+            <p style="color:#aaa; font-size:0.8rem; margin-bottom:10px;">回収するカードを選択してください。</p>
+            <div id="discard-list" class="discard-list"></div>
+            <div class="modal-actions">
+                <button id="btn-execute-recover" class="btn btn-primary">回収を実行</button>
+                <button id="btn-close-discard" class="btn btn-secondary">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- デッキ保存モーダル -->
+    <div id="save-modal" class="modal hidden">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <h2>デッキを保存</h2>
+            <p style="color:#aaa; font-size:0.85rem; margin-bottom:10px;">保存先のスロットを選んでください</p>
+            <div id="save-slot-list" class="discard-list"></div>
+            <div class="modal-actions">
+                <button id="btn-close-save" class="btn btn-secondary">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- デッキ読込モーダル -->
+    <div id="load-modal" class="modal hidden">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <h2>デッキを読込</h2>
+            <p style="color:#aaa; font-size:0.85rem; margin-bottom:10px;">読み込むスロットを選んでください</p>
+            <div id="load-slot-list" class="discard-list"></div>
+            <div class="modal-actions">
+                <button id="btn-close-load" class="btn btn-secondary">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="damage-modal" class="modal hidden">
+        <div class="modal-content text-center" style="text-align: center; max-height: 85vh; overflow-y: auto;">
+            <h2>ダメージ処理</h2>
+            <p>残りダメージ: <b id="remaining-dmg-display" style="color:#ff5252; font-size:2rem; text-shadow: 0 0 10px rgba(255,82,82,0.8);">0</b></p>
+            <p style="font-size:0.8rem; color:#aaa; margin:15px 0;">どの能力値でダメージを受けますか？<br>（現在値が1下がり、最高値分だけダメージを軽減します）</p>
+            <div class="modal-actions" style="flex-direction:column; gap:10px;">
+                <button class="btn btn-action stat-dmg-btn" data-stat="body" style="background:#552222; font-size:1rem; padding:12px;">肉体で受ける</button>
+                <button class="btn btn-action stat-dmg-btn" data-stat="int" style="background:#222255; font-size:1rem; padding:12px;">知性で受ける</button>
+                <button class="btn btn-action stat-dmg-btn" data-stat="men" style="background:#225522; font-size:1rem; padding:12px;">精神で受ける</button>
+            </div>
+            
+            <hr style="border-color:#444; margin:20px 0;">
+            <p style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">手札・捨札を廃棄してコスト分ダメージを肩代わりすることもできます。</p>
+            
+            <h4 style="margin:0 0 5px 0; text-align:left; font-size:0.9rem;">手札から廃棄（コスト分軽減）</h4>
+            <div id="dmg-hand-list" style="display:flex; flex-direction:column; gap:5px; max-height:120px; overflow-y:auto; background:#222; padding:8px; border-radius:5px; margin-bottom:10px;"></div>
+            
+            <h4 style="margin:0 0 5px 0; text-align:left; font-size:0.9rem;">捨札から廃棄（コスト分軽減）</h4>
+            <div id="dmg-discard-list" style="display:flex; flex-direction:column; gap:5px; max-height:120px; overflow-y:auto; background:#222; padding:8px; border-radius:5px;"></div>
+        </div>
+    </div>
+
+    <!-- 印刷用エリア -->
+    <div id="print-area" class="print-only"></div>
+
+    <!-- 能力値0時の回収モーダル -->
+    <div id="zero-stat-modal" class="modal hidden" style="z-index: 2000;">
+        <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+            <h2 style="color:#ffcc00; text-shadow:0 0 10px rgba(255,204,0,0.5);">能力値ブレイク！</h2>
+            <p style="font-size:0.9rem; margin-bottom:15px;">能力値が0になったため、捨札または廃棄札から1枚選んで手札に戻せます。</p>
+            
+            <h4 style="margin:10px 0 5px 0;">捨札から選ぶ</h4>
+            <div id="zero-discard-list" class="discard-list" style="max-height:150px; overflow-y:auto; background:#222; padding:5px; border-radius:5px;"></div>
+            
+            <h4 style="margin:10px 0 5px 0;">廃棄札から選ぶ</h4>
+            <div id="zero-void-list" class="discard-list" style="max-height:150px; overflow-y:auto; background:#222; padding:5px; border-radius:5px;"></div>
+            
+            <div class="modal-actions" style="margin-top:15px;">
+                <button id="btn-skip-zero-recovery" class="btn btn-secondary">スキップ</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js?v=22"></script>
+</body>
+</html>
+
