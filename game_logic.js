@@ -201,8 +201,8 @@ export function calculateDamageFromCards(cards, player) {
             cardDamage += parseInt(voidMatch[1]) * player.deck.void.length;
         }
         
-        // 前のカードからのボーナスを適用（カード自体がダメージを持っていなくても適用するかどうか？ 通常は攻撃カードに適用されるが、ここでは単純に加算する）
-        if (cardDamage > 0 || card.effect.includes('ダメージ')) {
+        // 常に次のカードにボーナスを適用し、消費する
+        if (nextCardBonus > 0) {
             cardDamage += nextCardBonus;
             nextCardBonus = 0; // 適用したらリセット
         }
