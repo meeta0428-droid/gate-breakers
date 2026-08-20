@@ -482,7 +482,7 @@ function setupEvents() {
         let summonDmg = 0;
         let summonLog = '';
         player.deck.summons.forEach(s => {
-            if (s.stance === 'attack') {
+            if (s.stance === 'attack' || s.stance === 'both') {
                 const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
                 if (match) {
                     const atk = parseInt(match[1]);
@@ -504,7 +504,8 @@ function setupEvents() {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
                     player.deck.discard.splice(discardIdx, 1);
-                    player.deck.summons.push({ card: card, stance: 'attack' });
+                    const initStance = card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack';
+                    player.deck.summons.push({ card: card, stance: initStance });
                 }
             } else if (toVoid.has(idx)) {
                 // app.jsではカードを場に出す時に既にdiscardにpushしている
@@ -555,7 +556,7 @@ function setupEvents() {
         let summonDef = 0;
         let summonLog = '';
         player.deck.summons.forEach(s => {
-            if (s.stance === 'defend') {
+            if (s.stance === 'defend' || s.stance === 'both') {
                 const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
                 if (match) {
                     const defVal = parseInt(match[2]);
@@ -577,7 +578,8 @@ function setupEvents() {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
                     player.deck.discard.splice(discardIdx, 1);
-                    player.deck.summons.push({ card: card, stance: 'attack' });
+                    const initStance = card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'defend';
+                    player.deck.summons.push({ card: card, stance: initStance });
                 }
             } else if (toVoid.has(idx)) {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
@@ -982,8 +984,8 @@ function updateUI() {
                     <span class="summon-card-stats">攻${atk}/防${def}</span>
                 </div>
                 <div class="summon-controls">
-                    <button class="summon-btn btn-atk ${s.stance === 'attack' ? 'active-attack' : ''}">攻撃</button>
-                    <button class="summon-btn btn-def ${s.stance === 'defend' ? 'active-defend' : ''}">防御</button>
+                    <button class="summon-btn btn-atk ${s.stance === 'attack' || s.stance === 'both' ? 'active-attack' : ''}">攻撃</button>
+                    <button class="summon-btn btn-def ${s.stance === 'defend' || s.stance === 'both' ? 'active-defend' : ''}">防御</button>
                     <button class="summon-btn summon-btn-dismiss">廃棄</button>
                 </div>
             `;
@@ -993,11 +995,21 @@ function updateUI() {
             });
             
             sDiv.querySelector('.btn-atk').addEventListener('click', () => {
-                s.stance = 'attack';
+                if (s.card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる')) {
+                    if (s.stance === 'defend' || s.stance === 'both') s.stance = 'both';
+                    else s.stance = 'both';
+                } else {
+                    s.stance = 'attack';
+                }
                 updateUI();
             });
             sDiv.querySelector('.btn-def').addEventListener('click', () => {
-                s.stance = 'defend';
+                if (s.card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる')) {
+                    if (s.stance === 'attack' || s.stance === 'both') s.stance = 'both';
+                    else s.stance = 'both';
+                } else {
+                    s.stance = 'defend';
+                }
                 updateUI();
             });
             sDiv.querySelector('.summon-btn-dismiss').addEventListener('click', () => {
