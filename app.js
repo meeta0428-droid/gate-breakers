@@ -774,12 +774,15 @@ function setupEvents() {
             });
         }
         
-        // パッシブ装備用のリスト（コスト分軽減ではなく、ダメージを受ける）
+        // パッシブ装備用のリスト（「このカードでダメージを受けた場合」などの表記があるカードのみ）
         els.dmgPassiveList.innerHTML = '';
-        if (player.deck.passives.length === 0) {
-            els.dmgPassiveList.innerHTML = '<span style="color:#555; font-size:0.75rem;">パッシブ装備がありません</span>';
+        const dmgTakingPassives = player.deck.passives.filter(p => p.effect.includes('このカードでダメージを受けた場合'));
+        
+        if (dmgTakingPassives.length === 0) {
+            els.dmgPassiveList.innerHTML = '<span style="color:#555; font-size:0.75rem;">身代わりにできるパッシブ装備がありません</span>';
         } else {
-            player.deck.passives.forEach((pCard, idx) => {
+            dmgTakingPassives.forEach((pCard) => {
+                const idx = player.deck.passives.indexOf(pCard);
                 const cDiv = document.createElement('div');
                 cDiv.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#111; padding:5px; border-radius:3px; font-size:0.8rem;';
                 cDiv.innerHTML = `<span>${pCard.name} (コスト${pCard.cost})</span> <button class="btn btn-primary" style="padding:2px 6px; font-size:0.7rem;">ダメージを受ける</button>`;
