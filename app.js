@@ -1104,7 +1104,7 @@ function updateUI() {
         comboArea.innerHTML = '<span style="color:#555; font-size:0.75rem;">まだカードが出されていません</span>';
     }
 
-    els.maxHandSizeDisplay.innerText = player.maxHandSize;
+    if (els.maxHandSizeDisplay) els.maxHandSizeDisplay.innerText = player.maxHandSize;
     els.deckCount.innerText = player.deck.mountain.length;
     els.discardCount.innerText = player.deck.discard.length;
     els.voidCount.innerText = player.deck.void.length;
