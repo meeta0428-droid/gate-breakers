@@ -289,20 +289,52 @@ export function executeCardEffects(cards, player, logMsg) {
 export function triggerHook(hookName, context, activeCards) {
     let currentContext = { ...context };
     
-    for (const card of activeCards) {
-        // もしcardが {card: CardObject, stance: 'attack'} のようなラップされたオブジェクトなら、中のcardを取り出す
-        const actualCard = card.card ? card.card : card;
-        const effectLogic = cardEffects[actualCard.name];
+    for (const cardObj of activeCards) {
+        const actualCard = cardObj.card ? cardObj.card : cardObj;
         
+        // --- 1. 個別定義されたフック（card_effects.js）の実行 ---
+        const effectLogic = cardEffects[actualCard.name];
         if (effectLogic && effectLogic[hookName]) {
-            // フック実行時、contextに自身（card）の情報も含めて渡す
             currentContext.card = actualCard;
-            currentContext.stance = card.stance || null;
+            currentContext.stance = cardObj.stance || null;
             
             const result = effectLogic[hookName](currentContext);
             if (result) {
-                // 返り値があればコンテキストを更新する（例: pendingDamageが上書きされる）
                 currentContext = { ...currentContext, ...result };
+            }
+        }
+        
+        // --- 2. パッシブカードの共通テキスト解析（汎用処理） ---
+        if (actualCard.category.includes('パッシブ')) {
+            if (hookName === 'onAttack') {
+                // 例: "ダメージ＋2" などの表記
+                const dmgMatch = actualCard.effect.match(/ダメージ\s*[＋\+]\s*(\d+)/);
+                // ただし、「対象が人間の場合さらにダメージ＋3」のような条件付きは除外または別途実装が必要なため簡易判定
+                // （本格的にはcard_effects.jsに書くのが推奨ですが、汎用として拾います）
+                if (dmgMatch) {
+                    const extraDmg = parseInt(dmgMatch[1], 10);
+                    currentContext.totalDmg = (currentContext.totalDmg || 0) + extraDmg;
+                    if (currentContext.logMsg) {
+                        currentContext.logMsg(`・【パッシブ】${actualCard.name}の効果でダメージ＋${extraDmg}`);
+                    }
+                }
+            }
+            
+            if (hookName === 'onBeforeDamageTaken') {
+                // 例: "受けるダメージを1点軽減" または "ダメージを受けた時にダメージ -1"
+                const reduceMatch1 = actualCard.effect.match(/受ける(?:あらゆる)?ダメージを(\d+)点軽減/);
+                const reduceMatch2 = actualCard.effect.match(/ダメージ(?:を受けた時|時)にダメージ\s*[-－]\s*(\d+)/);
+                
+                let reduceVal = 0;
+                if (reduceMatch1) reduceVal = parseInt(reduceMatch1[1], 10);
+                else if (reduceMatch2) reduceVal = parseInt(reduceMatch2[1], 10);
+                
+                if (reduceVal > 0 && currentContext.pendingDamage > 0) {
+                    currentContext.pendingDamage = Math.max(0, currentContext.pendingDamage - reduceVal);
+                    if (currentContext.logMsg) {
+                        currentContext.logMsg(`・【パッシブ】${actualCard.name}の効果でダメージを ${reduceVal} 点軽減！`);
+                    }
+                }
             }
         }
     }

@@ -494,6 +494,16 @@ function setupEvents() {
         });
         
         let totalDmg = dmg + summonDmg;
+        
+        // --- フックシステムの呼び出し（攻撃ダメージ計算後、適用前） ---
+        const activeCards = [...player.deck.passives, ...player.deck.summons];
+        const hookContext = triggerHook('onAttack', { 
+            totalDmg: totalDmg, 
+            player: player,
+            logMsg: logMsg 
+        }, activeCards);
+        totalDmg = hookContext.totalDmg;
+        // ----------------------------------------------------
 
         logMsg(`使用カード:<br>${cardLogs}<br>${summonLog}コンボ発動！ 合計 <span class="damage">${totalDmg}</span> のダメージを与えた！`, 'important');
         showDamagePopup(totalDmg);
