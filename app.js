@@ -593,6 +593,21 @@ function setupEvents() {
         currentCombo = [];
         els.incomingDmg.value = '';
         
+        let survivingSummons = [];
+        let destroyedSummonsLog = '';
+        player.deck.summons.forEach(s => {
+            if (actualDmg > s.card.cost) {
+                player.deck.void.push(s.card);
+                destroyedSummonsLog += `・召喚ユニット「${s.card.name}」はダメージに耐えきれず破壊され、廃棄札に移動した！<br>`;
+            } else {
+                survivingSummons.push(s);
+            }
+        });
+        player.deck.summons = survivingSummons;
+        if (destroyedSummonsLog !== '') {
+            logMsg(destroyedSummonsLog, 'damage');
+        }
+        
         if (actualDmg > 0) {
             pendingDamage = actualDmg;
             updateDamageModalUI();
