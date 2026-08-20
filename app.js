@@ -85,6 +85,7 @@ const els = {
     remainingDmgDisplay: document.getElementById('remaining-dmg-display'),
     dmgHandList: document.getElementById('dmg-hand-list'),
     dmgDiscardList: document.getElementById('dmg-discard-list'),
+    dmgSummonList: document.getElementById('dmg-summon-list'),
     
     zeroStatModal: document.getElementById('zero-stat-modal'),
     zeroDiscardList: document.getElementById('zero-discard-list'),
@@ -593,20 +594,7 @@ function setupEvents() {
         currentCombo = [];
         els.incomingDmg.value = '';
         
-        let survivingSummons = [];
-        let destroyedSummonsLog = '';
-        player.deck.summons.forEach(s => {
-            if (actualDmg > s.card.cost) {
-                player.deck.void.push(s.card);
-                destroyedSummonsLog += `・召喚ユニット「${s.card.name}」はダメージに耐えきれず破壊され、廃棄札に移動した！<br>`;
-            } else {
-                survivingSummons.push(s);
-            }
-        });
-        player.deck.summons = survivingSummons;
-        if (destroyedSummonsLog !== '') {
-            logMsg(destroyedSummonsLog, 'damage');
-        }
+
         
         if (actualDmg > 0) {
             pendingDamage = actualDmg;
@@ -719,6 +707,41 @@ function setupEvents() {
         
         renderList(els.dmgHandList, player.deck.hand, '手札');
         renderList(els.dmgDiscardList, player.deck.discard, '捨札');
+        
+        // 召喚ユニット用のリスト（コスト分軽減ではなく、ダメージを受ける）
+        els.dmgSummonList.innerHTML = '';
+        if (player.deck.summons.length === 0) {
+            els.dmgSummonList.innerHTML = '<span style="color:#555; font-size:0.75rem;">召喚ユニットがいません</span>';
+        } else {
+            player.deck.summons.forEach((s, idx) => {
+                const cDiv = document.createElement('div');
+                cDiv.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#111; padding:5px; border-radius:3px; font-size:0.8rem;';
+                cDiv.innerHTML = `<span>${s.card.name} (コスト${s.card.cost})</span> <button class="btn btn-primary" style="padding:2px 6px; font-size:0.7rem;">ダメージを受ける</button>`;
+                cDiv.querySelector('button').addEventListener('click', () => {
+                    const dmgToTake = pendingDamage;
+                    if (dmgToTake > s.card.cost) {
+                        // 破壊される
+                        player.deck.summons.splice(idx, 1);
+                        player.deck.void.push(s.card);
+                        pendingDamage -= s.card.cost; // コスト分だけ軽減して残りをプレイヤーが受ける？
+                        logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊され、廃棄札に移動した！（残り: ${pendingDamage}）`, 'damage');
+                    } else {
+                        // 耐え切る
+                        pendingDamage = 0;
+                        logMsg(`「${s.card.name}」でダメージを受け止めた！`, 'important');
+                    }
+                    
+                    if (pendingDamage <= 0) {
+                        pendingDamage = 0;
+                        els.damageModal.classList.add('hidden');
+                        updateUI();
+                    } else {
+                        updateDamageModalUI(); // 再描画
+                    }
+                });
+                els.dmgSummonList.appendChild(cDiv);
+            });
+        }
     }
     
     // ナビゲーション
