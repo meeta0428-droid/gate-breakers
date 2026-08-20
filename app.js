@@ -87,6 +87,7 @@ const els = {
     dmgHandList: document.getElementById('dmg-hand-list'),
     dmgDiscardList: document.getElementById('dmg-discard-list'),
     dmgSummonList: document.getElementById('dmg-summon-list'),
+    dmgPassiveList: document.getElementById('dmg-passive-list'),
     
     zeroStatModal: document.getElementById('zero-stat-modal'),
     zeroDiscardList: document.getElementById('zero-discard-list'),
@@ -770,6 +771,41 @@ function setupEvents() {
                     }
                 });
                 els.dmgSummonList.appendChild(cDiv);
+            });
+        }
+        
+        // パッシブ装備用のリスト（コスト分軽減ではなく、ダメージを受ける）
+        els.dmgPassiveList.innerHTML = '';
+        if (player.deck.passives.length === 0) {
+            els.dmgPassiveList.innerHTML = '<span style="color:#555; font-size:0.75rem;">パッシブ装備がありません</span>';
+        } else {
+            player.deck.passives.forEach((pCard, idx) => {
+                const cDiv = document.createElement('div');
+                cDiv.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#111; padding:5px; border-radius:3px; font-size:0.8rem;';
+                cDiv.innerHTML = `<span>${pCard.name} (コスト${pCard.cost})</span> <button class="btn btn-primary" style="padding:2px 6px; font-size:0.7rem;">ダメージを受ける</button>`;
+                cDiv.querySelector('button').addEventListener('click', () => {
+                    const dmgToTake = pendingDamage;
+                    if (dmgToTake > pCard.cost) {
+                        // 破壊される
+                        player.deck.passives.splice(idx, 1);
+                        player.deck.void.push(pCard);
+                        pendingDamage -= pCard.cost;
+                        logMsg(`「${pCard.name}」で受けたが、ダメージに耐えきれず破壊され、廃棄札に移動した！（残り: ${pendingDamage}）`, 'damage');
+                    } else {
+                        // 耐え切る
+                        pendingDamage = 0;
+                        logMsg(`「${pCard.name}」でダメージを受け止めた！`, 'important');
+                    }
+                    
+                    if (pendingDamage <= 0) {
+                        pendingDamage = 0;
+                        els.damageModal.classList.add('hidden');
+                        updateUI();
+                    } else {
+                        updateDamageModalUI(); // 再描画
+                    }
+                });
+                els.dmgPassiveList.appendChild(cDiv);
             });
         }
     }
