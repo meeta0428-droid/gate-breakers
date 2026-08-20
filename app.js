@@ -704,6 +704,8 @@ function setupEvents() {
     function updateDamageModalUI() {
         els.remainingDmgDisplay.innerText = pendingDamage;
         
+        const hasGuardStance = currentCombo.some(c => c.effect.includes('その後ダメージを受けるカードがコスト以下のダメージの場合は、ダメージを受けない'));
+        
         // 廃棄用リストの描画
         const renderList = (container, cardArray, sourceName) => {
             container.innerHTML = '';
@@ -714,21 +716,44 @@ function setupEvents() {
             cardArray.forEach((card, idx) => {
                 const cDiv = document.createElement('div');
                 cDiv.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#111; padding:5px; border-radius:3px; font-size:0.8rem;';
-                cDiv.innerHTML = `<span>${card.name} (コスト${card.cost})</span> <button class="btn btn-primary" style="padding:2px 6px; font-size:0.7rem;">廃棄</button>`;
+                
+                const btnLabel = hasGuardStance ? 'ダメージを受ける' : '廃棄';
+                cDiv.innerHTML = `<span>${card.name} (コスト${card.cost})</span> <button class="btn btn-primary" style="padding:2px 6px; font-size:0.7rem;">${btnLabel}</button>`;
+                
                 cDiv.querySelector('button').addEventListener('click', () => {
-                    const mitigation = card.cost;
-                    // 配列から削除して廃棄札へ
-                    cardArray.splice(idx, 1);
-                    player.deck.void.push(card);
+                    const dmgToTake = pendingDamage;
                     
-                    pendingDamage -= mitigation;
+                    if (hasGuardStance) {
+                        // ガードスタンス発動中：召喚ユニットと同じ処理
+                        if (dmgToTake > card.cost) {
+                            cardArray.splice(idx, 1);
+                            player.deck.void.push(card);
+                            pendingDamage -= card.cost;
+                            logMsg(`「${card.name}」で受けたが、ダメージに耐えきれず破壊され、廃棄札に移動した！（残り: ${pendingDamage}）`, 'damage');
+                        } else {
+                            pendingDamage = 0;
+                            logMsg(`「${card.name}」でダメージを受け止めた！(${sourceName}に残ります)`, 'important');
+                        }
+                    } else {
+                        // 通常：アクションカードを廃棄してコスト分軽減
+                        const mitigation = card.cost;
+                        cardArray.splice(idx, 1);
+                        player.deck.void.push(card);
+                        
+                        pendingDamage -= mitigation;
+                        if (pendingDamage <= 0) {
+                            pendingDamage = 0;
+                            logMsg(`${sourceName}の「${card.name}」を廃棄してダメージを防ぎ切った！`, 'important');
+                        } else {
+                            logMsg(`${sourceName}の「${card.name}」を廃棄して ${mitigation} 点軽減！（残り: ${pendingDamage}）`);
+                        }
+                    }
+                    
                     if (pendingDamage <= 0) {
                         pendingDamage = 0;
-                        logMsg(`${sourceName}の「${card.name}」を廃棄してダメージを防ぎ切った！`, 'important');
                         els.damageModal.classList.add('hidden');
                         updateUI();
                     } else {
-                        logMsg(`${sourceName}の「${card.name}」を廃棄して ${mitigation} 点軽減！（残り: ${pendingDamage}）`);
                         updateDamageModalUI(); // 再描画
                     }
                 });
@@ -785,14 +810,14 @@ function setupEvents() {
                 cDiv.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#111; padding:5px; border-radius:3px; font-size:0.8rem;';
                 
                 const isBulwark = pCard.effect.includes('このカードでダメージを受けた場合');
-                const btnLabel = isBulwark ? 'ダメージを受ける' : '廃棄';
+                const btnLabel = (isBulwark || hasGuardStance) ? 'ダメージを受ける' : '廃棄';
                 
                 cDiv.innerHTML = `<span>${pCard.name} (コスト${pCard.cost})</span> <button class="btn btn-primary" style="padding:2px 6px; font-size:0.7rem;">${btnLabel}</button>`;
                 cDiv.querySelector('button').addEventListener('click', () => {
                     const dmgToTake = pendingDamage;
                     
-                    if (isBulwark) {
-                        // 召喚ユニットと同じ処理（コスト以下なら耐える）
+                    if (isBulwark || hasGuardStance) {
+                        // 召喚ユニットやガードスタンスと同じ処理（コスト以下なら耐える）
                         if (dmgToTake > pCard.cost) {
                             player.deck.passives.splice(idx, 1);
                             player.deck.void.push(pCard);
@@ -800,7 +825,7 @@ function setupEvents() {
                             logMsg(`「${pCard.name}」で受けたが、ダメージに耐えきれず破壊され、廃棄札に移動した！（残り: ${pendingDamage}）`, 'damage');
                         } else {
                             pendingDamage = 0;
-                            logMsg(`「${pCard.name}」でダメージを受け止めた！`, 'important');
+                            logMsg(`「${pCard.name}」でダメージを受け止めた！(パッシブとして場に残ります)`, 'important');
                         }
                     } else {
                         // アクションカードと同じ処理（強制的に廃棄してコスト分軽減）
