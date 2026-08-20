@@ -1,4 +1,4 @@
-import { cardEffects } from "./card_effects.js?v=2";
+import { cardEffects } from "./card_effects.js?v=3";
 
 export class Card {
     constructor(data) {
@@ -251,6 +251,9 @@ export function executeCardEffects(cards, player, logMsg) {
     let toVoid = new Set();
     
     for (const [idx, card] of cards.entries()) {
+        // --- フックシステムの呼び出し（カード使用時） ---
+        triggerHook('onPlay', { player, logMsg }, [card]);
+        
         // ドロー効果
         const drawMatch = card.effect.match(/山札から(\d+)枚.*?手札に加える/);
         if (drawMatch) {
