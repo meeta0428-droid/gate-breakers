@@ -213,11 +213,12 @@ function getSavedDecks() {
     }
 }
 
-function saveDeckToSlot(slotIndex) {
+function saveDeckToSlot(slotIndex, deckName) {
     const saved = getSavedDecks();
     const cardNames = selectedCardsForDeck.map(c => c.name);
     const totalCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
     saved[slotIndex] = {
+        name: deckName || `スロット${slotIndex}`,
         cards: cardNames,
         cost: totalCost,
         count: cardNames.length,
@@ -279,8 +280,9 @@ function openSaveModal() {
         item.className = 'discard-item';
         
         if (slot) {
+            const dispName = slot.name || `スロット${i}`;
             item.innerHTML = `
-                <div><strong>スロット${i}</strong><br><small style="color:#aaa;">${slot.count}枚 / コスト${slot.cost}</small><br><small style="color:#666;">${slot.date}</small></div>
+                <div><strong>${dispName}</strong><br><small style="color:#aaa;">${slot.count}枚 / コスト${slot.cost}</small><br><small style="color:#666;">${slot.date}</small></div>
                 <div style="color:#ff5252;">上書き</div>
             `;
         } else {
@@ -296,8 +298,10 @@ function openSaveModal() {
                 return;
             }
             if (slot && !confirm(`スロット${i} を上書きしますか？`)) return;
-            saveDeckToSlot(i);
-            alert(`スロット${i} に保存しました！`);
+            const deckName = prompt('保存するデータに名前をつけてください:', slot ? (slot.name || `スロット${i}`) : `デッキ${i}`);
+            if (deckName === null) return; // キャンセル
+            saveDeckToSlot(i, deckName);
+            alert(`「${deckName || `スロット${i}`}」を保存しました！`);
             els.saveModal.classList.add('hidden');
         });
         els.saveSlotList.appendChild(item);
@@ -315,8 +319,9 @@ function openLoadModal() {
         item.className = 'discard-item';
         
         if (slot) {
+            const dispName = slot.name || `スロット${i}`;
             item.innerHTML = `
-                <div><strong>スロット${i}</strong><br><small style="color:#aaa;">${slot.count}枚 / コスト${slot.cost}</small><br><small style="color:#666;">${slot.date}</small></div>
+                <div><strong>${dispName}</strong><br><small style="color:#aaa;">${slot.count}枚 / コスト${slot.cost}</small><br><small style="color:#666;">${slot.date}</small></div>
                 <div style="color:#4caf50;">読込</div>
             `;
             item.addEventListener('click', () => {
