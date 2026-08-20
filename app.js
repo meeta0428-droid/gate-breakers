@@ -499,7 +499,7 @@ function setupEvents() {
         
         // 廃棄札へ行くものと捨札へ行くものを分ける
         currentCombo.forEach((card, idx) => {
-            if (card.category.includes('召喚')) {
+            if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
                     player.deck.discard.splice(discardIdx, 1);
@@ -572,7 +572,7 @@ function setupEvents() {
         logMsg(`${cardStr}${summonLog}敵からの攻撃！<br>元ダメージ: ${inputDmg}<br>カード軽減: ${totalDef}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
         
         currentCombo.forEach((card, idx) => {
-            if (card.category.includes('召喚')) {
+            if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
                     player.deck.discard.splice(discardIdx, 1);
