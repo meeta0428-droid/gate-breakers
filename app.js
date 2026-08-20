@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects } from './game_logic.js?v=17';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic.js?v=18';
 
 let cardPool = [];
 let player = null;
@@ -594,12 +594,23 @@ function setupEvents() {
         currentCombo = [];
         els.incomingDmg.value = '';
         
-
+        // --- フックシステムの呼び出し（ダメージ計算後、適用前） ---
+        const activeCards = [...player.deck.passives, ...player.deck.summons];
+        const hookContext = triggerHook('onBeforeDamageTaken', { 
+            pendingDamage: actualDmg, 
+            player: player,
+            logMsg: logMsg 
+        }, activeCards);
+        actualDmg = hookContext.pendingDamage;
+        // ----------------------------------------------------
         
         if (actualDmg > 0) {
             pendingDamage = actualDmg;
             updateDamageModalUI();
             els.damageModal.classList.remove('hidden');
+        } else if (hookContext.pendingDamage <= 0 && actualDmg <= 0) {
+            // フックによってダメージが0になった場合や元々0だった場合
+            logMsg('ダメージ処理が完了しました（最終ダメージ0）。');
         }
         updateUI();
     });

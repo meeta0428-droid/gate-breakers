@@ -1,3 +1,5 @@
+import { cardEffects } from "./card_effects.js?v=1";
+
 export class Card {
     constructor(data) {
         this.name = data.name;
@@ -274,4 +276,35 @@ export function executeCardEffects(cards, player, logMsg) {
     if (healed > 0) logMsg(`効果適用: 能力値ダメージを ${healed} 点回復した！`, 'important');
     
     return { toVoid };
+}
+
+
+/**
+ * 発動中のすべてのカード（コンボ、パッシブ、召喚など）の特殊効果（フック）を実行する
+ * @param {string} hookName 発動タイミングの名称 (例: 'onAttack', 'onBeforeDamageTaken')
+ * @param {object} context 渡したい変数 (例: { pendingDamage: 10, player, logMsg })
+ * @param {Array} activeCards 発動を判定するカードの配列（[{name:...}, {name:...}] の形式）
+ * @returns {object} 更新された context
+ */
+export function triggerHook(hookName, context, activeCards) {
+    let currentContext = { ...context };
+    
+    for (const card of activeCards) {
+        // もしcardが {card: CardObject, stance: 'attack'} のようなラップされたオブジェクトなら、中のcardを取り出す
+        const actualCard = card.card ? card.card : card;
+        const effectLogic = cardEffects[actualCard.name];
+        
+        if (effectLogic && effectLogic[hookName]) {
+            // フック実行時、contextに自身（card）の情報も含めて渡す
+            currentContext.card = actualCard;
+            currentContext.stance = card.stance || null;
+            
+            const result = effectLogic[hookName](currentContext);
+            if (result) {
+                // 返り値があればコンテキストを更新する（例: pendingDamageが上書きされる）
+                currentContext = { ...currentContext, ...result };
+            }
+        }
+    }
+    return currentContext;
 }
