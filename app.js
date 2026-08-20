@@ -438,8 +438,9 @@ function setupEvents() {
     
     // 攻撃実行
     els.btnAttack.addEventListener('click', () => {
-        if (currentCombo.length === 0) {
-            logMsg('出すカードがありません。手札からアクションカードを選んでください。');
+        let hasAttackingSummons = player.deck.summons.some(s => s.stance === 'attack');
+        if (currentCombo.length === 0 && !(player.deck.hand.length >= 1 && hasAttackingSummons)) {
+            logMsg('出すカードがありません。手札からアクションカードを選ぶか、攻撃可能な召喚ユニットを用意してください。');
             return;
         }
         
@@ -1051,6 +1052,36 @@ function updateUI() {
         cardDiv.style.zIndex = index;
         els.handContainer.appendChild(cardDiv);
     });
+
+    // 戦闘不能の判定
+    if (player.deck.mountain.length === 0 && player.deck.hand.length === 0) {
+        if (!player.isDead) {
+            logMsg('【戦闘不能】山札と手札が0枚になりました。これ以上行動できません。', 'damage');
+            player.isDead = true;
+        }
+        els.btnDraw.disabled = true;
+        els.btnAttack.disabled = true;
+        els.btnReact.disabled = true;
+        els.btnRefresh.disabled = true;
+        els.btnDiscardView.disabled = true;
+        els.btnDraw.style.opacity = '0.5';
+        els.btnAttack.style.opacity = '0.5';
+        els.btnReact.style.opacity = '0.5';
+        els.btnRefresh.style.opacity = '0.5';
+        els.btnDiscardView.style.opacity = '0.5';
+    } else {
+        player.isDead = false;
+        els.btnDraw.disabled = false;
+        els.btnAttack.disabled = false;
+        els.btnReact.disabled = false;
+        els.btnRefresh.disabled = false;
+        els.btnDiscardView.disabled = false;
+        els.btnDraw.style.opacity = '1';
+        els.btnAttack.style.opacity = '1';
+        els.btnReact.style.opacity = '1';
+        els.btnRefresh.style.opacity = '1';
+        els.btnDiscardView.style.opacity = '1';
+    }
 }
 
 function showDamagePopup(dmg) {
