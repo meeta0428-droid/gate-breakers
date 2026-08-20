@@ -201,10 +201,14 @@ export function calculateDamageFromCards(cards, player) {
             cardDamage += parseInt(voidMatch[1]) * player.deck.void.length;
         }
         
-        // 常に次のカードにボーナスを適用し、消費する
+        let isDamageCard = cardDamage > 0 || card.effect.includes('ダメージ');
+        
+        // 常に次のカードにボーナスを適用・消費する
         if (nextCardBonus > 0) {
-            cardDamage += nextCardBonus;
-            nextCardBonus = 0; // 適用したらリセット
+            if (isDamageCard) {
+                cardDamage += nextCardBonus;
+            }
+            nextCardBonus = 0; // カードの種類に関わらずボーナスは消費される
         }
         
         total += cardDamage;
@@ -313,15 +317,17 @@ export function triggerHook(hookName, context, activeCards) {
         // --- 2. パッシブカードの共通テキスト解析（汎用処理） ---
         if (actualCard.category.includes('パッシブ')) {
             if (hookName === 'onAttack') {
-                // 例: "ダメージ＋2" などの表記
-                const dmgMatch = actualCard.effect.match(/ダメージ\s*[＋\+]\s*(\d+)/);
-                // ただし、「対象が人間の場合さらにダメージ＋3」のような条件付きは除外または別途実装が必要なため簡易判定
-                // （本格的にはcard_effects.jsに書くのが推奨ですが、汎用として拾います）
-                if (dmgMatch) {
-                    const extraDmg = parseInt(dmgMatch[1], 10);
-                    currentContext.totalDmg = (currentContext.totalDmg || 0) + extraDmg;
-                    if (currentContext.logMsg) {
-                        currentContext.logMsg(`・【パッシブ】${actualCard.name}の効果でダメージ＋${extraDmg}`);
+                if (currentContext.totalDmg > 0) {
+                    // 例: "ダメージ＋2" などの表記
+                    const dmgMatch = actualCard.effect.match(/ダメージ\s*[＋\+]\s*(\d+)/);
+                    // ただし、「対象が人間の場合さらにダメージ＋3」のような条件付きは除外または別途実装が必要なため簡易判定
+                    // （本格的にはcard_effects.jsに書くのが推奨ですが、汎用として拾います）
+                    if (dmgMatch) {
+                        const extraDmg = parseInt(dmgMatch[1], 10);
+                        currentContext.totalDmg += extraDmg;
+                        if (currentContext.logMsg) {
+                            currentContext.logMsg(`・【パッシブ】${actualCard.name}の効果でダメージ＋${extraDmg}`);
+                        }
                     }
                 }
             }

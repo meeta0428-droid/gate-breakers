@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic.js?v=20';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic.js?v=21';
 
 let cardPool = [];
 let player = null;
@@ -468,11 +468,13 @@ function setupEvents() {
                 currentCardDmg += bonus;
                 detail += `（廃棄札ボーナス＋${bonus}）`;
             }
-            
+            let isDamageCard = currentCardDmg > 0 || c.effect.includes('ダメージ');
             if (nextCardBonus > 0) {
-                detail += `（直前カードのボーナス＋${nextCardBonus}）`;
-                currentCardDmg += nextCardBonus;
-                nextCardBonus = 0;
+                if (isDamageCard) {
+                    detail += `（直前カードのボーナス＋${nextCardBonus}）`;
+                    currentCardDmg += nextCardBonus;
+                }
+                nextCardBonus = 0; // いずれにせよボーナスは消費される
             }
             
             if (match) detail = `（基本ダメージ＋${match[1]}）` + detail;
