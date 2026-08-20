@@ -60,7 +60,7 @@ export const cardEffects = {
                 }
             }
             player.deck.void = newVoid;
-            player.deck.shuffle();
+            player.deck.shuffle(player.deck.mountain);
             if (movedCount > 0 && logMsg) {
                 logMsg(`・【${card.name}】の効果！廃棄札からコスト3以下のカード ${movedCount} 枚を山札に戻しました。`);
             }
