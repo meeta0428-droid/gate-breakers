@@ -1430,6 +1430,17 @@ function setupEvents() {
             currentCombo.push(card);
             logMsg(`「${card.name}」を場に出した！`);
             
+            if (card.name === '風読み' || card.effect.includes('イニシアチブフェイズに山札から1枚引き')) {
+                if (player.deck.mountain.length > 0) {
+                    const drawnCard = player.deck.mountain.shift();
+                    window.dispatchEvent(new CustomEvent('requestKazeyomiSelection', {
+                        detail: { drawnCard, playerObj: player }
+                    }));
+                } else {
+                    logMsg(`【${card.name}】の効果：山札がありませんでした。`);
+                }
+            }
+            
             els.modal.classList.add('hidden');
             updateUI();
         }
@@ -1505,6 +1516,41 @@ function setupEvents() {
             openCardModal(currentCombo[selectedCardIndex + 1], selectedCardIndex + 1, false, true);
             updateUI();
         }
+    });
+
+    // --- 風読みの処理 ---
+    let kazeyomiPendingCard = null;
+    window.addEventListener('requestKazeyomiSelection', (e) => {
+        const { drawnCard } = e.detail;
+        kazeyomiPendingCard = drawnCard;
+        
+        const modal = document.getElementById('kazeyomi-modal');
+        const display = document.getElementById('kazeyomi-card-display');
+        
+        display.innerHTML = `<strong>${drawnCard.name}</strong><br><small>${drawnCard.category}</small><br>コスト: ${drawnCard.cost} / 強度: ${drawnCard.power}<br><span style="font-size:0.8rem; color:#aaa;">${drawnCard.effect}</span>`;
+        modal.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-kazeyomi-hand')?.addEventListener('click', () => {
+        if (kazeyomiPendingCard) {
+            player.deck.hand.push(kazeyomiPendingCard);
+            logMsg(`【風読み】引いたカード「${kazeyomiPendingCard.name}」を手札に加えました。`);
+            kazeyomiPendingCard = null;
+        }
+        document.getElementById('kazeyomi-modal').classList.add('hidden');
+        updateUI();
+    });
+
+    document.getElementById('btn-kazeyomi-discard')?.addEventListener('click', () => {
+        if (kazeyomiPendingCard) {
+            player.deck.discard.push(kazeyomiPendingCard);
+            const bonus = kazeyomiPendingCard.cost;
+            player.initiativeModifier = (player.initiativeModifier || 0) + bonus;
+            logMsg(`【風読み】引いたカード「${kazeyomiPendingCard.name}」を捨札にしました。イニシアチブ＋${bonus}！`, 'important');
+            kazeyomiPendingCard = null;
+        }
+        document.getElementById('kazeyomi-modal').classList.add('hidden');
+        updateUI();
     });
 }
 
