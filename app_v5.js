@@ -544,7 +544,7 @@ function setupEvents() {
         let totalDmg = dmg + summonDmg;
         
         // --- フックシステムの呼び出し（攻撃ダメージ計算後、適用前） ---
-        const activeCards = [...player.deck.passives, ...player.deck.summons];
+        const activeCards = [...player.deck.passives, ...player.deck.summons, ...currentCombo];
         const hookContext = triggerHook('onAttack', { 
             totalDmg: totalDmg, 
             player: player,

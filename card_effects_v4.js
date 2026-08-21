@@ -132,5 +132,16 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // 無明穿：対象の手札が1枚以下の場合、あらゆるダメージ軽減を無視する。リアクションされなかった場合、ダメージ＋12に変更。
+    "無明穿": {
+        onAttack: (context) => {
+            if (context.enemyNoReact) {
+                // 基本の+6に加えて、+12に変更するため追加で+6
+                context.logMsg(`【無明穿】リアクションを許さない強烈な一撃！追加ダメージ ＋6！`, 'important');
+                return { totalDmg: context.totalDmg + 6 };
+            }
+            return {};
+        }
     }
 };
