@@ -45,6 +45,17 @@ export const cardEffects = {
             return { maxHandSize };
         }
     },
+    "虚槌スマッシャー": {
+        onAttack: (context) => {
+            let { totalDmg, logMsg, player, card } = context;
+            if (totalDmg > 0 && player.deck.mountain.length === 0) {
+                totalDmg += 5;
+                if (logMsg) logMsg(`・【パッシブ】${card.name}の追加効果（山札0）でさらにダメージ＋5！`);
+            }
+            return { totalDmg };
+        }
+    },
+    // 不屈：使用時に廃棄札にあるコスト3以下のカードをすべて山札に戻す
     "不屈": {
         onPlay: (context) => {
             let { player, logMsg, card } = context;
