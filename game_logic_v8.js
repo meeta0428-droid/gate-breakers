@@ -353,6 +353,7 @@ export function triggerHook(hookName, context, activeCards) {
         
         // --- 1. 個別定義されたフック（card_effects.js）の実行 ---
         const effectLogic = cardEffects[actualCard.name];
+        let hasCustomLogic = false;
         if (effectLogic && effectLogic[hookName]) {
             currentContext.card = actualCard;
             currentContext.stance = cardObj.stance || null;
@@ -361,17 +362,17 @@ export function triggerHook(hookName, context, activeCards) {
             if (result) {
                 currentContext = { ...currentContext, ...result };
             }
+            hasCustomLogic = true;
         }
         
         // --- 2. パッシブカードの共通テキスト解析（汎用処理） ---
-        if (actualCard.category.includes('パッシブ')) {
+        if (actualCard.category.includes('パッシブ') && !hasCustomLogic) {
             if (hookName === 'onAttack') {
                 if (currentContext.totalDmg > 0) {
                     // 例: "ダメージ＋2" などの表記
+                    // ただし「場合」や「なら」などの条件付きテキストは除外
                     const dmgMatch = actualCard.effect.match(/ダメージ\s*[＋\+]\s*(\d+)/);
-                    // ただし、「対象が人間の場合さらにダメージ＋3」のような条件付きは除外または別途実装が必要なため簡易判定
-                    // （本格的にはcard_effects.jsに書くのが推奨ですが、汎用として拾います）
-                    if (dmgMatch) {
+                    if (dmgMatch && !actualCard.effect.includes('場合') && !actualCard.effect.includes('なら')) {
                         const extraDmg = parseInt(dmgMatch[1], 10);
                         currentContext.totalDmg += extraDmg;
                         if (currentContext.logMsg) {
