@@ -555,6 +555,18 @@ function setupEvents() {
                     return;
                 }
                 
+                // 影刃：リアクション無効化を使用した場合、廃棄札へ
+                if (card._kagejinUsed) {
+                    const discardIdx = player.deck.discard.lastIndexOf(card);
+                    if (discardIdx > -1) {
+                        player.deck.discard.splice(discardIdx, 1);
+                        player.deck.void.push(card);
+                        logMsg(`「${card.name}」はリアクション無効化の代償として廃棄札に移動した。`);
+                    }
+                    delete card._kagejinUsed;
+                    return;
+                }
+                
                 if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
                     if (discardIdx > -1) {
@@ -575,19 +587,53 @@ function setupEvents() {
             updateUI();
         };
 
-        const hasZanshin = player.deck.passives.some(p => p.name === '残心' || p.effect.includes('使用したカード1枚は手札に戻る'));
-        const actionCardIndexes = currentCombo.map((c, i) => c.category.includes('アクション') ? i : -1).filter(i => i !== -1);
+        // --- 影刃のリアクション無効化チェック ---
+        const kagejinCards = currentCombo.filter(c => c.name === '影刃' || c.effect.includes('リアクションを無効化できる'));
         
-        if (hasZanshin && actionCardIndexes.length > 0) {
-            window.dispatchEvent(new CustomEvent('requestZanshinReturn', {
-                detail: {
-                    actionCardIndexes,
-                    combo: currentCombo,
-                    callback: finalizeAttackCombo
-                }
-            }));
+        const proceedAfterKagejin = () => {
+            // --- 残心チェック ---
+            const hasZanshin = player.deck.passives.some(p => p.name === '残心' || p.effect.includes('使用したカード1枚は手札に戻る'));
+            const actionCardIndexes = currentCombo.map((c, i) => c.category.includes('アクション') ? i : -1).filter(i => i !== -1);
+            
+            if (hasZanshin && actionCardIndexes.length > 0) {
+                window.dispatchEvent(new CustomEvent('requestZanshinReturn', {
+                    detail: {
+                        actionCardIndexes,
+                        combo: currentCombo,
+                        callback: finalizeAttackCombo
+                    }
+                }));
+            } else {
+                finalizeAttackCombo();
+            }
+        };
+
+        if (kagejinCards.length > 0) {
+            const kagejinModal = document.getElementById('kagejin-modal');
+            kagejinModal.classList.remove('hidden');
+            
+            const btnYes = document.getElementById('btn-kagejin-yes');
+            const btnNo = document.getElementById('btn-kagejin-no');
+            
+            // イベントリスナーの重複防止
+            const newBtnYes = btnYes.cloneNode(true);
+            const newBtnNo = btnNo.cloneNode(true);
+            btnYes.parentNode.replaceChild(newBtnYes, btnYes);
+            btnNo.parentNode.replaceChild(newBtnNo, btnNo);
+            
+            newBtnYes.addEventListener('click', () => {
+                kagejinCards.forEach(c => { c._kagejinUsed = true; });
+                logMsg(`【影刃】の効果発動！敵のリアクションを無効化した！`, 'important');
+                kagejinModal.classList.add('hidden');
+                proceedAfterKagejin();
+            });
+            
+            newBtnNo.addEventListener('click', () => {
+                kagejinModal.classList.add('hidden');
+                proceedAfterKagejin();
+            });
         } else {
-            finalizeAttackCombo();
+            proceedAfterKagejin();
         }
     });
 

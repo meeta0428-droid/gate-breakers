@@ -346,9 +346,9 @@
         </div>
     </div>
 
-    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v83 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v87 確認・更新</button>
+    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v83 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v88 確認・更新</button>
 
-    <script type="module" src="app_v5.js?v=87"></script>
+    <script type="module" src="app_v5.js?v=88"></script>
     <!-- 残心モーダル -->
     <div id="zanshin-modal" class="modal hidden" style="z-index: 2600;">
         <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
@@ -369,5 +369,17 @@
             </div>
         </div>
     </div>
+    <!-- 影刃モーダル -->
+    <div id="kagejin-modal" class="modal hidden" style="z-index: 2550;">
+        <div class="modal-content">
+            <h3 style="color:#cc44ff; margin-bottom:10px;">影刃の効果</h3>
+            <p style="font-size:0.9rem; margin-bottom:15px;">リアクション無効化の効果を使用しますか？<br><span style="font-size:0.75rem; color:#aaa;">（使用すると「影刃」は廃棄札に移動します）</span></p>
+            <div style="display:flex; justify-content:space-between; gap:10px;">
+                <button id="btn-kagejin-yes" class="btn btn-primary" style="flex:1;">使用する（廃棄）</button>
+                <button id="btn-kagejin-no" class="btn btn-secondary" style="flex:1;">使用しない</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
