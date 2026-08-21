@@ -430,6 +430,16 @@ function setupEvents() {
         player.deck.start(cardPool, cardNames);
         
         logMsg('戦闘開始！パッシブカードは自動的に装備されました。', 'important');
+        
+        // 忍者パッシブの戦闘開始時効果（重複しない）
+        const hasNinja = player.deck.passives.some(p => p.name === '忍者');
+        if (hasNinja) {
+            const drawn = player.deck.draw(1);
+            if (drawn > 0) {
+                logMsg(`【忍者】の効果発動！戦闘開始時に山札から1枚引いた！`, 'important');
+            }
+        }
+        
         updateUI();
     });
 

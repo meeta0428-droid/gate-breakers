@@ -99,5 +99,16 @@ export const cardEffects = {
                 logMsg(`・【${card.name}】の効果！廃棄札からコスト3以下のカード ${movedCount} 枚を山札に戻しました。`);
             }
         }
+    },
+    // 忍者：戦闘開始時に手札上限＋1し、山札から1枚引く。※このカードは重複しない
+    "忍者": {
+        onCalcMaxHandSize: (context) => {
+            // 重複しない：何枚あっても+1のみ
+            if (context._ninjaApplied) return {};
+            let { maxHandSize } = context;
+            maxHandSize += 1;
+            context._ninjaApplied = true;
+            return { maxHandSize, _ninjaApplied: true };
+        }
     }
 };
