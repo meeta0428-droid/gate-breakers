@@ -402,13 +402,12 @@ body {
     .print-page {
         box-sizing: border-box;
         page-break-after: always;
-        display: grid;
-        grid-template-columns: repeat(3, 63mm);
-        grid-template-rows: repeat(3, 88mm);
-        gap: 0;
-        justify-content: center;
-        align-content: start;
-        padding-top: 5mm;
+        break-after: page;
+        display: block;
+        width: 189mm;
+        height: 265mm; /* 88mm * 3 = 264mm + margin */
+        margin: 5mm auto 0;
+        overflow: hidden; /* ブラウザのはみ出し判定による白紙ページを強制阻止 */
     }
     
     .print-card {
@@ -420,8 +419,10 @@ body {
         display: flex;
         flex-direction: column;
         page-break-inside: avoid;
+        break-inside: avoid;
         background: #fff;
         color: #000;
+        float: left;
     }
     
     .print-card-title {
