@@ -986,9 +986,51 @@ function setupEvents() {
         const hasHotLimit = player.deck.passives.some(p => p.effect.includes('能力値にダメージを受けていても、回収ポイントが下がらない'));
         const getRecoveryMax = (stat) => hasHotLimit ? stat.maxVal : stat.currentVal;
 
-        const maxBody = getRecoveryMax(player.stats.body);
-        const maxInt = getRecoveryMax(player.stats.int);
-        const maxMen = getRecoveryMax(player.stats.men);
+        const maxBodyBase = getRecoveryMax(player.stats.body);
+        const maxIntBase = getRecoveryMax(player.stats.int);
+        const maxMenBase = getRecoveryMax(player.stats.men);
+        
+        let bonusBody = 0, bonusInt = 0, bonusMen = 0;
+        
+        const parseFullWidthIntLocal = (str) => {
+            if (!str) return 0;
+            return parseInt(str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)));
+        };
+
+        const checkRecoveryBonus = (card, isVoid) => {
+            const isDiscardOnly = card.effect.includes('捨札にある間') && card.effect.includes('持続');
+            const isBattleLong = card.effect.includes('戦闘中持続する') && !card.effect.includes('捨札にある間');
+            const isPassive = player.deck.passives.includes(card);
+            
+            // パッシブまたは条件を満たした持続効果のみ計算
+            if (isPassive || isBattleLong || (!isVoid && isDiscardOnly)) {
+                const matchAll = card.effect.match(/すべての回収ポイント\s*[＋\+]\s*([0-9０-９]+)/);
+                if (matchAll) {
+                    const val = parseFullWidthIntLocal(matchAll[1]);
+                    bonusBody += val; bonusInt += val; bonusMen += val;
+                }
+                
+                const matchAny = card.effect.match(/回収ポイント\s*[＋\+]\s*([0-9０-９]+)/);
+                if (matchAny && !matchAll) {
+                    const val = parseFullWidthIntLocal(matchAny[1]);
+                    bonusBody += val; bonusInt += val; bonusMen += val;
+                }
+                
+                const matchMinus = card.effect.match(/回収ポイント[をが]?\s*[\-ー\-－]\s*([0-9０-９]+)/);
+                if (matchMinus) {
+                    const val = parseFullWidthIntLocal(matchMinus[1]);
+                    bonusBody -= val; bonusInt -= val; bonusMen -= val;
+                }
+            }
+        };
+
+        player.deck.passives.forEach(c => checkRecoveryBonus(c, false));
+        player.deck.discard.forEach(c => checkRecoveryBonus(c, false));
+        player.deck.void.forEach(c => checkRecoveryBonus(c, true));
+
+        const maxBody = maxBodyBase + bonusBody;
+        const maxInt = maxIntBase + bonusInt;
+        const maxMen = maxMenBase + bonusMen;
 
         let costBody = 0, costInt = 0, costMen = 0;
         recoveringCards.forEach(idx => {

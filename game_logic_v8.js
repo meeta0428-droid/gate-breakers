@@ -270,11 +270,15 @@ export function executeCardEffects(cards, player, logMsg) {
         triggerHook('onPlay', { player, logMsg }, [card]);
         
         // ドロー効果
-        const drawMatch = card.effect.match(/山札から(\d+)枚.*?手札に加える/);
+        const drawMatch = card.effect.match(/山札から([0-9０-９]+)枚.*?手札に加える/);
         if (drawMatch) {
-            const amount = parseInt(drawMatch[1]);
+            const parseFullWidthIntLocal = (str) => {
+                if (!str) return 0;
+                return parseInt(str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)));
+            };
+            const amount = parseFullWidthIntLocal(drawMatch[1]);
             drawn += player.deck.draw(amount);
-        } else if (card.effect.includes('山札から1枚手札に加える')) {
+        } else if (card.effect.includes('山札から1枚手札に加える') || card.effect.includes('山札から１枚手札に加える')) {
             drawn += player.deck.draw(1);
         }
         
