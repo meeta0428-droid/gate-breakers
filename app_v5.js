@@ -579,6 +579,18 @@ function setupEvents() {
                     delete card._kagejinUsed;
                     return;
                 }
+
+                // 影打ち等：捨札から使用した場合、廃棄札へ
+                if (card._fromDiscard) {
+                    const discardIdx = player.deck.discard.lastIndexOf(card);
+                    if (discardIdx > -1) {
+                        player.deck.discard.splice(discardIdx, 1);
+                        player.deck.void.push(card);
+                        logMsg(`「${card.name}」は捨札から使用されたため廃棄札に移動した。`);
+                    }
+                    delete card._fromDiscard;
+                    return;
+                }
                 
                 if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
@@ -813,6 +825,18 @@ function setupEvents() {
         currentCombo.forEach((card, idx) => {
             delete card.isSetReaction;
             delete card._addedToReaction;
+
+            if (card._fromDiscard) {
+                const discardIdx = player.deck.discard.lastIndexOf(card);
+                if (discardIdx > -1) {
+                    player.deck.discard.splice(discardIdx, 1);
+                    player.deck.void.push(card);
+                    logMsg(`「${card.name}」は捨札から使用されたため廃棄札に移動した。`);
+                }
+                delete card._fromDiscard;
+                return;
+            }
+
             if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
@@ -1285,14 +1309,31 @@ function setupEvents() {
                         item.style.borderColor = '#1976d2';
                         item.style.backgroundColor = 'rgba(25, 118, 210, 0.2)';
                     }
+                    
+                    const canUseFromDiscard = card.effect.includes('手札にあるように使用できる');
+                    const useBtnHtml = canUseFromDiscard ? `<button class="btn btn-action btn-use-discard" data-idx="${idx}" style="font-size:0.7rem; padding:2px 5px; margin-top:5px; width:100%;">捨札から使用</button>` : '';
+
                     item.innerHTML = `
                         <div><strong>${card.name}</strong><br><small style="color:#aaa;">${card.category}</small></div>
                         <div style="text-align:right;">
                             <div>コスト: ${card.cost}</div>
                             ${isSelected ? '<div style="color:#4caf50; font-size:0.75rem;">✔ 選択中</div>' : ''}
+                            ${useBtnHtml}
                         </div>
                     `;
-                    item.addEventListener('click', () => {
+                    
+                    item.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('btn-use-discard')) {
+                            e.stopPropagation();
+                            const targetCard = player.deck.discard[idx];
+                            targetCard._fromDiscard = true;
+                            currentCombo.push(targetCard);
+                            logMsg(`【${targetCard.name}】の効果！捨札から場に出した！`);
+                            els.discardModal.classList.add('hidden');
+                            updateUI();
+                            return;
+                        }
+                        
                         if (recoveringCards.has(idx)) recoveringCards.delete(idx);
                         else recoveringCards.add(idx);
                         updateDiscardModalUI();
@@ -1420,8 +1461,21 @@ function setupEvents() {
             const card = currentCombo[selectedCardIndex];
             currentCombo.splice(selectedCardIndex, 1);
             delete card.isSetReaction;
-            player.deck.hand.push(card);
-            logMsg(`「${card.name}」を手札に戻しました。`);
+            
+            if (card._fromDiscard) {
+                // 捨札から出していた場合は、手札ではなく捨札に戻る（すでにdiscard配列にはある）
+                delete card._fromDiscard;
+                logMsg(`「${card.name}」を捨札に戻しました。`);
+            } else {
+                // 通常はdiscardから削除してhandに戻す
+                const discardIdx = player.deck.discard.lastIndexOf(card);
+                if (discardIdx > -1) {
+                    player.deck.discard.splice(discardIdx, 1);
+                }
+                player.deck.hand.push(card);
+                logMsg(`「${card.name}」を手札に戻しました。`);
+            }
+            
             els.modal.classList.add('hidden');
             updateUI();
         }
