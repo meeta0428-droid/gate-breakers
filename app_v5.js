@@ -409,6 +409,18 @@ function setupEvents() {
     els.btnLoadDeck.addEventListener('click', () => openLoadModal());
     els.btnCloseLoad.addEventListener('click', () => els.loadModal.classList.add('hidden'));
 
+    // イニシアチブ手動調整ボタン（影縫い等の効果用）
+    document.getElementById('btn-init-up').addEventListener('click', () => {
+        player.initiativeModifier += 1;
+        logMsg(`イニシアチブを手動で＋1しました（調整値: ${player.initiativeModifier >= 0 ? '+' : ''}${player.initiativeModifier}）`);
+        updateUI();
+    });
+    document.getElementById('btn-init-down').addEventListener('click', () => {
+        player.initiativeModifier -= 1;
+        logMsg(`イニシアチブを手動で−1しました（調整値: ${player.initiativeModifier >= 0 ? '+' : ''}${player.initiativeModifier}）`);
+        updateUI();
+    });
+
     // バトル開始ボタン
     els.btnStartBattle.addEventListener('click', () => {
         const currentCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);

@@ -112,6 +112,7 @@ export class Character {
             men: new Stat('精神')
         };
         this.deck = new Deck();
+        this.initiativeModifier = 0; // 手動イニシアチブ調整値（影縫い等）
     }
     
     get deckCapacity() {
@@ -159,6 +160,9 @@ export class Character {
         for (const card of this.deck.void) {
             checkPersistentBuff(card, true);
         }
+        
+        // 手動調整値（影縫い等の効果）
+        total += this.initiativeModifier;
         
         return total;
     }
