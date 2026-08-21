@@ -244,6 +244,21 @@
         </div>
     </div>
 
+    <!-- リアクションモーダル -->
+    <div id="reaction-modal" class="modal hidden">
+        <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+            <h3 style="margin-bottom:10px; font-size:1.1rem; color:#ffd54f;">リアクションの選択</h3>
+            <p style="font-size:0.8rem; margin-bottom:10px; color:#ddd;">
+                手札にあるリアクションカードを使用できます。（使用するカードをタップしてください）<br>
+                コンボエリア: <span id="reaction-combo-count">0</span>枚
+            </p>
+            <div id="reaction-list" class="card-list" style="margin-bottom:15px; min-height:100px; padding:5px; border:1px solid #444; border-radius:5px; background:#1a1a1a;"></div>
+            <div class="modal-actions">
+                <button id="btn-reaction-done" class="btn btn-primary" style="flex:1;">完了（ダメージ処理へ）</button>
+            </div>
+        </div>
+    </div>
+
     <div id="damage-modal" class="modal hidden">
         <div class="modal-content text-center" style="text-align: center; max-height: 85vh; overflow-y: auto;">
             <h2>ダメージ処理</h2>
@@ -292,9 +307,9 @@
         </div>
     </div>
 
-    <div id="app-version" style="position: fixed; bottom: 5px; right: 8px; font-size: 0.65rem; color: rgba(255, 255, 255, 0.4); z-index: 9999; pointer-events: none; font-family: monospace;">v58</div>
+    <div id="app-version" style="position: fixed; bottom: 5px; right: 8px; font-size: 0.65rem; color: rgba(255, 255, 255, 0.4); z-index: 9999; pointer-events: none; font-family: monospace;">v59</div>
 
-    <script type="module" src="app_v3.js?v=58"></script>
+    <script type="module" src="app_v3.js?v=59"></script>
 </body>
 </html>
 

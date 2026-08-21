@@ -548,13 +548,54 @@ function setupEvents() {
     let pendingDamage = 0;
     let isGuardStanceActive = false; // ガードスタンスの状態を保持
     
-    els.btnReact.addEventListener('click', () => {
-        let inputDmg = parseInt(els.incomingDmg.value);
-        if (isNaN(inputDmg) || inputDmg <= 0) {
-            alert('敵のダメージを入力してください。');
+    // --- リアクションモーダル用変数 ---
+    let pendingInputDmg = 0;
+    const reactionModal = document.getElementById('reaction-modal');
+    const reactionList = document.getElementById('reaction-list');
+    const reactionComboCount = document.getElementById('reaction-combo-count');
+    const btnReactionDone = document.getElementById('btn-reaction-done');
+
+    function updateReactionModalUI() {
+        reactionList.innerHTML = '';
+        reactionComboCount.innerText = currentCombo.length;
+        
+        const reactionCards = player.deck.hand.map((c, i) => ({ card: c, originalIndex: i }))
+                                             .filter(item => item.card.category.includes('リアクション'));
+                                             
+        if (reactionCards.length === 0) {
+            reactionList.innerHTML = '<span style="color:#555; font-size:0.75rem;">手札にリアクションカードはありません</span>';
             return;
         }
-        
+
+        reactionCards.forEach(item => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card-item';
+            cardDiv.innerHTML = `<strong>${item.card.name}</strong><br><small>コスト:${item.card.cost}</small>`;
+            cardDiv.onclick = () => {
+                const c = player.deck.hand[item.originalIndex];
+                player.deck.hand.splice(item.originalIndex, 1);
+                player.deck.discard.push(c);
+                currentCombo.push(c);
+                logMsg(`「${c.name}」をリアクションとして場に出した！`);
+                updateUI();
+                updateReactionModalUI(); // 再描画
+            };
+            reactionList.appendChild(cardDiv);
+        });
+    }
+
+    function openReactionModal(dmg) {
+        pendingInputDmg = dmg;
+        updateReactionModalUI();
+        reactionModal.classList.remove('hidden');
+    }
+
+    btnReactionDone.addEventListener('click', () => {
+        reactionModal.classList.add('hidden');
+        processReaction(pendingInputDmg);
+    });
+
+    function processReaction(inputDmg) {
         // ガードスタンス発動チェック
         if (currentCombo.some(c => c.effect.includes('その後ダメージを受けるカードがコスト以下のダメージの場合は、ダメージを受けない'))) {
             isGuardStanceActive = true;
@@ -636,11 +677,25 @@ function setupEvents() {
             updateDamageModalUI();
             els.damageModal.classList.remove('hidden');
         } else if (hookContext.pendingDamage <= 0 && actualDmg <= 0) {
-            // フックによってダメージが0になった場合や元々0だった場合
             logMsg('ダメージ処理が完了しました（最終ダメージ0）。');
             isGuardStanceActive = false;
         }
         updateUI();
+    }
+
+    els.btnReact.addEventListener('click', () => {
+        let inputDmg = parseInt(els.incomingDmg.value);
+        if (isNaN(inputDmg) || inputDmg <= 0) {
+            alert('敵のダメージを入力してください。');
+            return;
+        }
+        
+        const hasReaction = player.deck.hand.some(c => c.category.includes('リアクション'));
+        if (hasReaction) {
+            openReactionModal(inputDmg);
+        } else {
+            processReaction(inputDmg);
+        }
     });
 
     document.querySelectorAll('.stat-dmg-btn').forEach(btn => {
