@@ -1129,6 +1129,19 @@ function setupEvents() {
         }
         logMsg(`捨札から ${recoveredNames.length}枚 回収しました！<br><small>(${recoveredNames.join(', ')})</small>`);
         els.discardModal.classList.add('hidden');
+        
+        // パッシブ「武術家」のチェック
+        const hasBujutsuka = player.deck.passives.some(p => p.name === '武術家' || p.effect.includes('回収タイミングで肉体カテゴリーのコスト3以下'));
+        if (hasBujutsuka) {
+            const validCards = player.deck.discard.filter(c => c.category.includes('肉体') && c.cost <= 3);
+            if (validCards.length > 0) {
+                window.dispatchEvent(new CustomEvent('requestBujutsukaRecover', {
+                    detail: { playerObj: player }
+                }));
+                return; // updateUIはモーダル完了後に呼ぶ
+            }
+        }
+        
         updateUI();
     });
     
@@ -1470,6 +1483,43 @@ init();
         renderList();
         
         document.getElementById('btn-skip-return-deck').onclick = () => {
+            modal.classList.add('hidden');
+            updateUI();
+        };
+        
+        modal.classList.remove('hidden');
+    });
+
+    // 武術家効果モーダルのリスナー
+    window.addEventListener('requestBujutsukaRecover', (e) => {
+        const { playerObj } = e.detail;
+        
+        const modal = document.getElementById('bujutsuka-modal');
+        const listContainer = document.getElementById('bujutsuka-list');
+        if (!modal || !listContainer) return;
+        
+        function renderList() {
+            listContainer.innerHTML = '';
+            playerObj.deck.discard.forEach((c, idx) => {
+                if (c.category.includes('肉体') && c.cost <= 3) {
+                    const div = document.createElement('div');
+                    div.className = 'card-item';
+                    div.innerHTML = `<strong>${c.name}</strong><br><small>コスト:${c.cost}</small>`;
+                    div.onclick = () => {
+                        playerObj.deck.discard.splice(idx, 1);
+                        playerObj.deck.hand.push(c);
+                        logMsg(`武術家の効果！捨札から「${c.name}」を手札に加えました。`);
+                        modal.classList.add('hidden');
+                        updateUI();
+                    };
+                    listContainer.appendChild(div);
+                }
+            });
+        }
+        
+        renderList();
+        
+        document.getElementById('btn-skip-bujutsuka').onclick = () => {
             modal.classList.add('hidden');
             updateUI();
         };
