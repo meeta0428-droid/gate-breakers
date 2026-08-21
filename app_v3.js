@@ -638,6 +638,7 @@ function setupEvents() {
         } else if (hookContext.pendingDamage <= 0 && actualDmg <= 0) {
             // フックによってダメージが0になった場合や元々0だった場合
             logMsg('ダメージ処理が完了しました（最終ダメージ0）。');
+            isGuardStanceActive = false;
         }
         updateUI();
     });
