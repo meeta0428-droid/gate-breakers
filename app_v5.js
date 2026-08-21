@@ -614,6 +614,23 @@ function setupEvents() {
                 }
             });
             
+            // 超速判断の処理
+            const hasChosoku = currentCombo.some(c => c.name === '超速判断' || c.effect.includes('捨札からコスト3以下のカードを1枚引く'));
+            if (hasChosoku) {
+                window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                    detail: {
+                        filterFunc: c => c.cost <= 3,
+                        title: "超速判断の効果",
+                        desc: "捨札からコスト3以下のカードを1枚引きます。",
+                        onSelect: (card) => {
+                            player.deck.hand.push(card);
+                            logMsg(`【超速判断】捨札から「${card.name}」を手札に加えました。`);
+                        },
+                        playerObj: player
+                    }
+                }));
+            }
+
             currentCombo = setCards;
             updateUI();
         };
@@ -861,6 +878,23 @@ function setupEvents() {
         
         // 流し斬りの判定用にカウンターフラグを保持（comboクリア前に判定）
         const hasNagashigiri = currentCombo.some(c => c.name === '流し斬り' || c.effect.includes('この効果でダメージを防ぎ切った場合、対象にダメージ＋5を与える'));
+        
+        // 超速判断の処理
+        const hasChosoku = currentCombo.some(c => c.name === '超速判断' || c.effect.includes('捨札からコスト3以下のカードを1枚引く'));
+        if (hasChosoku) {
+            window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                detail: {
+                    filterFunc: c => c.cost <= 3,
+                    title: "超速判断の効果",
+                    desc: "捨札からコスト3以下のカードを1枚引きます。",
+                    onSelect: (card) => {
+                        player.deck.hand.push(card);
+                        logMsg(`【超速判断】捨札から「${card.name}」を手札に加えました。`);
+                    },
+                    playerObj: player
+                }
+            }));
+        }
         
         currentCombo = [];
         els.incomingDmg.value = '';
@@ -1551,6 +1585,49 @@ function setupEvents() {
         }
         document.getElementById('kazeyomi-modal').classList.add('hidden');
         updateUI();
+    });
+
+    // --- 汎用捨札回収イベント ---
+    window.addEventListener('requestRecoverCard', (e) => {
+        const { filterFunc, title, desc, onSelect, playerObj } = e.detail;
+        const validCards = playerObj.deck.discard.filter(filterFunc);
+        const modal = document.getElementById('select-discard-modal');
+        const listDiv = document.getElementById('select-discard-list');
+        document.getElementById('select-discard-title').innerText = title || "捨札から選択";
+        document.getElementById('select-discard-desc').innerText = desc || "カードを1枚選んでください。";
+        
+        listDiv.innerHTML = '';
+        if (validCards.length === 0) {
+            listDiv.innerHTML = '<p style="color:#aaa;">対象のカードがありません。</p>';
+        } else {
+            validCards.forEach(card => {
+                const item = document.createElement('div');
+                item.className = 'discard-item';
+                item.innerHTML = `
+                    <div><strong>${card.name}</strong><br><small style="color:#aaa;">${card.category}</small></div>
+                    <div style="text-align:right;">
+                        <div>コスト: ${card.cost}</div>
+                        <button class="btn btn-primary" style="font-size:0.7rem; padding:2px 5px; margin-top:5px; width:100%;">選択</button>
+                    </div>
+                `;
+                item.addEventListener('click', () => {
+                    // discard配列から削除
+                    const idx = playerObj.deck.discard.lastIndexOf(card);
+                    if (idx > -1) {
+                        playerObj.deck.discard.splice(idx, 1);
+                    }
+                    modal.classList.add('hidden');
+                    if (onSelect) onSelect(card);
+                    updateUI();
+                });
+                listDiv.appendChild(item);
+            });
+        }
+        modal.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-close-select-discard')?.addEventListener('click', () => {
+        document.getElementById('select-discard-modal').classList.add('hidden');
     });
 }
 
