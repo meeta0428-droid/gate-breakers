@@ -1046,6 +1046,19 @@ function setupEvents() {
     els.btnUseCard.addEventListener('click', () => {
         if (selectedCardIndex !== null) {
             const card = player.deck.hand[selectedCardIndex];
+            
+            // プレイ条件チェック
+            if (card.name === '血の咆哮') {
+                const voidCount = player.deck.void.length;
+                const hasZeroStat = player.stats.body.currentVal === 0 || 
+                                    player.stats.int.currentVal === 0 || 
+                                    player.stats.men.currentVal === 0;
+                if (voidCount < 2 && !hasZeroStat) {
+                    alert('【血の咆哮】は廃棄札が2枚以上、もしくは能力値が0になっている場合のみ使用可能です。');
+                    return;
+                }
+            }
+            
             player.deck.hand.splice(selectedCardIndex, 1); 
             player.deck.discard.push(card); 
             currentCombo.push(card);
