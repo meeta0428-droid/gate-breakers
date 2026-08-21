@@ -1,0 +1,10 @@
+<script>
+const effect = "山札から２枚手札に加える。すべての回収ポイント＋１。この効果は捨札にある間は持続する。";
+const isDiscardOnly = effect.includes('捨札にある間') && effect.includes('持続');
+const isBattleLong = effect.includes('戦闘中持続する') && !effect.includes('捨札にある間');
+console.log('isDiscardOnly:', isDiscardOnly);
+console.log('isBattleLong:', isBattleLong);
+
+const matchAll = effect.match(/すべての回収ポイント\s*[＋\+]\s*([0-9０-９]+)/);
+console.log('matchAll:', matchAll);
+</script>

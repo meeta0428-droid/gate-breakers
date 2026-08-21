@@ -107,7 +107,8 @@ function logMsg(msg, type = '') {
 
 async function loadCards() {
     try {
-        const response = await fetch('cards.json?v=3');
+        const response = await fetch('cards.json?t=' + new Date().getTime());
+        if (!response.ok) throw new Error('Network response was not ok');
         cardPool = await response.json();
     } catch (error) {
         console.error('Failed to load cards:', error);
