@@ -110,5 +110,25 @@ export const cardEffects = {
             context._ninjaApplied = true;
             return { maxHandSize, _ninjaApplied: true };
         }
+    },
+    // 暗器使い：相手がリアクションをしなかった場合に使用カードがコスト3以下の場合、ダメージ＋2。
+    "暗器使い": {
+        onAttack: (context) => {
+            if (!context.enemyNoReact) return {};
+            if (!context.currentCombo || context.currentCombo.length === 0) return {};
+            
+            let bonusDmg = 0;
+            for (const c of context.currentCombo) {
+                if (c.cost <= 3 && c.category.includes('アクション')) {
+                    bonusDmg += 2;
+                }
+            }
+            
+            if (bonusDmg > 0) {
+                context.logMsg(`【暗器使い】敵の隙を突いた！コスト3以下の使用カードの効果で追加ダメージ ${bonusDmg}！`, 'important');
+                return { totalDmg: context.totalDmg + bonusDmg };
+            }
+            return {};
+        }
     }
 };

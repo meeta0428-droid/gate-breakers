@@ -47,6 +47,7 @@ const els = {
     btnReact: document.getElementById('btn-react'),
     incomingDmg: document.getElementById('incoming-dmg'),
     chkIgnoreDef: document.getElementById('chk-ignore-def'),
+    chkEnemyNoReact: document.getElementById('chk-enemy-no-react'),
     
     // Navigation
     btnDeckToChara: document.getElementById('btn-deck-to-chara'),
@@ -547,10 +548,15 @@ function setupEvents() {
         const hookContext = triggerHook('onAttack', { 
             totalDmg: totalDmg, 
             player: player,
-            logMsg: logMsg 
+            logMsg: logMsg,
+            enemyNoReact: els.chkEnemyNoReact.checked,
+            currentCombo: currentCombo
         }, activeCards);
         totalDmg = hookContext.totalDmg;
         // ----------------------------------------------------
+
+        // 攻撃実行後、チェックボックスをリセット
+        els.chkEnemyNoReact.checked = false;
 
         logMsg(`使用カード:<br>${cardLogs}<br>${summonLog}コンボ発動！ 合計 <span class="damage">${totalDmg}</span> のダメージを与えた！`, 'important');
         showDamagePopup(totalDmg);
