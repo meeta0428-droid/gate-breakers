@@ -928,6 +928,13 @@ function setupEvents() {
     let recoveringCards = new Set();
     
     function updateDiscardModalUI() {
+        const hasHotLimit = player.deck.passives.some(p => p.effect.includes('能力値にダメージを受けていても、回収ポイントが下がらない'));
+        const getRecoveryMax = (stat) => hasHotLimit ? stat.maxVal : stat.currentVal;
+
+        const maxBody = getRecoveryMax(player.stats.body);
+        const maxInt = getRecoveryMax(player.stats.int);
+        const maxMen = getRecoveryMax(player.stats.men);
+
         let costBody = 0, costInt = 0, costMen = 0;
         recoveringCards.forEach(idx => {
             const card = player.deck.discard[idx];
@@ -937,20 +944,20 @@ function setupEvents() {
         });
 
         document.getElementById('recover-cost-body').innerText = costBody;
-        document.getElementById('recover-max-body').innerText = player.stats.body.currentVal;
-        document.getElementById('recover-cost-body').style.color = costBody > player.stats.body.currentVal ? '#ff5252' : '#fff';
+        document.getElementById('recover-max-body').innerText = maxBody;
+        document.getElementById('recover-cost-body').style.color = costBody > maxBody ? '#ff5252' : '#fff';
 
         document.getElementById('recover-cost-int').innerText = costInt;
-        document.getElementById('recover-max-int').innerText = player.stats.int.currentVal;
-        document.getElementById('recover-cost-int').style.color = costInt > player.stats.int.currentVal ? '#ff5252' : '#fff';
+        document.getElementById('recover-max-int').innerText = maxInt;
+        document.getElementById('recover-cost-int').style.color = costInt > maxInt ? '#ff5252' : '#fff';
 
         document.getElementById('recover-cost-men').innerText = costMen;
-        document.getElementById('recover-max-men').innerText = player.stats.men.currentVal;
-        document.getElementById('recover-cost-men').style.color = costMen > player.stats.men.currentVal ? '#ff5252' : '#fff';
+        document.getElementById('recover-max-men').innerText = maxMen;
+        document.getElementById('recover-cost-men').style.color = costMen > maxMen ? '#ff5252' : '#fff';
 
-        const overLimit = costBody > player.stats.body.currentVal || 
-                          costInt > player.stats.int.currentVal || 
-                          costMen > player.stats.men.currentVal;
+        const overLimit = costBody > maxBody || 
+                          costInt > maxInt || 
+                          costMen > maxMen;
         
         const executeBtn = document.getElementById('btn-execute-recover');
         executeBtn.disabled = overLimit || recoveringCards.size === 0;
