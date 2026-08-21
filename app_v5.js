@@ -46,6 +46,7 @@ const els = {
     btnAttack: document.getElementById('btn-attack'),
     btnReact: document.getElementById('btn-react'),
     incomingDmg: document.getElementById('incoming-dmg'),
+    chkIgnoreDef: document.getElementById('chk-ignore-def'),
     
     // Navigation
     btnDeckToChara: document.getElementById('btn-deck-to-chara'),
@@ -710,21 +711,23 @@ function setupEvents() {
             reactionList.appendChild(cardDiv);
         });
     }
+    let pendingIgnoreDef = false;
 
-    function openReactionModal(dmg) {
+    function openReactionModal(dmg, ignoreDef) {
         pendingInputDmg = dmg;
+        pendingIgnoreDef = ignoreDef;
         updateReactionModalUI();
         reactionModal.classList.remove('hidden');
     }
 
     btnReactionDone.addEventListener('click', () => {
         reactionModal.classList.add('hidden');
-        processReaction(pendingInputDmg);
+        processReaction(pendingInputDmg, pendingIgnoreDef);
     });
 
-    function processReaction(inputDmg) {
+    function processReaction(inputDmg, ignoreDef = false) {
         // ガードスタンス発動チェック
-        if (currentCombo.some(c => c.effect.includes('その後ダメージを受けるカードがコスト以下のダメージの場合は、ダメージを受けない'))) {
+        if (!ignoreDef && currentCombo.some(c => c.effect.includes('その後ダメージを受けるカードがコスト以下のダメージの場合は、ダメージを受けない'))) {
             isGuardStanceActive = true;
         }
         
@@ -788,11 +791,20 @@ function setupEvents() {
         });
         
         let totalDef = defense + summonDef;
+        
+        if (ignoreDef) {
+            totalDef = 0;
+        }
+        
         actualDmg = Math.max(0, inputDmg - totalDef);
 
         const cardStr = currentCombo.length > 0 ? `使用カード:<br>${cardLogs}<br>` : 'カード使用なし<br>';
         
-        logMsg(`${cardStr}${summonLog}敵からの攻撃！<br>元ダメージ: ${inputDmg}<br>カード軽減: ${totalDef}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
+        if (ignoreDef) {
+            logMsg(`${cardStr}${summonLog}敵からの攻撃（<span style="color:#cc44ff;">軽減無視！</span>）<br>元ダメージ: ${inputDmg}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
+        } else {
+            logMsg(`${cardStr}${summonLog}敵からの攻撃！<br>元ダメージ: ${inputDmg}<br>カード軽減: ${totalDef}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
+        }
         
         if (actualDmg === 0) {
             // 流し斬りチェックはすべての軽減適用後に行うため、ここでは判定しない
@@ -822,6 +834,7 @@ function setupEvents() {
         
         currentCombo = [];
         els.incomingDmg.value = '';
+        els.chkIgnoreDef.checked = false; // チェックをリセット
         
         // --- フックシステムの呼び出し（ダメージ計算後、適用前） ---
         const activeCards = [...player.deck.passives, ...player.deck.summons];
@@ -830,7 +843,10 @@ function setupEvents() {
             player: player,
             logMsg: logMsg 
         }, activeCards);
-        actualDmg = hookContext.pendingDamage;
+        
+        if (!ignoreDef) {
+            actualDmg = hookContext.pendingDamage;
+        }
         // ----------------------------------------------------
         
         // --- 流し斬りカウンター判定（すべての軽減適用後） ---
@@ -867,12 +883,14 @@ function setupEvents() {
             return;
         }
         
+        const ignoreDef = els.chkIgnoreDef.checked;
+        
         const hasReaction = player.deck.hand.some(c => c.category.includes('リアクション'));
         const hasSetCard = currentCombo.some(c => c.isSetReaction);
         if (hasReaction || hasSetCard) {
-            openReactionModal(inputDmg);
+            openReactionModal(inputDmg, ignoreDef);
         } else {
-            processReaction(inputDmg);
+            processReaction(inputDmg, ignoreDef);
         }
     });
 
