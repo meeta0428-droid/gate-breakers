@@ -127,10 +127,10 @@ export class Character {
         
         // パッシブ装備からのイニシアチブ
         for (const card of this.deck.passives) {
-            const matchPlus = card.effect.match(/イニシアチブ[＋\+](\d+)/);
+            const matchPlus = card.effect.match(/イニシアチブ\s*[＋\+]\s*(\d+)/);
             if (matchPlus) total += parseInt(matchPlus[1]);
             
-            const matchMinus = card.effect.match(/イニシアチブ[\-ー\-－](\d+)/);
+            const matchMinus = card.effect.match(/イニシアチブ\s*[\-ー\-－]\s*(\d+)/);
             if (matchMinus) total -= parseInt(matchMinus[1]);
         }
         
@@ -140,10 +140,10 @@ export class Character {
             const isBattleLong = card.effect.includes('戦闘中持続する');
             
             if (isBattleLong || (!isVoid && isDiscardOnly)) {
-                const matchPlus = card.effect.match(/イニシアチブ[＋\+](\d+)/);
+                const matchPlus = card.effect.match(/イニシアチブ\s*[＋\+]\s*(\d+)/);
                 if (matchPlus) total += parseInt(matchPlus[1]);
                 
-                const matchMinus = card.effect.match(/イニシアチブ[\-ー\-－](\d+)/);
+                const matchMinus = card.effect.match(/イニシアチブ\s*[\-ー\-－]\s*(\d+)/);
                 if (matchMinus) total -= parseInt(matchMinus[1]);
             }
         };
