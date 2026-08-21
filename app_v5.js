@@ -1432,6 +1432,20 @@ function setupEvents() {
     els.btnCloseModal.addEventListener('click', () => {
         els.modal.classList.add('hidden');
     });
+
+    const btnDiscardCard = document.getElementById('btn-discard-card');
+    if (btnDiscardCard) {
+        btnDiscardCard.addEventListener('click', () => {
+            if (selectedCardIndex !== null) {
+                const card = player.deck.hand[selectedCardIndex];
+                player.deck.hand.splice(selectedCardIndex, 1);
+                player.deck.discard.push(card);
+                logMsg(`手札から「${card.name}」を捨札に送りました。`);
+                els.modal.classList.add('hidden');
+                updateUI();
+            }
+        });
+    }
     
     els.btnUseCard.addEventListener('click', () => {
         if (selectedCardIndex !== null) {
