@@ -167,13 +167,7 @@
                     <button id="btn-draw" class="btn">手札補充</button>
                     <button id="btn-discard-view" class="btn">捨札回収</button>
                     <button id="btn-refresh" class="btn btn-secondary">リフレッシュ</button>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <button id="btn-attack" class="btn btn-primary" style="flex:1;">攻撃実行</button>
-                        <div style="margin-left: 10px; font-size:0.8rem; color:#aaa; display:flex; align-items:center;">
-                            <input type="checkbox" id="chk-enemy-void" style="margin-right:5px; transform:scale(1.2);">
-                            <label for="chk-enemy-void">敵カード廃棄</label>
-                        </div>
-                    </div>
+                    <button id="btn-attack" class="btn btn-primary" style="flex: 1 1 100%; margin-bottom:15px;">攻撃実行</button>
                 </div>
             </main>
 
@@ -357,26 +351,22 @@
     <!-- 残心モーダル -->
     <div id="zanshin-modal" class="modal hidden" style="z-index: 2600;">
         <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
-            <h3 style="color:#ffcc00; margin-bottom:10px;">残心の効果</h3>
-            <p style="font-size:0.85rem; margin-bottom:15px;" id="zanshin-msg">敵のカードを廃棄札に送ったため、使用したアクションカードを1枚手札に戻せます。</p>
-            <div id="zanshin-list" class="discard-list" style="max-height:300px; overflow-y:auto; background:#222; padding:5px; border-radius:5px;"></div>
-            <div class="modal-actions" style="margin-top:15px;">
-                <button id="btn-skip-zanshin" class="btn btn-secondary">スキップ</button>
+            <h3 style="color:#ffcc00; margin-bottom:10px;">残心の効果確認</h3>
+            <div id="zanshin-step1">
+                <p style="font-size:0.9rem; margin-bottom:15px;">相手のカードを廃棄札に送りましたか？<br><span style="font-size:0.75rem; color:#aaa;">（廃棄した場合、使用したアクションカードを1枚回収できます）</span></p>
+                <div style="display:flex; justify-content:space-between; gap:10px;">
+                    <button id="btn-zanshin-yes" class="btn btn-primary" style="flex:1;">はい（回収する）</button>
+                    <button id="btn-zanshin-no" class="btn btn-secondary" style="flex:1;">いいえ</button>
+                </div>
+            </div>
+            <div id="zanshin-step2" class="hidden">
+                <p style="font-size:0.85rem; margin-bottom:15px;">手札に戻すアクションカードを選択してください。</p>
+                <div id="zanshin-list" class="discard-list" style="max-height:300px; overflow-y:auto; background:#222; padding:5px; border-radius:5px;"></div>
+                <div class="modal-actions" style="margin-top:15px;">
+                    <button id="btn-skip-zanshin" class="btn btn-secondary">キャンセル</button>
+                </div>
             </div>
         </div>
     </div>
 </body>
 </html>
-
-
-    <!-- 残心モーダル -->
-    <div id="zanshin-modal" class="modal hidden" style="z-index: 2600;">
-        <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
-            <h3 style="color:#ffcc00; margin-bottom:10px;">残心の効果</h3>
-            <p style="font-size:0.85rem; margin-bottom:15px;" id="zanshin-msg">敵のカードを廃棄札に送ったため、使用したアクションカードを1枚手札に戻せます。</p>
-            <div id="zanshin-list" class="discard-list" style="max-height:300px; overflow-y:auto; background:#222; padding:5px; border-radius:5px;"></div>
-            <div class="modal-actions" style="margin-top:15px;">
-                <button id="btn-skip-zanshin" class="btn btn-secondary">スキップ</button>
-            </div>
-        </div>
-    </div>

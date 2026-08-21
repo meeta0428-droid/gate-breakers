@@ -560,12 +560,9 @@ function setupEvents() {
         };
 
         const hasZanshin = player.deck.passives.some(p => p.name === '残心' || p.effect.includes('使用したカード1枚は手札に戻る'));
-        const chkEnemyVoid = document.getElementById('chk-enemy-void');
-        const enemyVoidChecked = chkEnemyVoid ? chkEnemyVoid.checked : false;
         const actionCardIndexes = currentCombo.map((c, i) => c.category.includes('アクション') ? i : -1).filter(i => i !== -1);
         
-        if (hasZanshin && enemyVoidChecked && actionCardIndexes.length > 0) {
-            if (chkEnemyVoid) chkEnemyVoid.checked = false;
+        if (hasZanshin && actionCardIndexes.length > 0) {
             window.dispatchEvent(new CustomEvent('requestZanshinReturn', {
                 detail: {
                     actionCardIndexes,
@@ -574,7 +571,6 @@ function setupEvents() {
                 }
             }));
         } else {
-            if (chkEnemyVoid) chkEnemyVoid.checked = false;
             finalizeAttackCombo();
         }
     });
@@ -1494,115 +1490,42 @@ init();
     window.addEventListener('requestZanshinReturn', (e) => {
         const { actionCardIndexes, combo, callback } = e.detail;
         const modal = document.getElementById('zanshin-modal');
+        const step1 = document.getElementById('zanshin-step1');
+        const step2 = document.getElementById('zanshin-step2');
         const list = document.getElementById('zanshin-list');
+        const btnYes = document.getElementById('btn-zanshin-yes');
+        const btnNo = document.getElementById('btn-zanshin-no');
         const btnSkip = document.getElementById('btn-skip-zanshin');
         
-        list.innerHTML = '';
-        actionCardIndexes.forEach(idx => {
-            const card = combo[idx];
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerHTML = `<div class="card-title">${card.name} (コスト${card.cost})</div><div class="card-effect">${card.effect}</div>`;
-            div.addEventListener('click', () => {
-                modal.classList.add('hidden');
-                callback(idx); // return this card
+        step1.classList.remove('hidden');
+        step2.classList.add('hidden');
+        
+        btnYes.onclick = () => {
+            step1.classList.add('hidden');
+            step2.classList.remove('hidden');
+            
+            list.innerHTML = '';
+            actionCardIndexes.forEach(idx => {
+                const card = combo[idx];
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `<div class="card-title">${card.name} (コスト${card.cost})</div><div class="card-effect">${card.effect}</div>`;
+                div.addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                    callback(idx);
+                });
+                list.appendChild(div);
             });
-            list.appendChild(div);
-        });
+        };
+        
+        btnNo.onclick = () => {
+            modal.classList.add('hidden');
+            callback(-1);
+        };
         
         btnSkip.onclick = () => {
             modal.classList.add('hidden');
-            callback(-1); // skip
-        };
-        
-        modal.classList.remove('hidden');
-    });
-    window.addEventListener('requestCardReturn', (e) => {
-        const { maxCost, returnCount, playerObj } = e.detail;
-        const validCards = playerObj.deck.discard.filter(c => c.cost <= maxCost);
-        if (validCards.length === 0) {
-            alert('山札に戻せるカード（コスト' + maxCost + '以下）が捨札にありません。');
-            return;
-        }
-
-        const modal = document.getElementById('return-deck-modal');
-        const listContainer = document.getElementById('return-deck-list');
-        const msg = document.getElementById('return-deck-msg');
-        if (!modal || !listContainer || !msg) {
-            alert('モーダル要素が見つかりません。');
-            return;
-        }
-        
-        msg.innerText = `コスト${maxCost}以下の捨札から山札に戻すカードを${returnCount}枚選んでください。`;
-        
-        let selectedCount = 0;
-        
-        function renderList() {
-            listContainer.innerHTML = '';
-            playerObj.deck.discard.forEach((c, idx) => {
-                if (c.cost <= maxCost) {
-                    const div = document.createElement('div');
-                    div.className = 'card-item';
-                    div.innerHTML = `<strong>${c.name}</strong><br><small>コスト:${c.cost}</small>`;
-                    div.onclick = () => {
-                        playerObj.deck.discard.splice(idx, 1);
-                        playerObj.deck.mountain.push(c); // 山札のトップに戻す
-                        logMsg(`「${c.name}」を山札に戻した！`);
-                        selectedCount++;
-                        if (selectedCount >= returnCount || playerObj.deck.discard.filter(x => x.cost <= maxCost).length === 0) {
-                            modal.classList.add('hidden');
-                            updateUI();
-                        } else {
-                            renderList();
-                        }
-                    };
-                    listContainer.appendChild(div);
-                }
-            });
-        }
-        
-        renderList();
-        
-        document.getElementById('btn-skip-return-deck').onclick = () => {
-            modal.classList.add('hidden');
-            updateUI();
-        };
-        
-        modal.classList.remove('hidden');
-    });
-
-    // 武術家効果モーダルのリスナー
-    window.addEventListener('requestBujutsukaRecover', (e) => {
-        const { playerObj } = e.detail;
-        
-        const modal = document.getElementById('bujutsuka-modal');
-        const listContainer = document.getElementById('bujutsuka-list');
-        if (!modal || !listContainer) return;
-        
-        function renderList() {
-            listContainer.innerHTML = '';
-            playerObj.deck.discard.forEach((c, idx) => {
-                if (c.category.includes('肉体') && c.cost <= 3) {
-                    const div = document.createElement('div');
-                    div.className = 'card-item';
-                    div.innerHTML = `<strong>${c.name}</strong><br><small>コスト:${c.cost}</small>`;
-                    div.onclick = () => {
-                        playerObj.deck.discard.splice(idx, 1);
-                        playerObj.deck.hand.push(c);
-                        logMsg(`武術家の効果！捨札から「${c.name}」を手札に加えました。`);
-                        modal.classList.add('hidden');
-                        updateUI();
-                    };
-                    listContainer.appendChild(div);
-                }
-            });
-        }
-        
-        renderList();
-        
-        document.getElementById('btn-skip-bujutsuka').onclick = () => {
-            modal.classList.add('hidden');
-            updateUI();
+            callback(-1);
         };
         
         modal.classList.remove('hidden');
