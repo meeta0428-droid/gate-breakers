@@ -1383,11 +1383,19 @@ init();
     window.addEventListener('requestCardReturn', (e) => {
         const { maxCost, returnCount, playerObj } = e.detail;
         const validCards = playerObj.deck.discard.filter(c => c.cost <= maxCost);
-        if (validCards.length === 0) return;
+        if (validCards.length === 0) {
+            alert('山札に戻せるカード（コスト' + maxCost + '以下）が捨札にありません。');
+            return;
+        }
 
         const modal = document.getElementById('return-deck-modal');
         const listContainer = document.getElementById('return-deck-list');
         const msg = document.getElementById('return-deck-msg');
+        if (!modal || !listContainer || !msg) {
+            alert('モーダル要素が見つかりません。');
+            return;
+        }
+        
         msg.innerText = `コスト${maxCost}以下の捨札から山札に戻すカードを${returnCount}枚選んでください。`;
         
         let selectedCount = 0;

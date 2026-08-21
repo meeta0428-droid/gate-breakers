@@ -294,11 +294,16 @@ export function executeCardEffects(cards, player, logMsg) {
         }
         
         // 捨札を山札に戻す効果（例: コスト3までの捨札を1枚山札に戻す）
-        const returnMatch = card.effect.match(/コスト(\d+)までの捨札を(\d+)枚山札に戻す/);
+        const returnMatch = card.effect.match(/コスト([0-9０-９]+)までの捨札を([0-9０-９]+)枚山札に戻す/);
         if (returnMatch) {
-            const maxCost = parseInt(returnMatch[1]);
-            const returnCount = parseInt(returnMatch[2]);
+            const parseFullWidthIntLocal = (str) => {
+                if (!str) return 0;
+                return parseInt(str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)));
+            };
+            const maxCost = parseFullWidthIntLocal(returnMatch[1]);
+            const returnCount = parseFullWidthIntLocal(returnMatch[2]);
             if (typeof window !== 'undefined') {
+                console.log('Dispatching requestCardReturn');
                 window.dispatchEvent(new CustomEvent('requestCardReturn', {
                     detail: { maxCost, returnCount, playerObj: player }
                 }));
