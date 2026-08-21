@@ -596,14 +596,20 @@ function setupEvents() {
         reactionList.innerHTML = '';
         reactionComboCount.innerText = currentCombo.length;
         
+        // 手札のリアクションカード
         const reactionCards = player.deck.hand.map((c, i) => ({ card: c, originalIndex: i }))
                                              .filter(item => item.card.category.includes('リアクション'));
-                                             
-        if (reactionCards.length === 0) {
+        
+        // 闘禅一致でセット済みのカード（currentCombo内のisSetReaction）
+        const setCards = currentCombo.map((c, i) => ({ card: c, comboIndex: i }))
+                                     .filter(item => item.card.isSetReaction && !item.card._addedToReaction);
+
+        if (reactionCards.length === 0 && setCards.length === 0) {
             reactionList.innerHTML = '<span style="color:#555; font-size:0.75rem;">手札にリアクションカードはありません</span>';
             return;
         }
 
+        // 手札のリアクションカードを表示
         reactionCards.forEach(item => {
             const cardDiv = document.createElement('div');
             cardDiv.className = 'card-item';
@@ -614,6 +620,22 @@ function setupEvents() {
                 player.deck.discard.push(c);
                 currentCombo.push(c);
                 logMsg(`「${c.name}」をリアクションとして場に出した！`);
+                updateUI();
+                updateReactionModalUI(); // 再描画
+            };
+            reactionList.appendChild(cardDiv);
+        });
+
+        // 闘禅一致のセットカードを表示（黄色で区別）
+        setCards.forEach(item => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card-item';
+            cardDiv.style.borderColor = '#ffcc00';
+            cardDiv.innerHTML = `<strong><span style="color:#ffcc00;">[闘禅一致]</span> ${item.card.name}</strong><br><small>コスト:${item.card.cost} ― ${item.card.effect}</small>`;
+            cardDiv.onclick = () => {
+                // セットカードはすでにcurrentComboにあるので、リアクションとして使用済みにマーク
+                item.card._addedToReaction = true;
+                logMsg(`「${item.card.name}」を闘禅一致のリアクションとして発動準備！`);
                 updateUI();
                 updateReactionModalUI(); // 再描画
             };
@@ -642,7 +664,9 @@ function setupEvents() {
         const { toVoid } = executeCardEffects(currentCombo, player, logMsg);
         
         // --- 闘禅一致などのアクションカード（セット）による反撃ダメージ計算 ---
-        const reactionDmg = calculateDamageFromCards(currentCombo, player);
+        // モーダルで選択されたセットカードのみ反撃ダメージを計算
+        const activatedSetCards = currentCombo.filter(c => c.isSetReaction && c._addedToReaction);
+        const reactionDmg = calculateDamageFromCards(activatedSetCards, player);
         if (reactionDmg > 0) {
             let totalCounterDmg = reactionDmg;
             const hookContext = triggerHook('onAttack', {
@@ -655,7 +679,7 @@ function setupEvents() {
             totalCounterDmg = hookContext.totalDmg;
             enemyHp -= totalCounterDmg;
             
-            const setCardNames = currentCombo.filter(c => c.isSetReaction).map(c => c.name).join('、');
+            const setCardNames = activatedSetCards.map(c => c.name).join('、');
             logMsg(`【闘禅一致】セットされた「${setCardNames || 'カード'}」のリアクション効果が発動！敵に <span class="damage">${totalCounterDmg}</span> のダメージを与えた！`, 'important');
             
             if (typeof showDamagePopup === 'function') showDamagePopup(totalCounterDmg);
@@ -722,6 +746,7 @@ function setupEvents() {
         
         currentCombo.forEach((card, idx) => {
             delete card.isSetReaction;
+            delete card._addedToReaction;
             if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
@@ -770,7 +795,8 @@ function setupEvents() {
         }
         
         const hasReaction = player.deck.hand.some(c => c.category.includes('リアクション'));
-        if (hasReaction) {
+        const hasSetCard = currentCombo.some(c => c.isSetReaction);
+        if (hasReaction || hasSetCard) {
             openReactionModal(inputDmg);
         } else {
             processReaction(inputDmg);
