@@ -619,7 +619,7 @@ function setupEvents() {
             if (hasChosoku) {
                 window.dispatchEvent(new CustomEvent('requestRecoverCard', {
                     detail: {
-                        filterFunc: c => c.cost <= 3,
+                        filterFunc: c => c.cost <= 3 && !currentCombo.includes(c),
                         title: "超速判断の効果",
                         desc: "捨札からコスト3以下のカードを1枚引きます。",
                         onSelect: (card) => {
@@ -884,7 +884,7 @@ function setupEvents() {
         if (hasChosoku) {
             window.dispatchEvent(new CustomEvent('requestRecoverCard', {
                 detail: {
-                    filterFunc: c => c.cost <= 3,
+                    filterFunc: c => c.cost <= 3 && !currentCombo.includes(c),
                     title: "超速判断の効果",
                     desc: "捨札からコスト3以下のカードを1枚引きます。",
                     onSelect: (card) => {
