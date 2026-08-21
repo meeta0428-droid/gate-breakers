@@ -646,9 +646,18 @@ function setupEvents() {
         if (actualDmg === 0) {
             const hasNagashigiri = currentCombo.some(c => c.name === '流し斬り' || c.effect.includes('この効果でダメージを防ぎ切った場合、対象にダメージ＋5を与える'));
             if (hasNagashigiri) {
-                enemyHp -= 5;
-                logMsg('【流し斬り】の効果発動！ダメージを防ぎ切り、カウンターで敵に 5 ダメージを与えた！', 'important');
-                if (typeof showDamagePopup === 'function') showDamagePopup(5);
+                let counterDmg = 5;
+                const hookContext = triggerHook('onAttack', {
+                    totalDmg: counterDmg,
+                    logMsg,
+                    player,
+                    currentCombo
+                }, player.deck.passives);
+                
+                counterDmg = hookContext.totalDmg;
+                enemyHp -= counterDmg;
+                logMsg(`【流し斬り】の効果発動！ダメージを防ぎ切り、カウンターで敵に ${counterDmg} ダメージを与えた！`, 'important');
+                if (typeof showDamagePopup === 'function') showDamagePopup(counterDmg);
             }
         }
         
