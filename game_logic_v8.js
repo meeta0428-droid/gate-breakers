@@ -325,8 +325,10 @@ export function executeCardEffects(cards, player, logMsg) {
         }
         
         // 廃棄札へ移動する効果
-        // ただし「この効果を適用した場合」などの条件付き廃棄は除外
-        if (card.effect.match(/このカードは.*?廃棄札[へに]移動する/) && !card.effect.match(/この効果を適用した場合/)) {
+        // ただし「この効果を適用した場合」や「効果を使用すると」などの条件付き廃棄は除外
+        if (card.effect.match(/このカードは.*?廃棄札[へに]移動する/) 
+            && !card.effect.match(/この効果を適用した場合/)
+            && !card.effect.match(/効果を使用すると/)) {
             toVoid.add(idx);
         }
     }
