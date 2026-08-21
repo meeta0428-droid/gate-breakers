@@ -643,6 +643,15 @@ function setupEvents() {
         
         logMsg(`${cardStr}${summonLog}敵からの攻撃！<br>元ダメージ: ${inputDmg}<br>カード軽減: ${totalDef}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
         
+        if (actualDmg === 0) {
+            const hasNagashigiri = currentCombo.some(c => c.name === '流し斬り' || c.effect.includes('この効果でダメージを防ぎ切った場合、対象にダメージ＋5を与える'));
+            if (hasNagashigiri) {
+                enemyHp -= 5;
+                logMsg('【流し斬り】の効果発動！ダメージを防ぎ切り、カウンターで敵に 5 ダメージを与えた！', 'important');
+                if (typeof showDamagePopup === 'function') showDamagePopup(5);
+            }
+        }
+        
         currentCombo.forEach((card, idx) => {
             if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
