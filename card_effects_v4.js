@@ -118,14 +118,16 @@ export const cardEffects = {
             if (!context.currentCombo || context.currentCombo.length === 0) return {};
             
             let bonusDmg = 0;
+            let count = 0;
             for (const c of context.currentCombo) {
-                if (c.cost <= 3 && c.category.includes('アクション')) {
+                if (c.cost <= 3) {
                     bonusDmg += 2;
+                    count++;
                 }
             }
             
             if (bonusDmg > 0) {
-                context.logMsg(`【暗器使い】敵の隙を突いた！コスト3以下の使用カードの効果で追加ダメージ ${bonusDmg}！`, 'important');
+                context.logMsg(`【暗器使い】敵の隙を突いた！コスト3以下のカード ${count}枚 により追加ダメージ ＋${bonusDmg}！`, 'important');
                 return { totalDmg: context.totalDmg + bonusDmg };
             }
             return {};
