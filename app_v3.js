@@ -1058,6 +1058,19 @@ function setupEvents() {
                     return;
                 }
             }
+
+            if (card.effect.includes('単独で使用することができない')) {
+                if (currentCombo.length === 0) {
+                    alert(`【${card.name}】は単独で使用することができません。ダメージを発生させるカードの次に出してください。`);
+                    return;
+                }
+                const prevCard = currentCombo[currentCombo.length - 1];
+                const prevDmg = calculateDamageFromCards([prevCard], player);
+                if (prevDmg <= 0 && !prevCard.effect.includes('ダメージ')) {
+                    alert(`【${card.name}】はダメージを発生させるカードの次にしか出せません。`);
+                    return;
+                }
+            }
             
             player.deck.hand.splice(selectedCardIndex, 1); 
             player.deck.discard.push(card); 
