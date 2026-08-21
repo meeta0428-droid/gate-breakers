@@ -135,14 +135,24 @@ export class Character {
         }
         
         // 捨札で持続する効果からのイニシアチブ
-        for (const card of this.deck.discard) {
-            if (card.effect.includes('捨札にある間') && card.effect.includes('持続')) {
+        const checkPersistentBuff = (card, isVoid) => {
+            const isDiscardOnly = card.effect.includes('捨札にある間') && card.effect.includes('持続');
+            const isBattleLong = card.effect.includes('戦闘中持続する');
+            
+            if (isBattleLong || (!isVoid && isDiscardOnly)) {
                 const matchPlus = card.effect.match(/イニシアチブ[＋\+](\d+)/);
                 if (matchPlus) total += parseInt(matchPlus[1]);
                 
                 const matchMinus = card.effect.match(/イニシアチブ[\-ー\-－](\d+)/);
                 if (matchMinus) total -= parseInt(matchMinus[1]);
             }
+        };
+        
+        for (const card of this.deck.discard) {
+            checkPersistentBuff(card, false);
+        }
+        for (const card of this.deck.void) {
+            checkPersistentBuff(card, true);
         }
         
         return total;
