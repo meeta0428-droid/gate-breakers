@@ -307,9 +307,9 @@
         </div>
     </div>
 
-    <div id="app-version" style="position: fixed; bottom: 5px; right: 8px; font-size: 0.65rem; color: rgba(255, 255, 255, 0.4); z-index: 9999; pointer-events: none; font-family: monospace;">v59</div>
+    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v60 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v60 確認・更新</button>
 
-    <script type="module" src="app_v3.js?v=59"></script>
+    <script type="module" src="app_v3.js?v=60"></script>
 </body>
 </html>
 
