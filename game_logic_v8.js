@@ -162,7 +162,7 @@ export class Character {
         }
         
         // 手動調整値（影縫い等の効果）
-        total += this.initiativeModifier;
+        total += (this.initiativeModifier || 0);
         
         return total;
     }
