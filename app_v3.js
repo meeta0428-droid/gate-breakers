@@ -447,7 +447,7 @@ function setupEvents() {
     // 攻撃実行
     els.btnAttack.addEventListener('click', () => {
         let hasAttackingSummons = player.deck.summons.some(s => s.stance === 'attack');
-        if (currentCombo.length === 0 && !(player.deck.hand.length >= 1 && hasAttackingSummons)) {
+        if (currentCombo.length === 0 && !hasAttackingSummons) {
             logMsg('出すカードがありません。手札からアクションカードを選ぶか、攻撃可能な召喚ユニットを用意してください。');
             return;
         }
@@ -1240,8 +1240,8 @@ function updateUI() {
         els.handContainer.appendChild(cardDiv);
     });
 
-    // 戦闘不能の判定
-    if (player.deck.mountain.length === 0 && player.deck.hand.length === 0) {
+    // 戦闘不能の判定（山札、手札、コンボエリアがすべて空の場合）
+    if (player.deck.mountain.length === 0 && player.deck.hand.length === 0 && currentCombo.length === 0) {
         if (!player.isDead) {
             logMsg('【戦闘不能】山札と手札が0枚になりました。これ以上行動できません。', 'damage');
             player.isDead = true;
