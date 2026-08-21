@@ -125,13 +125,18 @@ export class Character {
     get initiative() {
         let total = this.baseInitiative;
         
+        const parseFullWidthInt = (str) => {
+            if (!str) return 0;
+            return parseInt(str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)));
+        };
+        
         // パッシブ装備からのイニシアチブ
         for (const card of this.deck.passives) {
-            const matchPlus = card.effect.match(/イニシアチブ\s*[＋\+]\s*(\d+)/);
-            if (matchPlus) total += parseInt(matchPlus[1]);
+            const matchPlus = card.effect.match(/イニシアチブ\s*[＋\+]\s*([0-9０-９]+)/);
+            if (matchPlus) total += parseFullWidthInt(matchPlus[1]);
             
-            const matchMinus = card.effect.match(/イニシアチブ\s*[\-ー\-－]\s*(\d+)/);
-            if (matchMinus) total -= parseInt(matchMinus[1]);
+            const matchMinus = card.effect.match(/イニシアチブ\s*[\-ー\-－]\s*([0-9０-９]+)/);
+            if (matchMinus) total -= parseFullWidthInt(matchMinus[1]);
         }
         
         // 捨札で持続する効果からのイニシアチブ
@@ -140,11 +145,11 @@ export class Character {
             const isBattleLong = card.effect.includes('戦闘中持続する') && !card.effect.includes('捨札にある間');
             
             if (isBattleLong || (!isVoid && isDiscardOnly)) {
-                const matchPlus = card.effect.match(/イニシアチブ\s*[＋\+]\s*(\d+)/);
-                if (matchPlus) total += parseInt(matchPlus[1]);
+                const matchPlus = card.effect.match(/イニシアチブ\s*[＋\+]\s*([0-9０-９]+)/);
+                if (matchPlus) total += parseFullWidthInt(matchPlus[1]);
                 
-                const matchMinus = card.effect.match(/イニシアチブ\s*[\-ー\-－]\s*(\d+)/);
-                if (matchMinus) total -= parseInt(matchMinus[1]);
+                const matchMinus = card.effect.match(/イニシアチブ\s*[\-ー\-－]\s*([0-9０-９]+)/);
+                if (matchMinus) total -= parseFullWidthInt(matchMinus[1]);
             }
         };
         
@@ -277,7 +282,6 @@ export function executeCardEffects(cards, player, logMsg) {
         const healMatch = card.effect.match(/ダメージを(\d+)点回復/);
         if (healMatch) {
             const amount = parseInt(healMatch[1]);
-            // シンプルにどれかの能力値を回復させる（低い順に回復）
             let remainingHeal = amount;
             for (const statKey of ['body', 'int', 'men']) {
                 const stat = player.stats[statKey];
@@ -285,6 +289,27 @@ export function executeCardEffects(cards, player, logMsg) {
                     stat.currentVal++;
                     remainingHeal--;
                     healed++;
+                }
+            }
+        }
+        
+        // 捨札を山札に戻す効果（例: コスト3までの捨札を1枚山札に戻す）
+        const returnMatch = card.effect.match(/コスト(\d+)までの捨札を(\d+)枚山札に戻す/);
+        if (returnMatch) {
+            const maxCost = parseInt(returnMatch[1]);
+            let returnCount = parseInt(returnMatch[2]);
+            let returned = 0;
+            // コストが条件を満たすものを探し、高いものから優先的に戻す
+            const validCards = player.deck.discard.filter(c => c.cost <= maxCost).sort((a, b) => b.cost - a.cost);
+            for (let i = 0; i < returnCount && i < validCards.length; i++) {
+                const targetCard = validCards[i];
+                const dIdx = player.deck.discard.indexOf(targetCard);
+                if (dIdx > -1) {
+                    player.deck.discard.splice(dIdx, 1);
+                    // シャッフルせずに一番下か適当に入れる？とりあえずpushする
+                    player.deck.mountain.push(targetCard);
+                    returned++;
+                    logMsg(`効果適用: 捨札から「${targetCard.name}」を山札に戻した！`);
                 }
             }
         }
