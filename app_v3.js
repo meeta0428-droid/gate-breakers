@@ -527,29 +527,56 @@ function setupEvents() {
         showDamagePopup(totalDmg);
         enemyHp -= totalDmg;
         
-        // 廃棄札へ行くものと捨札へ行くものを分ける
-        currentCombo.forEach((card, idx) => {
-            if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
-                const discardIdx = player.deck.discard.lastIndexOf(card);
-                if (discardIdx > -1) {
-                    player.deck.discard.splice(discardIdx, 1);
-                    const initStance = card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack';
-                    player.deck.summons.push({ card: card, stance: initStance });
+        const finalizeAttackCombo = (savedCardIdx = -1) => {
+            currentCombo.forEach((card, idx) => {
+                if (idx === savedCardIdx) {
+                    const discardIdx = player.deck.discard.lastIndexOf(card);
+                    if (discardIdx > -1) {
+                        player.deck.discard.splice(discardIdx, 1);
+                        player.deck.hand.push(card);
+                        logMsg(`【残心】の効果で「${card.name}」を手札に戻しました。`, 'important');
+                    }
+                    return;
                 }
-            } else if (toVoid.has(idx)) {
-                // app.jsではカードを場に出す時に既にdiscardにpushしている
-                // そのため、discardの最後から探して抜くか、とりあえずそのまま残してvoidにpushするか
-                // 正確にはdiscardの末尾に積まれているので、それをpopしてvoidに入れる
-                const discardIdx = player.deck.discard.lastIndexOf(card);
-                if (discardIdx > -1) {
-                    player.deck.discard.splice(discardIdx, 1);
-                    player.deck.void.push(card);
+                
+                if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
+                    const discardIdx = player.deck.discard.lastIndexOf(card);
+                    if (discardIdx > -1) {
+                        player.deck.discard.splice(discardIdx, 1);
+                        const initStance = card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack';
+                        player.deck.summons.push({ card: card, stance: initStance });
+                    }
+                } else if (toVoid.has(idx)) {
+                    const discardIdx = player.deck.discard.lastIndexOf(card);
+                    if (discardIdx > -1) {
+                        player.deck.discard.splice(discardIdx, 1);
+                        player.deck.void.push(card);
+                    }
                 }
-            }
-        });
+            });
+            
+            currentCombo = [];
+            updateUI();
+        };
+
+        const hasZanshin = player.deck.passives.some(p => p.name === '残心' || p.effect.includes('使用したカード1枚は手札に戻る'));
+        const chkEnemyVoid = document.getElementById('chk-enemy-void');
+        const enemyVoidChecked = chkEnemyVoid ? chkEnemyVoid.checked : false;
+        const actionCardIndexes = currentCombo.map((c, i) => c.category.includes('アクション') ? i : -1).filter(i => i !== -1);
         
-        currentCombo = [];
-        updateUI();
+        if (hasZanshin && enemyVoidChecked && actionCardIndexes.length > 0) {
+            if (chkEnemyVoid) chkEnemyVoid.checked = false;
+            window.dispatchEvent(new CustomEvent('requestZanshinReturn', {
+                detail: {
+                    actionCardIndexes,
+                    combo: currentCombo,
+                    callback: finalizeAttackCombo
+                }
+            }));
+        } else {
+            if (chkEnemyVoid) chkEnemyVoid.checked = false;
+            finalizeAttackCombo();
+        }
     });
 
     // 防御/被弾（リアクション）
@@ -1464,6 +1491,32 @@ init();
 
 
     // 山札へ戻すモーダルのリスナー
+    window.addEventListener('requestZanshinReturn', (e) => {
+        const { actionCardIndexes, combo, callback } = e.detail;
+        const modal = document.getElementById('zanshin-modal');
+        const list = document.getElementById('zanshin-list');
+        const btnSkip = document.getElementById('btn-skip-zanshin');
+        
+        list.innerHTML = '';
+        actionCardIndexes.forEach(idx => {
+            const card = combo[idx];
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `<div class="card-title">${card.name} (コスト${card.cost})</div><div class="card-effect">${card.effect}</div>`;
+            div.addEventListener('click', () => {
+                modal.classList.add('hidden');
+                callback(idx); // return this card
+            });
+            list.appendChild(div);
+        });
+        
+        btnSkip.onclick = () => {
+            modal.classList.add('hidden');
+            callback(-1); // skip
+        };
+        
+        modal.classList.remove('hidden');
+    });
     window.addEventListener('requestCardReturn', (e) => {
         const { maxCost, returnCount, playerObj } = e.detail;
         const validCards = playerObj.deck.discard.filter(c => c.cost <= maxCost);

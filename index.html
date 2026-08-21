@@ -167,7 +167,13 @@
                     <button id="btn-draw" class="btn">手札補充</button>
                     <button id="btn-discard-view" class="btn">捨札回収</button>
                     <button id="btn-refresh" class="btn btn-secondary">リフレッシュ</button>
-                    <button id="btn-attack" class="btn btn-action" style="flex: 1 1 100%;">実行</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <button id="btn-attack" class="btn btn-primary" style="flex:1;">攻撃実行</button>
+                        <div style="margin-left: 10px; font-size:0.8rem; color:#aaa; display:flex; align-items:center;">
+                            <input type="checkbox" id="chk-enemy-void" style="margin-right:5px; transform:scale(1.2);">
+                            <label for="chk-enemy-void">敵カード廃棄</label>
+                        </div>
+                    </div>
                 </div>
             </main>
 
@@ -202,15 +208,29 @@
         </div>
     </div>
 
-    <!-- 捨札確認・回収モーダル -->
+    <!-- 捨札回収モーダル -->
     <div id="discard-modal" class="modal hidden">
-        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
-            <h2>捨札回収</h2>
-            <div id="discard-cost-info" style="font-size:0.85rem; margin-top:10px; margin-bottom:10px; background:#111; padding:10px; border-radius:6px; line-height:1.4;">
-                <div style="display:flex; justify-content:space-between;"><span>肉体コスト:</span> <span><b id="recover-cost-body">0</b> / <span id="recover-max-body">0</span></span></div>
-                <div style="display:flex; justify-content:space-between;"><span>知性コスト:</span> <span><b id="recover-cost-int">0</b> / <span id="recover-max-int">0</span></span></div>
-                <div style="display:flex; justify-content:space-between;"><span>精神コスト:</span> <span><b id="recover-cost-men">0</b> / <span id="recover-max-men">0</span></span></div>
+        <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>捨札回収</h2>
+                <button id="btn-close-discard" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">×</button>
             </div>
+            
+            <div style="background:#222; padding:10px; border-radius:5px; margin-bottom:15px; font-size:0.9rem;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span>肉体コスト:</span>
+                    <span><span id="recover-cost-body">0</span> / <span id="recover-max-body">0</span></span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span>知性コスト:</span>
+                    <span><span id="recover-cost-int">0</span> / <span id="recover-max-int">0</span></span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>精神コスト:</span>
+                    <span><span id="recover-cost-men">0</span> / <span id="recover-max-men">0</span></span>
+                </div>
+            </div>
+
             <p style="color:#aaa; font-size:0.8rem; margin-bottom:10px;">回収するカードを選択してください。</p>
             <div id="discard-list" class="discard-list"></div>
             <div class="modal-actions">
@@ -331,9 +351,32 @@
         </div>
     </div>
 
-    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v75 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v75 確認・更新</button>
+    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v76 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v76 確認・更新</button>
 
-    <script type="module" src="app_v3.js?v=75"></script>
+    <script type="module" src="app_v3.js?v=76"></script>
+    <!-- 残心モーダル -->
+    <div id="zanshin-modal" class="modal hidden" style="z-index: 2600;">
+        <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+            <h3 style="color:#ffcc00; margin-bottom:10px;">残心の効果</h3>
+            <p style="font-size:0.85rem; margin-bottom:15px;" id="zanshin-msg">敵のカードを廃棄札に送ったため、使用したアクションカードを1枚手札に戻せます。</p>
+            <div id="zanshin-list" class="discard-list" style="max-height:300px; overflow-y:auto; background:#222; padding:5px; border-radius:5px;"></div>
+            <div class="modal-actions" style="margin-top:15px;">
+                <button id="btn-skip-zanshin" class="btn btn-secondary">スキップ</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
 
+
+    <!-- 残心モーダル -->
+    <div id="zanshin-modal" class="modal hidden" style="z-index: 2600;">
+        <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+            <h3 style="color:#ffcc00; margin-bottom:10px;">残心の効果</h3>
+            <p style="font-size:0.85rem; margin-bottom:15px;" id="zanshin-msg">敵のカードを廃棄札に送ったため、使用したアクションカードを1枚手札に戻せます。</p>
+            <div id="zanshin-list" class="discard-list" style="max-height:300px; overflow-y:auto; background:#222; padding:5px; border-radius:5px;"></div>
+            <div class="modal-actions" style="margin-top:15px;">
+                <button id="btn-skip-zanshin" class="btn btn-secondary">スキップ</button>
+            </div>
+        </div>
+    </div>
