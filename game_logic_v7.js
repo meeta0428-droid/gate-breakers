@@ -297,20 +297,11 @@ export function executeCardEffects(cards, player, logMsg) {
         const returnMatch = card.effect.match(/コスト(\d+)までの捨札を(\d+)枚山札に戻す/);
         if (returnMatch) {
             const maxCost = parseInt(returnMatch[1]);
-            let returnCount = parseInt(returnMatch[2]);
-            let returned = 0;
-            // コストが条件を満たすものを探し、高いものから優先的に戻す
-            const validCards = player.deck.discard.filter(c => c.cost <= maxCost).sort((a, b) => b.cost - a.cost);
-            for (let i = 0; i < returnCount && i < validCards.length; i++) {
-                const targetCard = validCards[i];
-                const dIdx = player.deck.discard.indexOf(targetCard);
-                if (dIdx > -1) {
-                    player.deck.discard.splice(dIdx, 1);
-                    // シャッフルせずに一番下か適当に入れる？とりあえずpushする
-                    player.deck.mountain.push(targetCard);
-                    returned++;
-                    logMsg(`効果適用: 捨札から「${targetCard.name}」を山札に戻した！`);
-                }
+            const returnCount = parseInt(returnMatch[2]);
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('requestCardReturn', {
+                    detail: { maxCost, returnCount, playerObj: player }
+                }));
             }
         }
         

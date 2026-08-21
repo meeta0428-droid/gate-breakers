@@ -1378,3 +1378,50 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
 // Start
 init();
 
+
+    // 山札へ戻すモーダルのリスナー
+    window.addEventListener('requestCardReturn', (e) => {
+        const { maxCost, returnCount, playerObj } = e.detail;
+        const validCards = playerObj.deck.discard.filter(c => c.cost <= maxCost);
+        if (validCards.length === 0) return;
+
+        const modal = document.getElementById('return-deck-modal');
+        const listContainer = document.getElementById('return-deck-list');
+        const msg = document.getElementById('return-deck-msg');
+        msg.innerText = `コスト${maxCost}以下の捨札から山札に戻すカードを${returnCount}枚選んでください。`;
+        
+        let selectedCount = 0;
+        
+        function renderList() {
+            listContainer.innerHTML = '';
+            playerObj.deck.discard.forEach((c, idx) => {
+                if (c.cost <= maxCost) {
+                    const div = document.createElement('div');
+                    div.className = 'card-item';
+                    div.innerHTML = `<strong>${c.name}</strong><br><small>コスト:${c.cost}</small>`;
+                    div.onclick = () => {
+                        playerObj.deck.discard.splice(idx, 1);
+                        playerObj.deck.mountain.push(c); // 山札のトップに戻す
+                        logMsg(`「${c.name}」を山札に戻した！`);
+                        selectedCount++;
+                        if (selectedCount >= returnCount || playerObj.deck.discard.filter(x => x.cost <= maxCost).length === 0) {
+                            modal.classList.add('hidden');
+                            updateUI();
+                        } else {
+                            renderList();
+                        }
+                    };
+                    listContainer.appendChild(div);
+                }
+            });
+        }
+        
+        renderList();
+        
+        document.getElementById('btn-skip-return-deck').onclick = () => {
+            modal.classList.add('hidden');
+            updateUI();
+        };
+        
+        modal.classList.remove('hidden');
+    });
