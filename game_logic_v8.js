@@ -216,6 +216,12 @@ export function calculateDamageFromCards(cards, player) {
             cardDamage += parseInt(voidMatch[1]) * player.deck.void.length;
         }
         
+        // 手札を使い切った時にダメージ+X
+        const emptyHandMatch = card.effect.match(/手札を使い切った時.*?ダメージ[＋\+](\d+)/);
+        if (emptyHandMatch && player && player.deck.hand.length === 0) {
+            cardDamage += parseInt(emptyHandMatch[1]);
+        }
+        
         let isDamageCard = cardDamage > 0 || card.effect.includes('ダメージ');
         
         // 常に次のカードにボーナスを適用・消費する

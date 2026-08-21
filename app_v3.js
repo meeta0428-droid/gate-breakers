@@ -470,6 +470,13 @@ function setupEvents() {
                 currentCardDmg += bonus;
                 detail += `（廃棄札ボーナス＋${bonus}）`;
             }
+            
+            const emptyHandMatch = c.effect.match(/手札を使い切った時.*?ダメージ[＋\+](\d+)/);
+            if (emptyHandMatch && player.deck.hand.length === 0) {
+                const bonus = parseInt(emptyHandMatch[1]);
+                currentCardDmg += bonus;
+                detail += `（手札0ボーナス＋${bonus}）`;
+            }
             let isDamageCard = currentCardDmg > 0 || c.effect.includes('ダメージ');
             if (nextCardBonus > 0) {
                 if (isDamageCard) {
