@@ -727,21 +727,7 @@ function setupEvents() {
         logMsg(`${cardStr}${summonLog}敵からの攻撃！<br>元ダメージ: ${inputDmg}<br>カード軽減: ${totalDef}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
         
         if (actualDmg === 0) {
-            const hasNagashigiri = currentCombo.some(c => c.name === '流し斬り' || c.effect.includes('この効果でダメージを防ぎ切った場合、対象にダメージ＋5を与える'));
-            if (hasNagashigiri) {
-                let counterDmg = 5;
-                const hookContext = triggerHook('onAttack', {
-                    totalDmg: counterDmg,
-                    logMsg,
-                    player,
-                    currentCombo
-                }, player.deck.passives);
-                
-                counterDmg = hookContext.totalDmg;
-                enemyHp -= counterDmg;
-                logMsg(`【流し斬り】の効果発動！ダメージを防ぎ切り、カウンターで敵に ${counterDmg} ダメージを与えた！`, 'important');
-                if (typeof showDamagePopup === 'function') showDamagePopup(counterDmg);
-            }
+            // 流し斬りチェックはすべての軽減適用後に行うため、ここでは判定しない
         }
         
         currentCombo.forEach((card, idx) => {
@@ -763,6 +749,9 @@ function setupEvents() {
             }
         });
         
+        // 流し斬りの判定用にカウンターフラグを保持（comboクリア前に判定）
+        const hasNagashigiri = currentCombo.some(c => c.name === '流し斬り' || c.effect.includes('この効果でダメージを防ぎ切った場合、対象にダメージ＋5を与える'));
+        
         currentCombo = [];
         els.incomingDmg.value = '';
         
@@ -775,6 +764,22 @@ function setupEvents() {
         }, activeCards);
         actualDmg = hookContext.pendingDamage;
         // ----------------------------------------------------
+        
+        // --- 流し斬りカウンター判定（すべての軽減適用後） ---
+        if (actualDmg <= 0 && hasNagashigiri) {
+            let counterDmg = 5;
+            const counterHook = triggerHook('onAttack', {
+                totalDmg: counterDmg,
+                logMsg,
+                player,
+                currentCombo: []
+            }, player.deck.passives);
+            
+            counterDmg = counterHook.totalDmg;
+            enemyHp -= counterDmg;
+            logMsg(`【流し斬り】の効果発動！すべての軽減でダメージを防ぎ切り、カウンターで敵に ${counterDmg} ダメージを与えた！`, 'important');
+            if (typeof showDamagePopup === 'function') showDamagePopup(counterDmg);
+        }
         
         if (actualDmg > 0) {
             pendingDamage = actualDmg;
