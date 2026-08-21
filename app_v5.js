@@ -558,7 +558,10 @@ function setupEvents() {
         // 攻撃実行後、チェックボックスをリセット
         els.chkEnemyNoReact.checked = false;
 
-        logMsg(`使用カード:<br>${cardLogs}<br>${summonLog}コンボ発動！ 合計 <span class="damage">${totalDmg}</span> のダメージを与えた！`, 'important');
+        const hasAllTarget = currentCombo.some(c => c.effect.includes('任意の対象全て') || c.effect.includes('任意の対象すべて'));
+        const targetLog = hasAllTarget ? '<br><span style="color:#ffcc00; font-weight:bold;">【任意の対象すべてへの攻撃！】</span>' : '';
+
+        logMsg(`使用カード:<br>${cardLogs}<br>${summonLog}コンボ発動！ 合計 <span class="damage">${totalDmg}</span> のダメージを与えた！${targetLog}`, 'important');
         showDamagePopup(totalDmg);
         enemyHp -= totalDmg;
         
