@@ -267,10 +267,6 @@ export function calculateDefenseFromCards(cards, player) {
             total += Math.floor((discardCost + voidCost) / 2);
         }
         
-        // 錬成壁の動的軽減値
-        if (card._renseiKabeMitigation) {
-            total += card._renseiKabeMitigation;
-        }
     }
     return total;
 }

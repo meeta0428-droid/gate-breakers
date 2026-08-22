@@ -812,9 +812,6 @@ function setupEvents() {
                 const v = player.deck.void.reduce((sum, c) => sum + c.cost, 0);
                 detail += `（割合軽減 ${Math.floor((d + v) / 2)}）`;
             }
-            if (c._renseiKabeMitigation) {
-                detail += `（ドロー軽減 ${c._renseiKabeMitigation}）`;
-            }
             if (toVoid.has(idx)) detail += ` [廃棄へ]`;
             return `・「${c.name}」${detail}`;
         }).join('<br>');
@@ -1632,6 +1629,21 @@ function setupEvents() {
                     }));
                 };
                 showQuickReloadModal();
+            }
+
+            if (card.name === '錬成壁') {
+                if (player.deck.mountain.length > 0) {
+                    const drawnCard = player.deck.mountain.shift();
+                    player.deck.hand.push(drawnCard);
+                    
+                    const currentDmg = parseInt(els.incomingDmg.value) || 0;
+                    const newDmg = Math.max(0, currentDmg - drawnCard.cost);
+                    els.incomingDmg.value = newDmg;
+                    
+                    logMsg(`【錬成壁】山札から「${drawnCard.name}」を引いた！<br>被ダメージ表示をその場で直接 <b>${drawnCard.cost}</b> 点減らしました！（残り: ${newDmg}）`, 'important');
+                } else {
+                    logMsg(`【錬成壁】効果不発：山札がありませんでした。`);
+                }
             }
 
             if (card.name === '風読み' || card.effect.includes('イニシアチブフェイズに山札から1枚引き')) {
