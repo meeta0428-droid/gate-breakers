@@ -551,7 +551,11 @@ function setupEvents() {
                 if (match) {
                     const atk = parseInt(match[1]);
                     summonDmg += atk;
-                    summonLog += `・召喚「${s.card.name}」の追撃 (＋${atk})<br>`;
+                    let extraInfo = '';
+                    if (s.card.name === 'サラマンダー') {
+                        extraInfo = ' <span style="color:#ffcc00; font-weight:bold;">[リアクション不可]</span>';
+                    }
+                    summonLog += `・召喚「${s.card.name}」の追撃 (＋${atk})${extraInfo}<br>`;
                 }
             }
         });
@@ -1761,6 +1765,18 @@ function setupEvents() {
                     }
                     return;
                 }
+                
+                if (passiveCard.name === 'サラマンダー') {
+                    const summonIdx = player.deck.summons.findIndex(s => s.card.name === 'サラマンダー');
+                    if (summonIdx > -1) {
+                        const salamanderCard = player.deck.summons[summonIdx].card;
+                        player.deck.summons.splice(summonIdx, 1);
+                        player.deck.void.push(salamanderCard);
+                        logMsg(`【サラマンダー】ユニットを廃棄札に送って効果発動！<br><span style="color:#ff5252; font-weight:bold;">※与えるダメージ＋5！</span>`, 'important');
+                        updateUI();
+                    }
+                    return;
+                }
 
                 if (passiveCard.name === 'ウンディーネ') {
                     const summonIdx = player.deck.summons.findIndex(s => s.card.name === 'ウンディーネ');
@@ -2590,6 +2606,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'ウンディーネ') {
                     els.btnTriggerPassive.innerText = '効果を発動（廃棄札2枚を山札へ）';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === 'サラマンダー') {
+                    els.btnTriggerPassive.innerText = '効果を発動（ダメージ＋5）';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else {
                     els.btnTriggerPassive.classList.add('hidden');
