@@ -1694,7 +1694,7 @@ function setupEvents() {
                         const nohmCard = player.deck.summons[summonIdx].card;
                         player.deck.summons.splice(summonIdx, 1);
                         player.deck.void.push(nohmCard);
-                        logMsg(`【ノーム】ユニットを廃棄して効果発動！<br><span style="color:#00ffff; font-weight:bold;">※ダメージを8点まで無効化し、それ以上の攻撃を阻止した！</span>`, 'important');
+                        logMsg(`【ノーム】ユニットを廃棄して効果発動！<br><span style="color:#00ffff; font-weight:bold;">※ダメージを無効化した！</span>`, 'important');
                         updateUI();
                     }
                     return;
