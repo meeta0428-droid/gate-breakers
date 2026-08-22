@@ -283,6 +283,11 @@ export function calculateDefenseFromCards(cards, player) {
             continue;
         }
 
+        if (card.name === 'ワイルドコール' && player && player.deck.summons.length > 0) {
+            total += 2;
+            continue;
+        }
+
         // 捨札と廃棄札の合計コストの半分ダメージを減少
         if (card.effect.includes('捨札と廃棄札の合計コストの半分ダメージを減少') && player) {
             const discardCost = player.deck.discard.reduce((sum, c) => sum + c.cost, 0);

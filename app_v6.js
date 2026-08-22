@@ -959,6 +959,10 @@ function setupEvents() {
             if (match1) detail = `（軽減 ${match1[1]}）`;
             else if (match2) detail = `（軽減 ${match2[1]}）`;
             
+            if (c.name === 'ワイルドコール' && player.deck.summons.length > 0) {
+                detail = `（召喚配置ボーナス軽減 2）`;
+            }
+            
             if (c.name === 'トラップコンボ') {
                 let maxStr = 0;
                 player.deck.summons.forEach(s => {
