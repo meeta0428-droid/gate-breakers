@@ -1632,6 +1632,28 @@ function setupEvents() {
                     return;
                 }
 
+                if (passiveCard.name === 'ファミリア') {
+                    if (player.deck.mountain.length === 0) {
+                        alert('山札がありません。');
+                        return;
+                    }
+                    window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                        detail: {
+                            title: "ファミリア：召喚ユニットを選択",
+                            desc: "山札から「召喚」カードを1枚選んでください。",
+                            playerObj: player,
+                            source: 'mountain',
+                            filterFunc: (c) => c.effect.includes('召喚'),
+                            onSelect: (selectedCard) => {
+                                const initStance = selectedCard.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack';
+                                player.deck.summons.push({ card: selectedCard, stance: initStance, isFamiliar: true });
+                                logMsg(`【ファミリア】効果発動！山札から「${selectedCard.name}」を永続召喚しました！`, 'important');
+                            }
+                        }
+                    }));
+                    return;
+                }
+
                 if (passiveCard.name === 'ハンドヘルドコンピュータ') {
                     if (player.deck.mountain.length < 2) {
                         alert('山札が2枚未満のため確認できません。');
@@ -2086,6 +2108,7 @@ function setupEvents() {
         let sourceArray;
         if (source === 'void') sourceArray = playerObj.deck.void;
         else if (source === 'hand') sourceArray = playerObj.deck.hand;
+        else if (source === 'mountain') sourceArray = playerObj.deck.mountain;
         else sourceArray = playerObj.deck.discard;
 
         const validCards = sourceArray.filter(filterFunc);
