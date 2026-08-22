@@ -835,6 +835,19 @@ function setupEvents() {
     });
 
     function processReaction(inputDmg, ignoreDef = false) {
+        // ノームの廃棄・無効化チェック
+        let nohmBlocked = false;
+        const nohmIdx = player.deck.summons.findIndex(s => s.card.name === 'ノーム');
+        if (nohmIdx > -1) {
+            const doNohmBlock = confirm(`【ノーム】が場にいます。\nノームを廃棄して、今回の攻撃を阻止（ダメージ無効化）しますか？\n（※OKを押すとノームが廃棄され、最終ダメージが0になります）`);
+            if (doNohmBlock) {
+                const nohmCard = player.deck.summons[nohmIdx].card;
+                player.deck.summons.splice(nohmIdx, 1);
+                player.deck.void.push(nohmCard);
+                nohmBlocked = true;
+            }
+        }
+        
         // ガードスタンス発動チェック
         if (!ignoreDef && currentCombo.some(c => c.effect.includes('その後ダメージを受けるカードがコスト以下のダメージの場合は、ダメージを受けない'))) {
             isGuardStanceActive = true;
@@ -913,6 +926,10 @@ function setupEvents() {
         
         actualDmg = Math.max(0, inputDmg - totalDef);
         
+        if (nohmBlocked) {
+            actualDmg = 0;
+        }
+        
         // 予測防壁の効果：攻撃に使用されたカードが「公開状態」だった場合、ダメージを無効化
         let yosokuTriggered = false;
         if (els.chkAttackFromOpen && els.chkAttackFromOpen.checked) {
@@ -924,11 +941,13 @@ function setupEvents() {
 
         const cardStr = currentCombo.length > 0 ? `使用カード:<br>${cardLogs}<br>` : 'カード使用なし<br>';
         const yosokuMsg = yosokuTriggered ? `<br><span style="color:#00ffff; font-weight:bold;">【予測防壁】攻撃元が公開状態だったため、ダメージを完全に無効化！</span>` : '';
+        const nohmMsg = nohmBlocked ? `<br><span style="color:#00ffff; font-weight:bold;">【ノーム】ユニットを廃棄し、ダメージを無効化（阻止）した！</span>` : '';
+        const additionalMsg = yosokuMsg + nohmMsg;
         
         if (ignoreDef) {
-            logMsg(`${cardStr}${summonLog}敵からの攻撃（<span style="color:#cc44ff;">軽減無視！</span>）<br>元ダメージ: ${inputDmg}${yosokuMsg}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
+            logMsg(`${cardStr}${summonLog}敵からの攻撃（<span style="color:#cc44ff;">軽減無視！</span>）<br>元ダメージ: ${inputDmg}${additionalMsg}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
         } else {
-            logMsg(`${cardStr}${summonLog}敵からの攻撃！<br>元ダメージ: ${inputDmg}<br>カード軽減: ${totalDef}${yosokuMsg}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
+            logMsg(`${cardStr}${summonLog}敵からの攻撃！<br>元ダメージ: ${inputDmg}<br>カード軽減: ${totalDef}${additionalMsg}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
         }
         
         if (actualDmg === 0) {
