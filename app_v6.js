@@ -1855,6 +1855,21 @@ function updateUI() {
         els.btnRefresh.style.opacity = '1';
         els.btnDiscardView.style.opacity = '1';
     }
+
+    // デバフ（持続効果）アラートの描画
+    const debuffArea = document.getElementById('debuff-alert-area');
+    if (debuffArea) {
+        debuffArea.innerHTML = '';
+        const hasIceBolt = player.deck.discard.some(c => c.name === 'アイスボルト');
+        if (hasIceBolt) {
+            debuffArea.innerHTML += `
+                <div style="background-color: rgba(50, 100, 255, 0.2); border-left: 4px solid #4da6ff; padding: 5px; font-size: 0.8rem; color: #b3d9ff; border-radius: 3px;">
+                    <strong>❄️ アイスボルト効果発動中！</strong><br>
+                    対象の回収時のコストが全て＋1されています。
+                </div>
+            `;
+        }
+    }
 }
 
 function showDamagePopup(dmg) {
