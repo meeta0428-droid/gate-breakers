@@ -1533,6 +1533,20 @@ function setupEvents() {
         });
     }
 
+    const btnVoidCard = document.getElementById('btn-void-card');
+    if (btnVoidCard) {
+        btnVoidCard.addEventListener('click', () => {
+            if (selectedCardIndex !== null) {
+                const card = player.deck.hand[selectedCardIndex];
+                player.deck.hand.splice(selectedCardIndex, 1);
+                player.deck.void.push(card);
+                logMsg(`手札から「${card.name}」を廃棄札に送りました。`);
+                els.modal.classList.add('hidden');
+                updateUI();
+            }
+        });
+    }
+
     if (els.btnTriggerPassive) {
         els.btnTriggerPassive.addEventListener('click', () => {
             if (selectedCardIndex !== null) {
@@ -2136,6 +2150,8 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
             if (els.btnSetCard) els.btnSetCard.classList.add('hidden');
             const btnDiscard = document.getElementById('btn-discard-card');
             if (btnDiscard) btnDiscard.classList.add('hidden'); // パッシブエリアのカードは捨てられない
+            const btnVoid = document.getElementById('btn-void-card');
+            if (btnVoid) btnVoid.classList.add('hidden');
 
             // 発動可能なパッシブ効果の判定
             if (els.btnTriggerPassive) {
@@ -2149,6 +2165,8 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
             if (els.btnTriggerPassive) els.btnTriggerPassive.classList.add('hidden');
             const btnDiscard = document.getElementById('btn-discard-card');
             if (btnDiscard) btnDiscard.classList.remove('hidden'); // 手札は捨てられる
+            const btnVoid = document.getElementById('btn-void-card');
+            if (btnVoid) btnVoid.classList.remove('hidden');
             els.btnUseCard.classList.remove('hidden');
             if (els.btnSetCard) {
                 const hasTouzen = player.deck.passives.some(p => p.name === '闘禅一致');

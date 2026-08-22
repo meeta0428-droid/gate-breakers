@@ -211,6 +211,7 @@
                 <button id="btn-trigger-passive" class="btn btn-primary hidden" style="background-color: #9c27b0;">効果を発動</button>
                 <button id="btn-set-card" class="btn btn-primary hidden">セット(闘禅一致)</button>
                 <button id="btn-discard-card" class="btn btn-secondary" style="background-color: #666;">手札から捨てる</button>
+                <button id="btn-void-card" class="btn btn-secondary" style="background-color: #7b1fa2;">手札から廃棄</button>
                 <button id="btn-close-modal" class="btn btn-secondary">キャンセル</button>
             </div>
             <div class="modal-actions hidden" id="combo-actions" style="margin-top:10px; flex-wrap:wrap; gap:5px; justify-content:center;">
@@ -369,9 +370,9 @@
         </div>
     </div>
 
-    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v134 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v134 確認・更新</button>
+    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v135 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v135 確認・更新</button>
 
-    <script type="module" src="app_v6.js?v=134"></script>
+    <script type="module" src="app_v6.js?v=135"></script>
     <!-- 残心モーダル -->
     <div id="zanshin-modal" class="modal hidden" style="z-index: 2600;">
         <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
