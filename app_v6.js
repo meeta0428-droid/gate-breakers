@@ -421,6 +421,7 @@ function setupEvents() {
     });
     document.getElementById('btn-init-down').addEventListener('click', () => {
         player.initiativeModifier = (player.initiativeModifier || 0) - 1;
+        player._alchemistUsed = false; // 1ラウンド1回の制限をリセット
         logMsg(`イニシアチブを手動で−1しました（調整値: ${player.initiativeModifier >= 0 ? '+' : ''}${player.initiativeModifier}）`);
         updateUI();
     });
@@ -1581,6 +1582,10 @@ function setupEvents() {
                 }
 
                 if (passiveCard.name === '錬金術師') {
+                    if (player._alchemistUsed) {
+                        alert('錬金術師の効果は1ラウンドに1回までです。');
+                        return;
+                    }
                     if (player.deck.hand.length === 0) {
                         alert('捨てる手札がありません。');
                         return;
@@ -1612,6 +1617,7 @@ function setupEvents() {
                                             filterFunc: (c) => c.cost <= discardedCard.cost,
                                             onSelect: (recoveredCard) => {
                                                 player.deck.hand.push(recoveredCard); // 回収
+                                                player._alchemistUsed = true; // 1ラウンド1回の制限フラグ
                                                 logMsg(`【錬金術師】効果発動！手札の「${discardedCard.name}」を捨て、捨札から「${recoveredCard.name}」を回収しました！`, 'important');
                                                 updateUI();
                                             }
@@ -1985,10 +1991,13 @@ function updateUI() {
                     card: card,
                     name: card.name,
                     strength: card.strength,
-                    count: 1
+                    count: 1,
+                    noDuplicate: card.effect.includes('重複しない')
                 };
             } else {
-                groupedPassives[card.name].strength += card.strength;
+                if (!groupedPassives[card.name].noDuplicate) {
+                    groupedPassives[card.name].strength += card.strength;
+                }
                 groupedPassives[card.name].count++;
             }
         });
@@ -1996,6 +2005,7 @@ function updateUI() {
         Object.values(groupedPassives).forEach(group => {
             const pDiv = document.createElement('div');
             pDiv.className = 'passive-card';
+            // 重複しないカードで複数枚ある場合はカウントだけ表示するか、あるいは強度だけ固定にする
             pDiv.innerHTML = `<strong>${group.name}${group.count > 1 ? ` x${group.count}` : ''}</strong> (強度+${group.strength})`;
             pDiv.addEventListener('click', () => {
                 openCardModal(group.card, -1, true); // isPassive = true
