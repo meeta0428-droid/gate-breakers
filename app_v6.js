@@ -2425,6 +2425,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
                 } else if (card.name === 'ハンドヘルドコンピュータ') {
                     els.btnTriggerPassive.innerText = '効果を発動（山札確認）';
                     els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === 'ファミリア') {
+                    els.btnTriggerPassive.innerText = '効果を発動';
+                    els.btnTriggerPassive.classList.remove('hidden');
                 } else {
                     els.btnTriggerPassive.classList.add('hidden');
                 }
