@@ -1227,9 +1227,15 @@ function setupEvents() {
                     if (dmgToTake > s.card.cost) {
                         // 破壊される
                         player.deck.summons.splice(idx, 1);
-                        player.deck.void.push(s.card);
                         pendingDamage -= s.card.cost; // コスト分だけ軽減して残りをプレイヤーが受ける？
-                        logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊され、廃棄札に移動した！（残り: ${pendingDamage}）`, 'damage');
+                        
+                        if (s.card.name === 'シルフ') {
+                            player.deck.hand.push(s.card);
+                            logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊され、<span style="color:#00ffff; font-weight:bold;">手札に戻った！</span>（残り: ${pendingDamage}）`, 'damage');
+                        } else {
+                            player.deck.void.push(s.card);
+                            logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊され、廃棄札に移動した！（残り: ${pendingDamage}）`, 'damage');
+                        }
                     } else {
                         // 耐え切る
                         pendingDamage = 0;
@@ -1695,6 +1701,18 @@ function setupEvents() {
                         player.deck.summons.splice(summonIdx, 1);
                         player.deck.void.push(nohmCard);
                         logMsg(`【ノーム】ユニットを廃棄して効果発動！<br><span style="color:#00ffff; font-weight:bold;">※ダメージを無効化した！</span>`, 'important');
+                        updateUI();
+                    }
+                    return;
+                }
+
+                if (passiveCard.name === 'シルフ') {
+                    const summonIdx = player.deck.summons.findIndex(s => s.card.name === 'シルフ');
+                    if (summonIdx > -1) {
+                        const sylphCard = player.deck.summons[summonIdx].card;
+                        player.deck.summons.splice(summonIdx, 1);
+                        player.deck.void.push(sylphCard);
+                        logMsg(`【シルフ】ユニットを廃棄札に送って効果発動！<br><span style="color:#00ffff; font-weight:bold;">※任意の全ての対象のイニシアチブを＋5してください！</span>`, 'important');
                         updateUI();
                     }
                     return;
@@ -2296,7 +2314,12 @@ function updateUI() {
             sDiv.querySelector('.summon-btn-dismiss').addEventListener('click', () => {
                 if (confirm(`${s.card.name} を廃棄してよろしいですか？`)) {
                     player.deck.summons.splice(idx, 1);
-                    player.deck.discard.push(s.card);
+                    if (s.card.name === 'シルフ') {
+                        player.deck.hand.push(s.card);
+                        logMsg(`「${s.card.name}」は破壊され、手札に戻った！`);
+                    } else {
+                        player.deck.discard.push(s.card);
+                    }
                     updateUI();
                 }
             });
@@ -2476,6 +2499,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'ノーム') {
                     els.btnTriggerPassive.innerText = '効果を発動（ユニット廃棄）';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === 'シルフ') {
+                    els.btnTriggerPassive.innerText = '効果を発動（イニシアチブ＋5）';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else {
                     els.btnTriggerPassive.classList.add('hidden');
