@@ -320,5 +320,25 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // 戦術解析士：「知性・アクション」のダメージを＋1
+    "戦術解析士": {
+        onAttack: (context) => {
+            if (context.currentCombo && context.currentCombo.length > 0 && !context._senjutsuApplied) {
+                let bonusDmg = 0;
+                for (const c of context.currentCombo) {
+                    if (c.category.includes('知性') && c.category.includes('アクション')) {
+                        bonusDmg += 1;
+                    }
+                }
+                
+                if (bonusDmg > 0) {
+                    context._senjutsuApplied = true;
+                    context.logMsg(`【戦術解析士】情報のアドバンテージ！知性・アクションのダメージ ＋${bonusDmg}！`, 'important');
+                    return { totalDmg: context.totalDmg + bonusDmg, _senjutsuApplied: true };
+                }
+            }
+            return {};
+        }
     }
 };

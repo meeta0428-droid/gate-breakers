@@ -1561,7 +1561,23 @@ function setupEvents() {
                 window.dispatchEvent(new CustomEvent('requestBujutsukaRecover', {
                     detail: { playerObj: player }
                 }));
-                return; // updateUIはモーダル完了後に呼ぶ
+                // ここでリターンすると戦術解析士のログが出なくなるので注意
+            }
+        }
+        
+        // パッシブ「戦術解析士」のチェック
+        const hasSenjutsu = player.deck.passives.some(p => p.name === '戦術解析士');
+        if (hasSenjutsu) {
+            logMsg(`【戦術解析士】情報のアドバンテージ！<br><span style="color:#ffcc00; font-weight:bold;">※任意の対象の手札1枚を公開状態にしてください！</span><br>（公開状態にした場合は、画面下部の「敵手札オープン中」にチェックを入れてください）`, 'important');
+        }
+        
+        // 武術家のモーダル表示がある場合は updateUI を呼ばずにリターンしていたが、
+        // 武術家の処理がある場合でも戦術解析士のログは出すべき。
+        // updateUIのタイミングが変わるため、武術家チェックの中の return を除去または条件付きにする。
+        if (hasBujutsuka) {
+            const validCards = player.deck.discard.filter(c => c.category.includes('肉体') && c.cost <= 3);
+            if (validCards.length > 0) {
+                return; // 武術家のモーダルが開くため、ここではUI更新しない
             }
         }
         
