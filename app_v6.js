@@ -696,16 +696,17 @@ function setupEvents() {
             
             // 大地の息吹の処理
             const hasDaichi = currentCombo.some(c => c.name === '大地の息吹');
-            if (hasDaichi && player.deck.void.some(c => c.category.includes('召喚') || c.effect.includes('召喚・攻'))) {
+            const daichiTargetCards = [...player.deck.void, ...player.deck.discard];
+            if (hasDaichi && daichiTargetCards.some(c => c.category.includes('召喚') || c.effect.includes('召喚・攻'))) {
                 window.dispatchEvent(new CustomEvent('requestRecoverCard', {
                     detail: {
                         filterFunc: c => c.category.includes('召喚') || c.effect.includes('召喚・攻'),
                         title: "大地の息吹の効果",
-                        desc: "廃棄札から「召喚」カードを1枚選んで手札に加えます。",
-                        source: 'void',
+                        desc: "捨札または廃棄札から「召喚」カードを1枚選んで手札に加えます。",
+                        source: 'void_or_discard',
                         onSelect: (card) => {
                             player.deck.hand.push(card);
-                            logMsg(`【大地の息吹】廃棄札から「${card.name}」を手札に加えました。`);
+                            logMsg(`【大地の息吹】「${card.name}」を手札に加えました。`);
                         },
                         playerObj: player
                     }
@@ -1099,16 +1100,17 @@ function setupEvents() {
         
         // 大地の息吹の処理
         const hasDaichi = currentCombo.some(c => c.name === '大地の息吹');
-        if (hasDaichi && player.deck.void.some(c => c.category.includes('召喚') || c.effect.includes('召喚・攻'))) {
+        const daichiTargetCards2 = [...player.deck.void, ...player.deck.discard];
+        if (hasDaichi && daichiTargetCards2.some(c => c.category.includes('召喚') || c.effect.includes('召喚・攻'))) {
             window.dispatchEvent(new CustomEvent('requestRecoverCard', {
                 detail: {
                     filterFunc: c => c.category.includes('召喚') || c.effect.includes('召喚・攻'),
                     title: "大地の息吹の効果",
-                    desc: "廃棄札から「召喚」カードを1枚選んで手札に加えます。",
-                    source: 'void',
+                    desc: "捨札または廃棄札から「召喚」カードを1枚選んで手札に加えます。",
+                    source: 'void_or_discard',
                     onSelect: (card) => {
                         player.deck.hand.push(card);
-                        logMsg(`【大地の息吹】廃棄札から「${card.name}」を手札に加えました。`);
+                        logMsg(`【大地の息吹】「${card.name}」を手札に加えました。`);
                     },
                     playerObj: player
                 }
@@ -2493,6 +2495,7 @@ function setupEvents() {
         if (source === 'void') sourceArray = playerObj.deck.void;
         else if (source === 'hand') sourceArray = playerObj.deck.hand;
         else if (source === 'mountain') sourceArray = playerObj.deck.mountain;
+        else if (source === 'void_or_discard') sourceArray = [...playerObj.deck.void, ...playerObj.deck.discard];
         else sourceArray = playerObj.deck.discard;
 
         const validCards = sourceArray.filter(filterFunc);
@@ -2524,9 +2527,19 @@ function setupEvents() {
                     </div>
                 `;
                 item.addEventListener('click', () => {
-                    const idx = sourceArray.lastIndexOf(card);
-                    if (idx > -1) {
-                        sourceArray.splice(idx, 1);
+                    if (source === 'void_or_discard') {
+                        const vIdx = playerObj.deck.void.lastIndexOf(card);
+                        if (vIdx > -1) {
+                            playerObj.deck.void.splice(vIdx, 1);
+                        } else {
+                            const dIdx = playerObj.deck.discard.lastIndexOf(card);
+                            if (dIdx > -1) playerObj.deck.discard.splice(dIdx, 1);
+                        }
+                    } else {
+                        const idx = sourceArray.lastIndexOf(card);
+                        if (idx > -1) {
+                            sourceArray.splice(idx, 1);
+                        }
                     }
                     modal.classList.add('hidden');
                     if (onSelect) onSelect(card);
