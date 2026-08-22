@@ -288,12 +288,25 @@ export const cardEffects = {
                 }
             }
             
+            
             if (bonusDmg > 0 && !context._weakpointApplied) {
                 context._weakpointApplied = true;
                 context.logMsg(`【ウィークポイント】急所を的確に狙う！コンボ成立！<br>ダメージ＋1 が <b>ダメージ＋4</b> に変更されました！（追加ダメージ ＋${bonusDmg}）`, 'important');
                 return { totalDmg: context.totalDmg + bonusDmg, _weakpointApplied: true };
             }
             
+            return {};
+        }
+    },
+    // ハンドヘルドコンピュータ：敵陣営に「公開状態」の手札が存在する場合、カード毎にダメージ+1
+    "ハンドヘルドコンピュータ": {
+        onAttack: (context) => {
+            if (context.enemyOpen && context.currentCombo && context.currentCombo.length > 0 && !context._handheldApplied) {
+                const bonusDmg = context.currentCombo.length;
+                context._handheldApplied = true;
+                context.logMsg(`【ハンドヘルドコンピュータ】敵の公開手札を解析！コンボ枚数（${bonusDmg}枚）に応じてダメージ ＋${bonusDmg}！`, 'important');
+                return { totalDmg: context.totalDmg + bonusDmg, _handheldApplied: true };
+            }
             return {};
         }
     }

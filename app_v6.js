@@ -564,6 +564,7 @@ function setupEvents() {
             player: player,
             logMsg: logMsg,
             enemyNoReact: els.chkEnemyNoReact.checked,
+            enemyOpen: els.chkEnemyOpen ? els.chkEnemyOpen.checked : false,
             currentCombo: currentCombo
         }, activeCards);
         totalDmg = hookContext.totalDmg;
@@ -851,6 +852,7 @@ function setupEvents() {
                 totalDmg: totalCounterDmg,
                 logMsg,
                 player,
+                enemyOpen: els.chkEnemyOpen ? els.chkEnemyOpen.checked : false,
                 currentCombo
             }, [...player.deck.passives, ...player.deck.summons]);
             
@@ -1003,6 +1005,7 @@ function setupEvents() {
                 totalDmg: counterDmg,
                 logMsg,
                 player,
+                enemyOpen: els.chkEnemyOpen ? els.chkEnemyOpen.checked : false,
                 currentCombo: []
             }, player.deck.passives);
             
@@ -1592,6 +1595,65 @@ function setupEvents() {
 
                 if (passiveCard.name === '武具錬成') {
                     logMsg(`【武具錬成】効果を対象に共有しました！<br><span style="color:#ffcc00; font-size:0.9rem;">（対象の攻撃ダメージ＋1、または受けるダメージ1点軽減）</span>`, 'important');
+                    return;
+                }
+
+                if (passiveCard.name === 'ハンドヘルドコンピュータ') {
+                    if (player.deck.mountain.length < 2) {
+                        alert('山札が2枚未満のため確認できません。');
+                        return;
+                    }
+                    const card1 = player.deck.mountain[0];
+                    const card2 = player.deck.mountain[1];
+                    
+                    document.getElementById('handheld-card1-name').innerText = card1.name;
+                    document.getElementById('handheld-card2-name').innerText = card2.name;
+                    
+                    // 初期状態として、1枚目を上、2枚目も上（元の順序のまま）とする
+                    let pos1 = 'top';
+                    let pos2 = 'top';
+                    
+                    const updateBtnStyles = () => {
+                        document.getElementById('btn-hc-c1-top').className = pos1 === 'top' ? 'btn btn-primary' : 'btn btn-secondary';
+                        document.getElementById('btn-hc-c1-bottom').className = pos1 === 'bottom' ? 'btn btn-primary' : 'btn btn-secondary';
+                        document.getElementById('btn-hc-c2-top').className = pos2 === 'top' ? 'btn btn-primary' : 'btn btn-secondary';
+                        document.getElementById('btn-hc-c2-bottom').className = pos2 === 'bottom' ? 'btn btn-primary' : 'btn btn-secondary';
+                    };
+                    updateBtnStyles();
+                    
+                    document.getElementById('btn-hc-c1-top').onclick = () => { pos1 = 'top'; updateBtnStyles(); };
+                    document.getElementById('btn-hc-c1-bottom').onclick = () => { pos1 = 'bottom'; updateBtnStyles(); };
+                    document.getElementById('btn-hc-c2-top').onclick = () => { pos2 = 'top'; updateBtnStyles(); };
+                    document.getElementById('btn-hc-c2-bottom').onclick = () => { pos2 = 'bottom'; updateBtnStyles(); };
+                    
+                    document.getElementById('btn-handheld-confirm').onclick = () => {
+                        // 山札から2枚を取り出す
+                        const c1 = player.deck.mountain.shift();
+                        const c2 = player.deck.mountain.shift();
+                        
+                        // 下に置くカードと上に置くカードに分ける
+                        const toBottom = [];
+                        const toTop = [];
+                        
+                        if (pos1 === 'top') toTop.push(c1); else toBottom.push(c1);
+                        if (pos2 === 'top') toTop.push(c2); else toBottom.push(c2);
+                        
+                        // 下に戻す
+                        toBottom.forEach(c => player.deck.mountain.push(c));
+                        
+                        // 上に戻す（後から入れたものが上に来るように逆順にunshift）
+                        // ※例：1枚目も2枚目も上の場合、toTop = [c1, c2]。元の順序にするには c2 を先に入れ、c1 を後に入れるか、単純に配列として結合するか。
+                        // Array.prototype.unshift は可変長引数で渡した要素をそのままの順序で先頭に追加する
+                        if (toTop.length > 0) {
+                            player.deck.mountain.unshift(...toTop);
+                        }
+                        
+                        document.getElementById('handheld-modal').classList.add('hidden');
+                        logMsg('【ハンドヘルドコンピュータ】山札の上から2枚を確認し、戻しました。', 'important');
+                        updateUI();
+                    };
+                    
+                    document.getElementById('handheld-modal').classList.remove('hidden');
                     return;
                 }
 
@@ -2302,6 +2364,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === '錬成の法') {
                     els.btnTriggerPassive.innerText = '効果を発動';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === 'ハンドヘルドコンピュータ') {
+                    els.btnTriggerPassive.innerText = '効果を発動（山札確認）';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else {
                     els.btnTriggerPassive.classList.add('hidden');
