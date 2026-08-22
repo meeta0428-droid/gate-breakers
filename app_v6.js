@@ -661,6 +661,24 @@ function setupEvents() {
                 }));
             }
             
+            // ウンディーネ召喚時効果
+            const hasUndine = currentCombo.some(c => c.name === 'ウンディーネ');
+            if (hasUndine && player.deck.void.some(c => c.cost <= 2)) {
+                window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                    detail: {
+                        filterFunc: c => c.cost <= 2,
+                        title: "ウンディーネ：召喚時効果",
+                        desc: "山札に戻すコスト2以下の廃棄札を選んでください。",
+                        source: 'void',
+                        onSelect: (card) => {
+                            player.deck.cards.push(card);
+                            logMsg(`【ウンディーネ】対象の廃棄札「${card.name}」を山札に戻した！`);
+                        },
+                        playerObj: player
+                    }
+                }));
+            }
+            
             // ドロー効果の汎用処理（バックドア・アクセスなど）
             let totalDraw = 0;
             currentCombo.forEach(c => {
@@ -1010,6 +1028,24 @@ function setupEvents() {
                     onSelect: (card) => {
                         player.deck.hand.push(card);
                         logMsg(`【超速判断】捨札から「${card.name}」を手札に加えました。`);
+                    },
+                    playerObj: player
+                }
+            }));
+        }
+        
+        // ウンディーネ召喚時効果
+        const hasUndine = currentCombo.some(c => c.name === 'ウンディーネ');
+        if (hasUndine && player.deck.void.some(c => c.cost <= 2)) {
+            window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                detail: {
+                    filterFunc: c => c.cost <= 2,
+                    title: "ウンディーネ：召喚時効果",
+                    desc: "山札に戻すコスト2以下の廃棄札を選んでください。",
+                    source: 'void',
+                    onSelect: (card) => {
+                        player.deck.cards.push(card);
+                        logMsg(`【ウンディーネ】対象の廃棄札「${card.name}」を山札に戻した！`);
                     },
                     playerObj: player
                 }
@@ -1722,6 +1758,47 @@ function setupEvents() {
                         player.deck.void.push(sylphCard);
                         logMsg(`【シルフ】ユニットを廃棄札に送って効果発動！<br><span style="color:#00ffff; font-weight:bold;">※任意の全ての対象のイニシアチブを＋5してください！</span>`, 'important');
                         updateUI();
+                    }
+                    return;
+                }
+
+                if (passiveCard.name === 'ウンディーネ') {
+                    const summonIdx = player.deck.summons.findIndex(s => s.card.name === 'ウンディーネ');
+                    if (summonIdx > -1) {
+                        const undineCard = player.deck.summons[summonIdx].card;
+                        player.deck.summons.splice(summonIdx, 1);
+                        player.deck.void.push(undineCard);
+                        logMsg(`【ウンディーネ】ユニットを廃棄札に送って効果発動！`, 'important');
+                        
+                        let remainingCount = 2;
+                        const showUndineModal = () => {
+                            const validCards = player.deck.void.filter(c => c !== undineCard);
+                            if (validCards.length === 0) {
+                                if (remainingCount === 2) logMsg(`戻せる廃棄札がありませんでした。`);
+                                updateUI();
+                                return;
+                            }
+                            window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                                detail: {
+                                    title: `ウンディーネ (残り枠: ${remainingCount}枚)`,
+                                    desc: `山札に戻す廃棄札を選んでください。（右上の×で終了）`,
+                                    playerObj: player,
+                                    source: 'void',
+                                    filterFunc: (c) => c !== undineCard,
+                                    onSelect: (selectedCard) => {
+                                        player.deck.cards.push(selectedCard);
+                                        logMsg(`廃棄札から「${selectedCard.name}」を山札に戻した！`);
+                                        remainingCount--;
+                                        if (remainingCount > 0) {
+                                            setTimeout(showUndineModal, 100);
+                                        } else {
+                                            updateUI();
+                                        }
+                                    }
+                                }
+                            }));
+                        };
+                        showUndineModal();
                     }
                     return;
                 }
@@ -2510,6 +2587,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'シルフ') {
                     els.btnTriggerPassive.innerText = '効果を発動（イニシアチブ＋5）';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === 'ウンディーネ') {
+                    els.btnTriggerPassive.innerText = '効果を発動（廃棄札2枚を山札へ）';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else {
                     els.btnTriggerPassive.classList.add('hidden');
