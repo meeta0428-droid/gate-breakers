@@ -400,14 +400,18 @@ body {
     .print-only { display: block !important; }
     
     .print-page {
+        width: 189mm; /* 63mm * 3 */
+        height: 264mm; /* 88mm * 3 */
         box-sizing: border-box;
         page-break-after: always;
         break-after: page;
-        display: block;
-        width: 189mm;
-        height: 265mm; /* 88mm * 3 = 264mm + margin */
-        margin: 5mm auto 0;
-        overflow: hidden; /* ブラウザのはみ出し判定による白紙ページを強制阻止 */
+        display: grid;
+        grid-template-columns: repeat(3, 63mm);
+        grid-template-rows: repeat(3, 88mm);
+        gap: 0;
+        margin: 0 auto; /* 横中央寄せ */
+        padding: 0; /* paddingを完全排除して高さを264mmに抑える */
+        overflow: hidden;
     }
     
     .print-card {
@@ -418,11 +422,9 @@ body {
         padding: 4mm;
         display: flex;
         flex-direction: column;
-        page-break-inside: avoid;
-        break-inside: avoid;
         background: #fff;
         color: #000;
-        float: left;
+        /* page-break-insideはgridアイテムには効きにくいので不要 */
     }
     
     .print-card-title {
