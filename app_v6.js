@@ -64,6 +64,7 @@ const els = {
     mStr: document.getElementById('modal-str'),
     mDesc: document.getElementById('modal-desc'),
     btnUseCard: document.getElementById('btn-use-card'),
+    btnTriggerPassive: document.getElementById('btn-trigger-passive'),
     btnSetCard: document.getElementById('btn-set-card'),
     btnCloseModal: document.getElementById('btn-close-modal'),
     
@@ -1490,6 +1491,58 @@ function setupEvents() {
             }
         });
     }
+
+    if (els.btnTriggerPassive) {
+        els.btnTriggerPassive.addEventListener('click', () => {
+            if (selectedCardIndex !== null) {
+                const passiveCard = player.deck.passives[selectedCardIndex];
+                els.modal.classList.add('hidden'); // 詳細モーダルを閉じる
+
+                if (passiveCard.name === '錬金術師') {
+                    if (player.deck.hand.length === 0) {
+                        alert('捨てる手札がありません。');
+                        return;
+                    }
+                    if (player.deck.discard.length === 0) {
+                        alert('捨札がありません。');
+                        return;
+                    }
+
+                    // まず捨てる手札を選ぶ
+                    window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                        detail: {
+                            title: "錬金術師：捨てる手札を選択",
+                            desc: "捨てる手札を1枚選んでください。",
+                            playerObj: player,
+                            source: 'hand',
+                            filterFunc: (c) => true,
+                            onSelect: (discardedCard) => {
+                                player.deck.discard.push(discardedCard); // 選択した手札を捨札へ
+                                
+                                // 次に、回収する捨札を選ぶ（捨てたカードのコスト以下）
+                                setTimeout(() => {
+                                    window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                                        detail: {
+                                            title: "錬金術師：回収する捨札を選択",
+                                            desc: `コスト ${discardedCard.cost} 以下のカードを選んでください。`,
+                                            playerObj: player,
+                                            source: 'discard',
+                                            filterFunc: (c) => c.cost <= discardedCard.cost,
+                                            onSelect: (recoveredCard) => {
+                                                player.deck.hand.push(recoveredCard); // 回収
+                                                logMsg(`【錬金術師】効果発動！手札の「${discardedCard.name}」を捨て、捨札から「${recoveredCard.name}」を回収しました！`, 'important');
+                                                updateUI();
+                                            }
+                                        }
+                                    }));
+                                }, 100);
+                            }
+                        }
+                    }));
+                }
+            }
+        });
+    }
     
     els.btnUseCard.addEventListener('click', () => {
         if (selectedCardIndex !== null) {
@@ -1701,10 +1754,14 @@ function setupEvents() {
         updateUI();
     });
 
-    // --- 汎用回収イベント（捨札/廃棄札） ---
+    // --- 汎用回収イベント（捨札/廃棄札/手札選択） ---
     window.addEventListener('requestRecoverCard', (e) => {
         const { filterFunc, title, desc, onSelect, playerObj, source } = e.detail;
-        const sourceArray = source === 'void' ? playerObj.deck.void : playerObj.deck.discard;
+        let sourceArray;
+        if (source === 'void') sourceArray = playerObj.deck.void;
+        else if (source === 'hand') sourceArray = playerObj.deck.hand;
+        else sourceArray = playerObj.deck.discard;
+
         const validCards = sourceArray.filter(filterFunc);
         
         const modal = document.getElementById('select-discard-modal');
@@ -1985,7 +2042,21 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
         if (isPassive) {
             els.btnUseCard.classList.add('hidden');
             if (els.btnSetCard) els.btnSetCard.classList.add('hidden');
+            const btnDiscard = document.getElementById('btn-discard-card');
+            if (btnDiscard) btnDiscard.classList.add('hidden'); // パッシブエリアのカードは捨てられない
+
+            // 発動可能なパッシブ効果の判定
+            if (els.btnTriggerPassive) {
+                if (card.name === '錬金術師') {
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else {
+                    els.btnTriggerPassive.classList.add('hidden');
+                }
+            }
         } else {
+            if (els.btnTriggerPassive) els.btnTriggerPassive.classList.add('hidden');
+            const btnDiscard = document.getElementById('btn-discard-card');
+            if (btnDiscard) btnDiscard.classList.remove('hidden'); // 手札は捨てられる
             els.btnUseCard.classList.remove('hidden');
             if (els.btnSetCard) {
                 const hasTouzen = player.deck.passives.some(p => p.name === '闘禅一致');
