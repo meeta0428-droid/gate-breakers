@@ -273,5 +273,28 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // ウィークポイント：コンボ成立時（2枚以上のカードを出している場合）、ダメージ＋1を＋4に変更（追加で＋3）
+    "ウィークポイント": {
+        onAttack: (context) => {
+            if (!context.currentCombo || context.currentCombo.length <= 1) return {};
+            
+            let bonusDmg = 0;
+            // コンボの中にウィークポイントが何枚含まれているかチェック
+            for (let i = 0; i < context.currentCombo.length; i++) {
+                if (context.currentCombo[i].name === 'ウィークポイント') {
+                    // コンボが成立（2枚以上）しているので、1枚につき+3（元の+1に加算して+4になる）
+                    bonusDmg += 3;
+                }
+            }
+            
+            if (bonusDmg > 0 && !context._weakpointApplied) {
+                context._weakpointApplied = true;
+                context.logMsg(`【ウィークポイント】急所を的確に狙う！コンボ成立！<br>ダメージ＋1 が <b>ダメージ＋4</b> に変更されました！（追加ダメージ ＋${bonusDmg}）`, 'important');
+                return { totalDmg: context.totalDmg + bonusDmg, _weakpointApplied: true };
+            }
+            
+            return {};
+        }
     }
 };
