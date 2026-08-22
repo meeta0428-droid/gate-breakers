@@ -1686,6 +1686,43 @@ function setupEvents() {
                 showQuickReloadModal();
             }
 
+            if (card.name === '癒しの雫') {
+                let remainingCost = 6;
+                const showIyashiModal = () => {
+                    const validCards = player.deck.void.filter(c => c.cost <= remainingCost);
+                    if (validCards.length === 0) {
+                        if (remainingCost === 6) {
+                            logMsg(`【癒しの雫】山札に戻せる廃棄札がありませんでした。`);
+                        } else {
+                            logMsg(`【癒しの雫】処理を終了しました。（残りコスト枠: ${remainingCost}）`);
+                        }
+                        updateUI();
+                        return;
+                    }
+                    window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                        detail: {
+                            title: `癒しの雫 (残り枠: ${remainingCost})`,
+                            desc: `山札に戻す廃棄札を選んでください。（右上の×で終了）`,
+                            playerObj: player,
+                            source: 'void',
+                            filterFunc: (c) => c.cost <= remainingCost,
+                            onSelect: (selectedCard) => {
+                                player.deck.cards.push(selectedCard); // 廃棄札から山札へ（シャッフル等する場合deck.cardsかmountainか。このアプリはそのまま一番下でOKならcardsに入れてshuffleするか。既存はどこに？）
+                                // 既存の btnVoidView では player.deck.cards.push(selectedCard) で戻している
+                                logMsg(`【癒しの雫】廃棄札から「${selectedCard.name}」を山札に戻した！`);
+                                remainingCost -= selectedCard.cost;
+                                if (remainingCost > 0) {
+                                    setTimeout(showIyashiModal, 100);
+                                } else {
+                                    updateUI();
+                                }
+                            }
+                        }
+                    }));
+                };
+                showIyashiModal();
+            }
+
             if (card.name === '風読み' || card.effect.includes('イニシアチブフェイズに山札から1枚引き')) {
                 if (player.deck.mountain.length > 0) {
                     const drawnCard = player.deck.mountain.shift();
