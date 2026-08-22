@@ -514,6 +514,21 @@ function setupEvents() {
                 detail += `（召喚配置ボーナス＋2 🎯任意のカードにダメージ）`;
             }
             
+            if (c.name === '獣の戦意' && player.deck.summons.length > 0) {
+                let maxStr = 0;
+                let targetName = '';
+                player.deck.summons.forEach(s => {
+                    if (s.card.strength > maxStr) {
+                        maxStr = s.card.strength;
+                        targetName = s.card.name;
+                    }
+                });
+                if (maxStr > 0) {
+                    currentCardDmg += maxStr;
+                    detail += `（召喚「${targetName}」の強度ボーナス＋${maxStr}）`;
+                }
+            }
+            
             const voidMatch = c.effect.match(/廃棄札1枚につき.*?ダメージ.*?[＋\+](\d+)/);
             if (voidMatch) {
                 const bonus = parseInt(voidMatch[1]) * player.deck.void.length;

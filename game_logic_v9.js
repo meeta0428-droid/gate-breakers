@@ -218,6 +218,14 @@ export function calculateDamageFromCards(cards, player) {
             // "ダメージ+2"で+2されているので、"ダメージ+4に変更"とするため +2 を追加
             cardDamage += 2;
         }
+
+        if (card.name === '獣の戦意' && player && player.deck.summons.length > 0) {
+            let maxStr = 0;
+            player.deck.summons.forEach(s => {
+                if (s.card.strength > maxStr) maxStr = s.card.strength;
+            });
+            cardDamage += maxStr;
+        }
         
         // 廃棄札1枚につきダメージ+X
         const voidMatch = card.effect.match(/廃棄札1枚につき.*?ダメージ.*?[＋\+](\d+)/);
