@@ -549,7 +549,9 @@ function setupEvents() {
             if (s.stance === 'attack' || s.stance === 'both') {
                 const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
                 if (match) {
-                    const atk = parseInt(match[1]);
+                    let atk = parseInt(match[1]);
+                    if (s.elementalerBuff) atk += 2 * s.elementalerBuff;
+                    
                     summonDmg += atk;
                     let extraInfo = '';
                     if (s.card.name === 'サラマンダー') {
@@ -1270,6 +1272,7 @@ function setupEvents() {
                     if (match) {
                         defVal = parseInt(match[2], 10);
                     }
+                    if (s.elementalerBuff) defVal += 2 * s.elementalerBuff;
                     const endurance = s.card.cost + defVal;
                     
                     if (dmgToTake >= endurance) {
@@ -1751,6 +1754,57 @@ function setupEvents() {
                         logMsg(`【ノーム】ユニットを廃棄して効果発動！<br><span style="color:#00ffff; font-weight:bold;">※ダメージを無効化した！</span>`, 'important');
                         updateUI();
                     }
+                    return;
+                }
+
+                if (passiveCard.name === 'エレメンタラー') {
+                    if (player.deck.summons.length === 0) {
+                        alert('場に召喚ユニットがいません。');
+                        return;
+                    }
+                    const overlay = document.createElement('div');
+                    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;';
+                    
+                    const title = document.createElement('h3');
+                    title.innerText = '強化するユニットを選択';
+                    title.style.color = '#fff';
+                    title.style.marginBottom = '20px';
+                    overlay.appendChild(title);
+                    
+                    player.deck.summons.forEach((s, idx) => {
+                        const btn = document.createElement('button');
+                        btn.className = 'btn btn-primary';
+                        btn.style.cssText = 'margin:10px; width:80%; padding:10px; font-size:1.1rem; text-align:center;';
+                        btn.innerText = s.card.name;
+                        btn.addEventListener('click', () => {
+                            s.elementalerBuff = (s.elementalerBuff || 0) + 1;
+                            
+                            // エレメンタラーをパッシブから削除して廃棄札へ
+                            const pIdx = player.deck.passives.findIndex(p => p === passiveCard);
+                            if (pIdx > -1) {
+                                const elemCard = player.deck.passives[pIdx];
+                                player.deck.passives.splice(pIdx, 1);
+                                player.deck.void.push(elemCard);
+                                logMsg(`【エレメンタラー】効果適用！「${s.card.name}」の攻/防を＋2しました。（※エレメンタラーを下に重ねてください）`, 'important');
+                            }
+                            
+                            document.body.removeChild(overlay);
+                            els.modal.classList.add('hidden');
+                            updateUI();
+                        });
+                        overlay.appendChild(btn);
+                    });
+                    
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn btn-secondary';
+                    cancelBtn.style.cssText = 'margin-top:20px; padding:5px 20px;';
+                    cancelBtn.innerText = 'キャンセル';
+                    cancelBtn.addEventListener('click', () => {
+                        document.body.removeChild(overlay);
+                    });
+                    overlay.appendChild(cancelBtn);
+                    
+                    document.body.appendChild(overlay);
                     return;
                 }
 
@@ -2372,8 +2426,14 @@ function updateUI() {
             let atk = "?", def = "?";
             const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
             if (match) {
-                atk = match[1];
-                def = match[2];
+                let atkVal = parseInt(match[1], 10);
+                let defVal = parseInt(match[2], 10);
+                if (s.elementalerBuff) {
+                    atkVal += 2 * s.elementalerBuff;
+                    defVal += 2 * s.elementalerBuff;
+                }
+                atk = atkVal;
+                def = defVal;
             }
             
             const sDiv = document.createElement('div');
@@ -2597,6 +2657,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'ファミリア') {
                     els.btnTriggerPassive.innerText = '効果を発動';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === 'エレメンタラー') {
+                    els.btnTriggerPassive.innerText = '効果を発動（対象ユニットの攻防＋2）';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'ノーム') {
                     els.btnTriggerPassive.innerText = '効果を発動（ユニット廃棄）';
