@@ -1520,6 +1520,25 @@ function setupEvents() {
             currentCombo.push(card);
             logMsg(`「${card.name}」を場に出した！`);
             
+            // 汎用ドロー効果（山札からX枚引く）
+            const drawMatch = card.effect.match(/山札から([0-9０-９]+)枚引く/);
+            if (drawMatch) {
+                const drawCount = parseInt(drawMatch[1].replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)));
+                let drawnNames = [];
+                for (let i = 0; i < drawCount; i++) {
+                    if (player.deck.mountain.length > 0) {
+                        const drawn = player.deck.mountain.shift();
+                        player.deck.hand.push(drawn);
+                        drawnNames.push(drawn.name);
+                    }
+                }
+                if (drawnNames.length > 0) {
+                    logMsg(`【${card.name}】の効果で山札から ${drawnNames.length}枚 引きました！<br><small>(${drawnNames.join(', ')})</small>`, 'important');
+                } else {
+                    logMsg(`【${card.name}】の効果：山札がありませんでした。`);
+                }
+            }
+
             if (card.name === '風読み' || card.effect.includes('イニシアチブフェイズに山札から1枚引き')) {
                 if (player.deck.mountain.length > 0) {
                     const drawnCard = player.deck.mountain.shift();
