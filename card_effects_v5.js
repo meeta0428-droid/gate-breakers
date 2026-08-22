@@ -237,5 +237,30 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // 起爆粉塵：コンボが続く場合、ダメージを＋4から＋6に変更（差分の＋2を追加）
+    "起爆粉塵": {
+        onAttack: (context) => {
+            if (!context.currentCombo || context.currentCombo.length === 0) return {};
+            
+            let bonusDmg = 0;
+            // コンボの中に起爆粉塵が含まれているかチェック
+            for (let i = 0; i < context.currentCombo.length; i++) {
+                if (context.currentCombo[i].name === '起爆粉塵') {
+                    // 起爆粉塵の後（2枚目以降）にカードが続いていればコンボ成立
+                    if (i < context.currentCombo.length - 1) {
+                        bonusDmg += 2; // +4から+6への変更分（1枚につき+2）
+                    }
+                }
+            }
+            
+            if (bonusDmg > 0 && !context._kibakuApplied) {
+                context._kibakuApplied = true;
+                context.logMsg(`【起爆粉塵】コンボ成立！粉塵が連鎖爆発を起こす！<br>ダメージ＋4 が <b>ダメージ＋6</b> に変更されました！（追加ダメージ ＋${bonusDmg}）`, 'important');
+                return { totalDmg: context.totalDmg + bonusDmg, _kibakuApplied: true };
+            }
+            
+            return {};
+        }
     }
 };
