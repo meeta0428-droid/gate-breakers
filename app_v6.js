@@ -941,6 +941,14 @@ function setupEvents() {
             if (match1) detail = `（軽減 ${match1[1]}）`;
             else if (match2) detail = `（軽減 ${match2[1]}）`;
             
+            if (c.name === 'トラップコンボ') {
+                let maxStr = 0;
+                player.deck.summons.forEach(s => {
+                    if (s.card.strength > maxStr) maxStr = s.card.strength;
+                });
+                detail = `（基本軽減2 ＋ 召喚強度ボーナス${maxStr}）`;
+            }
+            
             if (c.effect.includes('捨札と廃棄札の合計コストの半分ダメージを減少')) {
                 const d = player.deck.discard.reduce((sum, c) => sum + c.cost, 0);
                 const v = player.deck.void.reduce((sum, c) => sum + c.cost, 0);
@@ -1124,6 +1132,36 @@ function setupEvents() {
             enemyHp -= counterDmg;
             logMsg(`【流し斬り】の効果発動！すべての軽減でダメージを防ぎ切り、カウンターで敵に ${counterDmg} ダメージを与えた！`, 'important');
             if (typeof showDamagePopup === 'function') showDamagePopup(counterDmg);
+        }
+        
+        // --- トラップコンボカウンター判定 ---
+        const hasTrapCombo = currentCombo.some(c => c.name === 'トラップコンボ');
+        if (hasTrapCombo && player.deck.summons.length > 0) {
+            let trapCounterDmg = 0;
+            const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
+            player.deck.summons.forEach(s => {
+                const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
+                if (match) {
+                    let atk = parseInt(match[1]);
+                    if (s.elementalerBuff) atk += 2 * s.elementalerBuff;
+                    atk += honnouBuff;
+                    trapCounterDmg += atk;
+                }
+            });
+            
+            if (trapCounterDmg > 0) {
+                const counterHook = triggerHook('onAttack', {
+                    totalDmg: trapCounterDmg,
+                    logMsg,
+                    player,
+                    enemyOpen: els.chkEnemyOpen ? els.chkEnemyOpen.checked : false,
+                    currentCombo: []
+                }, player.deck.passives);
+                trapCounterDmg = counterHook.totalDmg;
+                enemyHp -= trapCounterDmg;
+                logMsg(`【トラップコンボ】の効果発動！召喚ユニットによるカウンター攻撃で敵に ${trapCounterDmg} ダメージを与えた！`, 'important');
+                if (typeof showDamagePopup === 'function') showDamagePopup(trapCounterDmg);
+            }
         }
         
         if (actualDmg > 0) {

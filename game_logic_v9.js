@@ -273,6 +273,16 @@ export function calculateDefenseFromCards(cards, player) {
             total += parseInt(match2[1]);
             continue;
         }
+        
+        if (card.name === 'トラップコンボ' && player) {
+            let maxStr = 0;
+            player.deck.summons.forEach(s => {
+                if (s.card.strength > maxStr) maxStr = s.card.strength;
+            });
+            total += 2 + maxStr;
+            continue;
+        }
+
         // 捨札と廃棄札の合計コストの半分ダメージを減少
         if (card.effect.includes('捨札と廃棄札の合計コストの半分ダメージを減少') && player) {
             const discardCost = player.deck.discard.reduce((sum, c) => sum + c.cost, 0);
