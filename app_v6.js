@@ -1137,31 +1137,53 @@ function setupEvents() {
         // --- トラップコンボカウンター判定 ---
         const hasTrapCombo = currentCombo.some(c => c.name === 'トラップコンボ');
         if (hasTrapCombo && player.deck.summons.length > 0) {
-            let trapCounterDmg = 0;
-            const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
-            player.deck.summons.forEach(s => {
-                const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
-                if (match) {
-                    let atk = parseInt(match[1]);
-                    if (s.elementalerBuff) atk += 2 * s.elementalerBuff;
-                    atk += honnouBuff;
-                    trapCounterDmg += atk;
-                }
-            });
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;';
             
-            if (trapCounterDmg > 0) {
-                const counterHook = triggerHook('onAttack', {
-                    totalDmg: trapCounterDmg,
-                    logMsg,
-                    player,
-                    enemyOpen: els.chkEnemyOpen ? els.chkEnemyOpen.checked : false,
-                    currentCombo: []
-                }, player.deck.passives);
-                trapCounterDmg = counterHook.totalDmg;
-                enemyHp -= trapCounterDmg;
-                logMsg(`【トラップコンボ】の効果発動！召喚ユニットによるカウンター攻撃で敵に ${trapCounterDmg} ダメージを与えた！`, 'important');
-                if (typeof showDamagePopup === 'function') showDamagePopup(trapCounterDmg);
-            }
+            const title = document.createElement('h3');
+            title.innerText = 'トラップコンボ：カウンターを行うユニットを選択';
+            title.style.color = '#fff';
+            title.style.marginBottom = '20px';
+            title.style.textAlign = 'center';
+            overlay.appendChild(title);
+            
+            const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
+            
+            player.deck.summons.forEach(s => {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-primary';
+                btn.style.cssText = 'margin:10px; width:80%; max-width:300px; padding:10px; font-size:1.1rem; text-align:center;';
+                btn.innerText = s.card.name;
+                btn.addEventListener('click', () => {
+                    document.body.removeChild(overlay);
+                    
+                    let trapCounterDmg = 0;
+                    const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
+                    if (match) {
+                        let atk = parseInt(match[1]);
+                        if (s.elementalerBuff) atk += 2 * s.elementalerBuff;
+                        atk += honnouBuff;
+                        trapCounterDmg += atk;
+                    }
+                    
+                    if (trapCounterDmg > 0) {
+                        const counterHook = triggerHook('onAttack', {
+                            totalDmg: trapCounterDmg,
+                            logMsg,
+                            player,
+                            enemyOpen: els.chkEnemyOpen ? els.chkEnemyOpen.checked : false,
+                            currentCombo: []
+                        }, player.deck.passives);
+                        trapCounterDmg = counterHook.totalDmg;
+                        enemyHp -= trapCounterDmg;
+                        logMsg(`【トラップコンボ】の効果発動！召喚「${s.card.name}」によるカウンター攻撃で敵に ${trapCounterDmg} ダメージを与えた！`, 'important');
+                        if (typeof showDamagePopup === 'function') showDamagePopup(trapCounterDmg);
+                        updateUI();
+                    }
+                });
+                overlay.appendChild(btn);
+            });
+            document.body.appendChild(overlay);
         }
         
         if (actualDmg > 0) {
