@@ -509,6 +509,11 @@ function setupEvents() {
             const match = c.effect.match(/ダメージ[＋\+](\d+)/);
             if (match) currentCardDmg += parseInt(match[1]);
             
+            if (c.name === 'ロックオンアサルト' && player.deck.summons.length > 0) {
+                currentCardDmg += 2;
+                detail += `（召喚配置ボーナス＋2 🎯任意のカードにダメージ）`;
+            }
+            
             const voidMatch = c.effect.match(/廃棄札1枚につき.*?ダメージ.*?[＋\+](\d+)/);
             if (voidMatch) {
                 const bonus = parseInt(voidMatch[1]) * player.deck.void.length;
