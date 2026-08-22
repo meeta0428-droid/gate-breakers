@@ -154,7 +154,7 @@ body {
     flex-direction: row;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
-    height: 155px;
+    height: 135px;
 }
 
 .log-container {
