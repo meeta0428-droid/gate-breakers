@@ -186,5 +186,23 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // 氷雪魔弾：持続デバフの強度をログに出力
+    "氷雪魔弾": {
+        onAttack: (context) => {
+            if (context.player && !context._hyosetsuApplied) {
+                const hasMadanjushi = context.player.deck.passives.some(p => p.name === '魔弾銃士');
+                // 基本強度は3
+                let finalStrength = 3;
+                if (hasMadanjushi) {
+                    finalStrength += 1;
+                }
+                
+                context._hyosetsuApplied = true;
+                context.logMsg(`【氷雪魔弾】凍てつく弾丸！<br>このカードが捨札にある間、ダメージを受けた対象は <b>コスト${finalStrength} 以下</b> のカードを回収する際のコストが＋1されます！`, 'important');
+                return { _hyosetsuApplied: true };
+            }
+            return {};
+        }
     }
 };

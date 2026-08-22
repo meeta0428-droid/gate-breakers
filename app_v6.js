@@ -1902,6 +1902,18 @@ function updateUI() {
                 </div>
             `;
         }
+        
+        const hasHyosetsu = player.deck.discard.some(c => c.name === '氷雪魔弾');
+        if (hasHyosetsu) {
+            const hasMadanjushi = player.deck.passives.some(p => p.name === '魔弾銃士');
+            const str = hasMadanjushi ? 4 : 3;
+            debuffArea.innerHTML += `
+                <div style="background-color: rgba(50, 150, 255, 0.2); border-left: 4px solid #66b3ff; padding: 5px; font-size: 0.8rem; color: #cce6ff; border-radius: 3px;">
+                    <strong>❄️ 氷雪魔弾効果発動中！</strong><br>
+                    対象が <b>コスト${str} 以下</b> のカードを回収する際、コストが＋1されます。
+                </div>
+            `;
+        }
     }
 }
 
