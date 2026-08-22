@@ -812,6 +812,9 @@ function setupEvents() {
                 const v = player.deck.void.reduce((sum, c) => sum + c.cost, 0);
                 detail += `（割合軽減 ${Math.floor((d + v) / 2)}）`;
             }
+            if (c._renseiKabeMitigation) {
+                detail += `（ドロー軽減 ${c._renseiKabeMitigation}）`;
+            }
             if (toVoid.has(idx)) detail += ` [廃棄へ]`;
             return `・「${c.name}」${detail}`;
         }).join('<br>');

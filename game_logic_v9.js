@@ -266,6 +266,11 @@ export function calculateDefenseFromCards(cards, player) {
             const voidCost = player.deck.void.reduce((sum, c) => sum + c.cost, 0);
             total += Math.floor((discardCost + voidCost) / 2);
         }
+        
+        // 錬成壁の動的軽減値
+        if (card._renseiKabeMitigation) {
+            total += card._renseiKabeMitigation;
+        }
     }
     return total;
 }
