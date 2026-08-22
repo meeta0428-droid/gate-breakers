@@ -550,12 +550,14 @@ function setupEvents() {
         // 召喚カードの追撃
         let summonDmg = 0;
         let summonLog = '';
+        const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
         player.deck.summons.forEach(s => {
             if (s.stance === 'attack' || s.stance === 'both') {
                 const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
                 if (match) {
                     let atk = parseInt(match[1]);
                     if (s.elementalerBuff) atk += 2 * s.elementalerBuff;
+                    atk += honnouBuff;
                     
                     summonDmg += atk;
                     let extraInfo = '';
@@ -672,6 +674,11 @@ function setupEvents() {
                 }));
             }
             
+            const hasHonnou = currentCombo.some(c => c.name === '本能の覚醒');
+            if (hasHonnou) {
+                logMsg(`【本能の覚醒】の効果が発動！このカードが捨札にある限り、召喚ユニットの攻/防が＋2されます。`, 'important');
+            }
+
             // ウンディーネ召喚時効果
             const hasUndine = currentCombo.some(c => c.name === 'ウンディーネ');
             if (hasUndine && player.deck.void.some(c => c.cost <= 2)) {
@@ -1278,6 +1285,9 @@ function setupEvents() {
                         defVal = parseInt(match[2], 10);
                     }
                     if (s.elementalerBuff) defVal += 2 * s.elementalerBuff;
+                    const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
+                    defVal += honnouBuff;
+                    
                     const endurance = s.card.cost + defVal;
                     
                     if (dmgToTake >= endurance) {
@@ -2427,6 +2437,7 @@ function updateUI() {
     // 召喚エリアの描画
     els.summonArea.innerHTML = '';
     if (player.deck.summons.length > 0) {
+        const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
         player.deck.summons.forEach((s, idx) => {
             let atk = "?", def = "?";
             const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
@@ -2437,6 +2448,8 @@ function updateUI() {
                     atkVal += 2 * s.elementalerBuff;
                     defVal += 2 * s.elementalerBuff;
                 }
+                atkVal += honnouBuff;
+                defVal += honnouBuff;
                 atk = atkVal;
                 def = defVal;
             }
