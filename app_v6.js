@@ -42,6 +42,7 @@ const els = {
     // Buttons
     btnDraw: document.getElementById('btn-draw'),
     btnDiscardView: document.getElementById('btn-discard-view'),
+    btnVoidView: document.getElementById('btn-void-view'),
     btnRefresh: document.getElementById('btn-refresh'),
     btnAttack: document.getElementById('btn-attack'),
     btnReact: document.getElementById('btn-react'),
@@ -1402,6 +1403,29 @@ function setupEvents() {
         els.discardModal.classList.remove('hidden');
     });
 
+    // 廃棄札確認（山札・手札へ戻す）を開く
+    els.btnVoidView?.addEventListener('click', () => {
+        if (player.deck.void.length === 0) {
+            alert('廃棄札がありません。');
+            return;
+        }
+        window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+            detail: {
+                title: "廃棄札確認",
+                desc: "山札に戻すカードを1枚選んでください。（キャンセルする場合は右上の×か外側をクリック）",
+                playerObj: player,
+                source: 'void',
+                filterFunc: (c) => true,
+                onSelect: (selectedCard) => {
+                    // 山札（deck）の一番下（もしくはシャッフル）に戻す
+                    player.deck.cards.push(selectedCard);
+                    logMsg(`廃棄札から「${selectedCard.name}」を山札に戻しました。`);
+                    updateUI();
+                }
+            }
+        }));
+    });
+
     document.getElementById('btn-execute-recover').addEventListener('click', () => {
         if (recoveringCards.size === 0) return;
         
@@ -1612,13 +1636,15 @@ function setupEvents() {
         updateUI();
     });
 
-    // --- 汎用捨札回収イベント ---
+    // --- 汎用回収イベント（捨札/廃棄札） ---
     window.addEventListener('requestRecoverCard', (e) => {
-        const { filterFunc, title, desc, onSelect, playerObj } = e.detail;
-        const validCards = playerObj.deck.discard.filter(filterFunc);
+        const { filterFunc, title, desc, onSelect, playerObj, source } = e.detail;
+        const sourceArray = source === 'void' ? playerObj.deck.void : playerObj.deck.discard;
+        const validCards = sourceArray.filter(filterFunc);
+        
         const modal = document.getElementById('select-discard-modal');
         const listDiv = document.getElementById('select-discard-list');
-        document.getElementById('select-discard-title').innerText = title || "捨札から選択";
+        document.getElementById('select-discard-title').innerText = title || "カードを選択";
         document.getElementById('select-discard-desc').innerText = desc || "カードを1枚選んでください。";
         
         listDiv.innerHTML = '';
@@ -1636,10 +1662,9 @@ function setupEvents() {
                     </div>
                 `;
                 item.addEventListener('click', () => {
-                    // discard配列から削除
-                    const idx = playerObj.deck.discard.lastIndexOf(card);
+                    const idx = sourceArray.lastIndexOf(card);
                     if (idx > -1) {
-                        playerObj.deck.discard.splice(idx, 1);
+                        sourceArray.splice(idx, 1);
                     }
                     modal.classList.add('hidden');
                     if (onSelect) onSelect(card);
