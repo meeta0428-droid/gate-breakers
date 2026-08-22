@@ -309,5 +309,16 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // ロジックブレイク：オープン中のカードを廃棄する指示をログに出力
+    "ロジックブレイク": {
+        onAttack: (context) => {
+            if (!context._logicBreakApplied) {
+                context._logicBreakApplied = true;
+                context.logMsg(`【ロジックブレイク】敵の思考を破壊する！<br><span style="color:#ff5555; font-weight:bold;">※オープン中のカードを１枚廃棄！</span><br>（敵の公開状態の手札を1枚指定し、強制的に廃棄札へ移動させてください）`, 'important');
+                return { _logicBreakApplied: true };
+            }
+            return {};
+        }
     }
 };
