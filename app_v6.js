@@ -1985,14 +1985,15 @@ function updateUI() {
     els.passiveArea.innerHTML = '';
     if (player.deck.passives.length > 0) {
         const groupedPassives = {};
-        player.deck.passives.forEach(card => {
+        player.deck.passives.forEach((card, originalIdx) => {
             if (!groupedPassives[card.name]) {
                 groupedPassives[card.name] = { 
                     card: card,
                     name: card.name,
                     strength: card.strength,
                     count: 1,
-                    noDuplicate: card.effect.includes('重複しない')
+                    noDuplicate: card.effect.includes('重複しない'),
+                    originalIdx: originalIdx
                 };
             } else {
                 if (!groupedPassives[card.name].noDuplicate) {
@@ -2008,7 +2009,7 @@ function updateUI() {
             // 重複しないカードで複数枚ある場合はカウントだけ表示するか、あるいは強度だけ固定にする
             pDiv.innerHTML = `<strong>${group.name}${group.count > 1 ? ` x${group.count}` : ''}</strong> (強度+${group.strength})`;
             pDiv.addEventListener('click', () => {
-                openCardModal(group.card, -1, true); // isPassive = true
+                openCardModal(group.card, group.originalIdx, true); // isPassive = true
             });
             els.passiveArea.appendChild(pDiv);
         });
