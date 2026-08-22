@@ -215,5 +215,16 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // 賦活の秘薬：回復の指示をログに出力
+    "賦活の秘薬": {
+        onAttack: (context) => {
+            if (!context._fukatsuApplied) {
+                context._fukatsuApplied = true;
+                context.logMsg(`【賦活の秘薬】生命力がみなぎる！<br>※プレイヤーは<b>任意の一つの能力値のダメージを１点回復</b>させてください。<br>また、このカードが捨札にある間、すべての回収ポイントが＋１されます！`, 'important');
+                return { _fukatsuApplied: true };
+            }
+            return {};
+        }
     }
 };

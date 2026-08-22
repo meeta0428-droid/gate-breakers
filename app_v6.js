@@ -1314,7 +1314,7 @@ function setupEvents() {
                     bonusBody += val; bonusInt += val; bonusMen += val;
                 }
                 
-                const matchAny = card.effect.match(/回収ポイント\s*[＋\+]\s*([0-9０-９]+)/);
+                const matchAny = card.effect.match(/回収ポイント[をが]?\s*[＋\+]\s*([0-9０-９]+)/);
                 if (matchAny && !matchAll) {
                     const val = parseFullWidthIntLocal(matchAny[1]);
                     bonusBody += val; bonusInt += val; bonusMen += val;
@@ -2038,6 +2038,16 @@ function updateUI() {
                 <div style="background-color: rgba(50, 150, 255, 0.2); border-left: 4px solid #66b3ff; padding: 5px; font-size: 0.8rem; color: #cce6ff; border-radius: 3px;">
                     <strong>❄️ 氷雪魔弾効果発動中！</strong><br>
                     対象が <b>コスト${str} 以下</b> のカードを回収する際、コストが＋1されます。
+                </div>
+            `;
+        }
+        
+        const fukatsuCount = player.deck.discard.filter(c => c.name === '賦活の秘薬').length;
+        if (fukatsuCount > 0) {
+            debuffArea.innerHTML += `
+                <div style="background-color: rgba(50, 200, 100, 0.2); border-left: 4px solid #4dff88; padding: 5px; font-size: 0.8rem; color: #b3ffcc; border-radius: 3px; margin-top: 5px;">
+                    <strong>🧪 賦活の秘薬 効果適用中！</strong><br>
+                    すべての回収ポイントが ＋${fukatsuCount} されています。
                 </div>
             `;
         }
