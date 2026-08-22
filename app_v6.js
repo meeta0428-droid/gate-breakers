@@ -1581,6 +1581,56 @@ function setupEvents() {
                     return;
                 }
 
+                if (passiveCard.name === '錬成の法') {
+                    if (player.deck.hand.length === 0) {
+                        alert('捨てる手札がありません。');
+                        return;
+                    }
+                    if (player.deck.void.length === 0) {
+                        alert('廃棄札がありません。');
+                        return;
+                    }
+
+                    // まず捨てる手札を選ぶ
+                    window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                        detail: {
+                            title: "錬成の法：捨てる手札を選択",
+                            desc: "捨札にする手札を1枚選んでください。",
+                            playerObj: player,
+                            source: 'hand',
+                            filterFunc: (c) => true,
+                            onSelect: (discardedCard) => {
+                                player.deck.discard.push(discardedCard); // 選択した手札を捨札へ
+                                
+                                // 次に、回収する廃棄札を選ぶ（捨てたカードのコスト以下）
+                                setTimeout(() => {
+                                    window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                                        detail: {
+                                            title: "錬成の法：回収する廃棄札を選択",
+                                            desc: `コスト ${discardedCard.cost} 以下のカードを選んでください。`,
+                                            playerObj: player,
+                                            source: 'void',
+                                            filterFunc: (c) => c.cost <= discardedCard.cost,
+                                            onSelect: (recoveredCard) => {
+                                                player.deck.hand.push(recoveredCard); // 回収
+                                                // 錬成の法自身をパッシブから捨札へ移動
+                                                const passiveIdx = player.deck.passives.indexOf(passiveCard);
+                                                if (passiveIdx > -1) {
+                                                    player.deck.passives.splice(passiveIdx, 1);
+                                                    player.deck.discard.push(passiveCard);
+                                                }
+                                                logMsg(`【錬成の法】効果発動！手札の「${discardedCard.name}」を捨て、廃棄札から「${recoveredCard.name}」を手札に加えました！<br><small>※錬成の法は使用されたため捨札に移動しました。</small>`, 'important');
+                                                updateUI();
+                                            }
+                                        }
+                                    }));
+                                }, 100);
+                            }
+                        }
+                    }));
+                    return; // 発動フローに入ったのでリターン
+                }
+
                 if (passiveCard.name === '錬金術師') {
                     if (player._alchemistUsed) {
                         alert('錬金術師の効果は1ラウンドに1回までです。');
@@ -2235,6 +2285,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === '武具錬成') {
                     els.btnTriggerPassive.innerText = '効果を共有';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === '錬成の法') {
+                    els.btnTriggerPassive.innerText = '効果を発動';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else {
                     els.btnTriggerPassive.classList.add('hidden');
