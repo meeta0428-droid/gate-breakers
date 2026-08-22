@@ -1575,6 +1575,11 @@ function setupEvents() {
                 const passiveCard = player.deck.passives[selectedCardIndex];
                 els.modal.classList.add('hidden'); // 詳細モーダルを閉じる
 
+                if (passiveCard.name === '武具錬成') {
+                    logMsg(`【武具錬成】効果を対象に共有しました！<br><span style="color:#ffcc00; font-size:0.9rem;">（対象の攻撃ダメージ＋1、または受けるダメージ1点軽減）</span>`, 'important');
+                    return;
+                }
+
                 if (passiveCard.name === '錬金術師') {
                     if (player.deck.hand.length === 0) {
                         alert('捨てる手札がありません。');
@@ -2215,6 +2220,10 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
             // 発動可能なパッシブ効果の判定
             if (els.btnTriggerPassive) {
                 if (card.name === '錬金術師') {
+                    els.btnTriggerPassive.innerText = '効果を発動';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === '武具錬成') {
+                    els.btnTriggerPassive.innerText = '効果を共有';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else {
                     els.btnTriggerPassive.classList.add('hidden');
