@@ -1365,10 +1365,17 @@ function setupEvents() {
                     const canUseFromDiscard = card.effect.includes('手札にあるように使用できる');
                     const useBtnHtml = canUseFromDiscard ? `<button class="btn btn-action btn-use-discard" data-idx="${idx}" style="font-size:0.7rem; padding:2px 5px; margin-top:5px; width:100%;">捨札から使用</button>` : '';
 
+                    const hasMadanjushi = player.deck.passives.some(p => p.name === '魔弾銃士');
+                    const isBullet = card.effect.includes('弾丸');
+                    let costDisplay = `コスト: ${card.cost}`;
+                    if (hasMadanjushi && isBullet) {
+                        costDisplay = `コスト: <span style="text-decoration: line-through;">${card.cost}</span> <span style="color:#ffcc00;">${Math.max(0, card.cost - 1)}</span> <span style="color:#ffcc00; font-size:0.7rem;">(魔弾)</span>`;
+                    }
+
                     item.innerHTML = `
                         <div><strong>${card.name}</strong><br><small style="color:#aaa;">${card.category}</small></div>
                         <div style="text-align:right;">
-                            <div>コスト: ${card.cost}</div>
+                            <div>${costDisplay}</div>
                             ${isSelected ? '<div style="color:#4caf50; font-size:0.75rem;">✔ 選択中</div>' : ''}
                             ${useBtnHtml}
                         </div>
@@ -1654,10 +1661,17 @@ function setupEvents() {
             validCards.forEach(card => {
                 const item = document.createElement('div');
                 item.className = 'discard-item';
+                const hasMadanjushi = playerObj.deck.passives.some(p => p.name === '魔弾銃士');
+                const isBullet = card.effect.includes('弾丸');
+                let costDisplay = `コスト: ${card.cost}`;
+                if (hasMadanjushi && isBullet) {
+                    costDisplay = `コスト: <span style="text-decoration: line-through;">${card.cost}</span> <span style="color:#ffcc00;">${Math.max(0, card.cost - 1)}</span> <span style="color:#ffcc00; font-size:0.7rem;">(魔弾)</span>`;
+                }
+
                 item.innerHTML = `
                     <div><strong>${card.name}</strong><br><small style="color:#aaa;">${card.category}</small></div>
                     <div style="text-align:right;">
-                        <div>コスト: ${card.cost}</div>
+                        <div>${costDisplay}</div>
                         <button class="btn btn-primary" style="font-size:0.7rem; padding:2px 5px; margin-top:5px; width:100%;">選択</button>
                     </div>
                 `;
