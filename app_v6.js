@@ -981,6 +981,12 @@ function setupEvents() {
             }));
         }
         
+        // ジャミングプロトコルの処理
+        const hasJamming = currentCombo.some(c => c.name === 'ジャミングプロトコル');
+        if (hasJamming) {
+            logMsg(`【ジャミングプロトコル】通信を傍受・妨害！<br><span style="color:#ffcc00; font-weight:bold;">※攻撃を行ってきた敵の任意の手札1枚を表向き（公開状態）にさせてください！</span><br>（公開状態にした場合は、画面下部の「敵手札オープン中」にチェックを入れてください）`, 'important');
+        }
+        
         currentCombo = [];
         els.incomingDmg.value = '';
         els.chkIgnoreDef.checked = false; // チェックをリセット
