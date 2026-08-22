@@ -425,6 +425,16 @@ function setupEvents() {
         updateUI();
     });
 
+    document.getElementById('btn-manual-heal').addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('requestStatHeal', {
+            detail: {
+                amount: 1,
+                playerObj: player,
+                desc: "【味方からの回復・手動回復】回復する能力値を1つ選んでください。（各1点回復）"
+            }
+        }));
+    });
+
     // バトル開始ボタン
     els.btnStartBattle.addEventListener('click', () => {
         const currentCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
