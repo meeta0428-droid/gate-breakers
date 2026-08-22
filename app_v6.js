@@ -1198,9 +1198,14 @@ function setupEvents() {
         for (let i = 0; i < cards.length; i += 9) {
             printHTML += '<div class="print-page">';
             const pageCards = cards.slice(i, i + 9);
-            pageCards.forEach(card => {
+            pageCards.forEach((card, idx) => {
+                const col = idx % 3;
+                const row = Math.floor(idx / 3);
+                const leftPos = col * 63;
+                const topPos = row * 88;
+
                 printHTML += `
-                    <div class="print-card">
+                    <div class="print-card" style="left: ${leftPos}mm; top: ${topPos}mm;">
                         <div class="print-card-title">${card.name}</div>
                         <div class="print-card-cat">${card.category}</div>
                         <div class="print-card-stats">

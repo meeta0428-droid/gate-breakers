@@ -401,25 +401,23 @@ body {
     
     .print-page {
         width: 189mm; /* 63mm * 3 */
+        height: 264mm; /* 88mm * 3 */
         margin: 0 auto;
         padding: 0;
         box-sizing: border-box;
         page-break-after: always;
         break-after: page;
-        font-size: 0; /* inline-blockによる謎の隙間を消す */
-        line-height: 0;
+        position: relative; /* 子要素の絶対座標の基準 */
+        overflow: hidden;
     }
     
     .print-card {
+        position: absolute;
         width: 63mm;
         height: 88mm;
         border: 1px dashed #999;
         box-sizing: border-box;
         padding: 4mm;
-        display: inline-block;
-        vertical-align: top;
-        page-break-inside: avoid;
-        break-inside: avoid;
         background: #fff;
         color: #000;
         
