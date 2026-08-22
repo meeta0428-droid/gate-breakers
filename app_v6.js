@@ -1224,10 +1224,18 @@ function setupEvents() {
                 cDiv.innerHTML = `<span>${s.card.name} (コスト${s.card.cost})</span> <button class="btn btn-primary" style="padding:2px 6px; font-size:0.7rem;">ダメージを受ける</button>`;
                 cDiv.querySelector('button').addEventListener('click', () => {
                     const dmgToTake = pendingDamage;
-                    if (dmgToTake > s.card.cost) {
+                    
+                    let defVal = 0;
+                    const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
+                    if (match) {
+                        defVal = parseInt(match[2], 10);
+                    }
+                    const endurance = s.card.cost + defVal;
+                    
+                    if (dmgToTake >= endurance) {
                         // 破壊される
                         player.deck.summons.splice(idx, 1);
-                        pendingDamage -= s.card.cost; // コスト分だけ軽減して残りをプレイヤーが受ける？
+                        pendingDamage -= endurance;
                         
                         if (s.card.name === 'シルフ') {
                             player.deck.hand.push(s.card);
