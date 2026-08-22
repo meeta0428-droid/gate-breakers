@@ -262,5 +262,16 @@ export const cardEffects = {
             
             return {};
         }
+    },
+    // バックドア・アクセス：相手の手札を公開するよう促す
+    "バックドア・アクセス": {
+        onAttack: (context) => {
+            if (!context._backdoorApplied) {
+                context._backdoorApplied = true;
+                context.logMsg(`【バックドア・アクセス】システムへの侵入に成功！<br><span style="color:#ffcc00;">※任意の対象（敵など）を指定し、<b>手札1枚を表向き（公開状態）</b>にさせてください。<br>公開状態にした場合は、画面下部の「敵手札オープン中」にチェックを入れてください。</span>`, 'important');
+                return { _backdoorApplied: true };
+            }
+            return {};
+        }
     }
 };

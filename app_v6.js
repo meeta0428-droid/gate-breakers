@@ -49,6 +49,7 @@ const els = {
     incomingDmg: document.getElementById('incoming-dmg'),
     chkIgnoreDef: document.getElementById('chk-ignore-def'),
     chkEnemyNoReact: document.getElementById('chk-enemy-no-react'),
+    chkEnemyOpen: document.getElementById('chk-enemy-open'),
     
     // Navigation
     btnDeckToChara: document.getElementById('btn-deck-to-chara'),
@@ -656,6 +657,19 @@ function setupEvents() {
                         playerObj: player
                     }
                 }));
+            }
+            
+            // ドロー効果の汎用処理（バックドア・アクセスなど）
+            let totalDraw = 0;
+            currentCombo.forEach(c => {
+                const drawMatch = c.effect.match(/山札から(?:カードを)?(\d+)枚引いて手札に加える/);
+                if (drawMatch) {
+                    totalDraw += parseInt(drawMatch[1], 10);
+                }
+            });
+            if (totalDraw > 0) {
+                const drawnCount = player.deck.draw(totalDraw);
+                logMsg(`カードの効果で山札から ${drawnCount} 枚ドローしました！`);
             }
 
             currentCombo = setCards;

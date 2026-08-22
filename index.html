@@ -182,9 +182,14 @@
                     <button id="btn-discard-view" class="btn">捨札回収</button>
                     <button id="btn-void-view" class="btn" style="background-color:#4a3f5c;">廃棄確認</button>
                     <button id="btn-refresh" class="btn btn-secondary">リフレッシュ</button>
-                    <label style="flex: 1 1 100%; display:flex; justify-content:center; align-items:center; gap:4px; font-size:0.75rem; color:#ccc; margin-top:5px;">
-                        <input type="checkbox" id="chk-enemy-no-react"> 敵リアクションなし（暗器等）
-                    </label>
+                    <div style="flex: 1 1 100%; display:flex; justify-content:center; gap: 15px; margin-top:5px;">
+                        <label style="display:flex; align-items:center; gap:4px; font-size:0.75rem; color:#ccc;">
+                            <input type="checkbox" id="chk-enemy-no-react"> 敵リアクションなし
+                        </label>
+                        <label style="display:flex; align-items:center; gap:4px; font-size:0.75rem; color:#ccc;">
+                            <input type="checkbox" id="chk-enemy-open"> 敵手札オープン中
+                        </label>
+                    </div>
                     <button id="btn-attack" class="btn btn-primary" style="flex: 1 1 100%; margin-bottom:15px;">攻撃実行</button>
                 </div>
             </main>
@@ -370,9 +375,9 @@
         </div>
     </div>
 
-    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v142 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v142 確認・更新</button>
+    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v143 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v143 確認・更新</button>
 
-    <script type="module" src="app_v6.js?v=142"></script>
+    <script type="module" src="app_v6.js?v=143"></script>
     <!-- 残心モーダル -->
     <div id="zanshin-modal" class="modal hidden" style="z-index: 2600;">
         <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
