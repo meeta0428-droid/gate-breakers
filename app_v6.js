@@ -671,7 +671,7 @@ function setupEvents() {
                         desc: "山札に戻すコスト2以下の廃棄札を選んでください。",
                         source: 'void',
                         onSelect: (card) => {
-                            player.deck.cards.push(card);
+                            player.deck.mountain.push(card);
                             logMsg(`【ウンディーネ】対象の廃棄札「${card.name}」を山札に戻した！`);
                         },
                         playerObj: player
@@ -1044,7 +1044,7 @@ function setupEvents() {
                     desc: "山札に戻すコスト2以下の廃棄札を選んでください。",
                     source: 'void',
                     onSelect: (card) => {
-                        player.deck.cards.push(card);
+                        player.deck.mountain.push(card);
                         logMsg(`【ウンディーネ】対象の廃棄札「${card.name}」を山札に戻した！`);
                     },
                     playerObj: player
@@ -1604,7 +1604,7 @@ function setupEvents() {
                 filterFunc: (c) => true,
                 onSelect: (selectedCard) => {
                     // 山札（deck）の一番下（もしくはシャッフル）に戻す
-                    player.deck.cards.push(selectedCard);
+                    player.deck.mountain.push(selectedCard);
                     logMsg(`廃棄札から「${selectedCard.name}」を山札に戻しました。`);
                     updateUI();
                 }
@@ -1786,7 +1786,7 @@ function setupEvents() {
                                     source: 'void',
                                     filterFunc: (c) => c !== undineCard,
                                     onSelect: (selectedCard) => {
-                                        player.deck.cards.push(selectedCard);
+                                        player.deck.mountain.push(selectedCard);
                                         logMsg(`廃棄札から「${selectedCard.name}」を山札に戻した！`);
                                         remainingCount--;
                                         if (remainingCount > 0) {
@@ -2071,8 +2071,8 @@ function setupEvents() {
                             source: 'void',
                             filterFunc: (c) => c.cost <= remainingCost,
                             onSelect: (selectedCard) => {
-                                player.deck.cards.push(selectedCard); // 廃棄札から山札へ（シャッフル等する場合deck.cardsかmountainか。このアプリはそのまま一番下でOKならcardsに入れてshuffleするか。既存はどこに？）
-                                // 既存の btnVoidView では player.deck.cards.push(selectedCard) で戻している
+                                player.deck.mountain.push(selectedCard); // 廃棄札から山札へ（シャッフル等する場合deck.cardsかmountainか。このアプリはそのまま一番下でOKならcardsに入れてshuffleするか。既存はどこに？）
+                                // 既存の btnVoidView では player.deck.mountain.push(selectedCard) で戻している
                                 logMsg(`【癒しの雫】廃棄札から「${selectedCard.name}」を山札に戻した！`);
                                 remainingCost -= selectedCard.cost;
                                 if (remainingCost > 0) {
