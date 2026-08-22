@@ -613,6 +613,17 @@ function setupEvents() {
                     return;
                 }
                 
+                // 使用後廃棄のテキストを持つカード
+                if (card.effect.includes('使用後このカードは廃棄札へと移動する')) {
+                    const discardIdx = player.deck.discard.lastIndexOf(card);
+                    if (discardIdx > -1) {
+                        player.deck.discard.splice(discardIdx, 1);
+                        player.deck.void.push(card);
+                        logMsg(`「${card.name}」は使用されたため廃棄札に移動した。`);
+                    }
+                    return;
+                }
+                
                 if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
                     if (discardIdx > -1) {
@@ -903,6 +914,17 @@ function setupEvents() {
                     logMsg(`「${card.name}」は捨札から使用されたため廃棄札に移動した。`);
                 }
                 delete card._fromDiscard;
+                return;
+            }
+
+            // 使用後廃棄のテキストを持つカード
+            if (card.effect.includes('使用後このカードは廃棄札へと移動する')) {
+                const discardIdx = player.deck.discard.lastIndexOf(card);
+                if (discardIdx > -1) {
+                    player.deck.discard.splice(discardIdx, 1);
+                    player.deck.void.push(card);
+                    logMsg(`「${card.name}」は使用されたため廃棄札に移動した。`);
+                }
                 return;
             }
 
