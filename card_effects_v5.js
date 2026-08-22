@@ -148,7 +148,14 @@ export const cardEffects = {
     "魔術師": {
         onAttack: (context) => {
             if (context.totalDmg > 0 && context.player && !context._majutsushiApplied) {
-                const discardCount = context.player.deck.discard.length;
+                let discardCount = context.player.deck.discard.length;
+                
+                // 現在使用中のカード（コンボエリアにあるカード）は捨札枚数にカウントしない
+                if (context.currentCombo) {
+                    const comboSet = new Set(context.currentCombo);
+                    discardCount = context.player.deck.discard.filter(c => !comboSet.has(c)).length;
+                }
+
                 if (discardCount > 0) {
                     context._majutsushiApplied = true; // 重複防止
                     context.logMsg(`【魔術師】知識を力に変換！捨札 ${discardCount}枚 につきダメージ ＋${discardCount}！`, 'important');
