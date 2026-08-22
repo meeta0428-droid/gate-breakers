@@ -401,17 +401,13 @@ body {
     
     .print-page {
         width: 189mm; /* 63mm * 3 */
-        height: 264mm; /* 88mm * 3 */
+        margin: 0 auto;
+        padding: 0;
         box-sizing: border-box;
         page-break-after: always;
         break-after: page;
-        display: grid;
-        grid-template-columns: repeat(3, 63mm);
-        grid-template-rows: repeat(3, 88mm);
-        gap: 0;
-        margin: 0 auto; /* 横中央寄せ */
-        padding: 0; /* paddingを完全排除して高さを264mmに抑える */
-        overflow: hidden;
+        font-size: 0; /* inline-blockによる謎の隙間を消す */
+        line-height: 0;
     }
     
     .print-card {
@@ -420,11 +416,15 @@ body {
         border: 1px dashed #999;
         box-sizing: border-box;
         padding: 4mm;
-        display: flex;
-        flex-direction: column;
+        display: inline-block;
+        vertical-align: top;
+        page-break-inside: avoid;
+        break-inside: avoid;
         background: #fff;
         color: #000;
-        /* page-break-insideはgridアイテムには効きにくいので不要 */
+        
+        font-size: 14px; /* リセット */
+        line-height: 1.2;
     }
     
     .print-card-title {
@@ -446,20 +446,27 @@ body {
     }
     
     .print-card-stats {
-        display: flex;
-        justify-content: space-between;
+        display: block;
         font-size: 10pt;
         font-weight: bold;
         margin-bottom: 3mm;
         background: #eee;
         padding: 2mm;
         border-radius: 2mm;
+        overflow: hidden; /* clearfixの代わり */
+    }
+    
+    .print-card-stats span:first-child {
+        float: left;
+    }
+    
+    .print-card-stats span:last-child {
+        float: right;
     }
     
     .print-card-effect {
         font-size: 8pt;
         line-height: 1.4;
-        flex-grow: 1;
         overflow: hidden;
     }
 }
