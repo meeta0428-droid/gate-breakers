@@ -1304,12 +1304,17 @@ function setupEvents() {
         const maxInt = maxIntBase + bonusInt;
         const maxMen = maxMenBase + bonusMen;
 
+        const hasMadanjushi = player.deck.passives.some(p => p.name === '魔弾銃士');
         let costBody = 0, costInt = 0, costMen = 0;
         recoveringCards.forEach(idx => {
             const card = player.deck.discard[idx];
-            if (card.category.includes('肉体')) costBody += card.cost;
-            else if (card.category.includes('知性')) costInt += card.cost;
-            else if (card.category.includes('精神')) costMen += card.cost;
+            let actualCost = card.cost;
+            if (hasMadanjushi && card.effect.includes('弾丸')) {
+                actualCost = Math.max(0, actualCost - 1);
+            }
+            if (card.category.includes('肉体')) costBody += actualCost;
+            else if (card.category.includes('知性')) costInt += actualCost;
+            else if (card.category.includes('精神')) costMen += actualCost;
         });
 
         document.getElementById('recover-cost-body').innerText = costBody;
