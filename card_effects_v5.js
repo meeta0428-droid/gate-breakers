@@ -164,5 +164,27 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // キュアライト：使用者の捨札1枚につき強度+1、その強度以下のコストの廃棄札を山札に戻せる
+    "キュアライト": {
+        onAttack: (context) => {
+            if (context.player && !context._curelightApplied) {
+                let discardCount = context.player.deck.discard.length;
+                
+                // コンボエリアにあるカード（今使っているキュアライト等）は捨札としてカウントしない
+                if (context.currentCombo) {
+                    const comboSet = new Set(context.currentCombo);
+                    discardCount = context.player.deck.discard.filter(c => !comboSet.has(c)).length;
+                }
+                
+                // キュアライトの基本強度は3
+                const finalStrength = 3 + discardCount;
+                
+                context._curelightApplied = true;
+                context.logMsg(`【キュアライト】癒やしの光！現在の捨札は ${discardCount} 枚。<br>強度が <b>${finalStrength}</b> になりました！<br><span style="color:#ff66cc;">※味方（または自分）は廃棄札から <b>コスト${finalStrength} 以下</b> のカードを1枚、山札に戻してください。</span>`, 'important');
+                return { _curelightApplied: true };
+            }
+            return {};
+        }
     }
 };
