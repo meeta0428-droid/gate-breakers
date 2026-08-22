@@ -1198,24 +1198,27 @@ function setupEvents() {
         for (let i = 0; i < cards.length; i += 9) {
             printHTML += '<div class="print-page">';
             const pageCards = cards.slice(i, i + 9);
-            pageCards.forEach((card, idx) => {
-                const col = idx % 3;
-                const row = Math.floor(idx / 3);
-                const leftPos = col * 63;
-                const topPos = row * 88;
-
-                printHTML += `
-                    <div class="print-card" style="left: ${leftPos}mm; top: ${topPos}mm;">
-                        <div class="print-card-title">${card.name}</div>
-                        <div class="print-card-cat">${card.category}</div>
-                        <div class="print-card-stats">
-                            <span>ｺｽﾄ:${card.cost}</span>
-                            <span>強度:${card.strength}</span>
+            
+            for (let r = 0; r < 3; r++) {
+                const rowCards = pageCards.slice(r * 3, r * 3 + 3);
+                if (rowCards.length === 0) break;
+                
+                printHTML += '<div class="print-row">';
+                rowCards.forEach(card => {
+                    printHTML += `
+                        <div class="print-card">
+                            <div class="print-card-title">${card.name}</div>
+                            <div class="print-card-cat">${card.category}</div>
+                            <div class="print-card-stats">
+                                <span>ｺｽﾄ:${card.cost}</span>
+                                <span>強度:${card.strength}</span>
+                            </div>
+                            <div class="print-card-effect">${card.effect}</div>
                         </div>
-                        <div class="print-card-effect">${card.effect}</div>
-                    </div>
-                `;
-            });
+                    `;
+                });
+                printHTML += '<div style="clear:both;"></div></div>';
+            }
             printHTML += '</div>';
         }
         

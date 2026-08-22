@@ -401,18 +401,22 @@ body {
     
     .print-page {
         width: 189mm; /* 63mm * 3 */
-        height: 264mm; /* 88mm * 3 */
         margin: 0 auto;
-        padding: 0;
+        padding: 5mm 0 0 0;
         box-sizing: border-box;
         page-break-after: always;
         break-after: page;
-        position: relative; /* 子要素の絶対座標の基準 */
-        overflow: hidden;
+        transform: scale(0.96); /* ヘッダーフッターやハードマージンとの干渉を避ける */
+        transform-origin: top center;
+    }
+    
+    .print-row {
+        width: 100%;
+        clear: both;
     }
     
     .print-card {
-        position: absolute;
+        float: left;
         width: 63mm;
         height: 88mm;
         border: 1px dashed #999;
@@ -421,7 +425,7 @@ body {
         background: #fff;
         color: #000;
         
-        font-size: 14px; /* リセット */
+        font-size: 14px;
         line-height: 1.2;
     }
     
