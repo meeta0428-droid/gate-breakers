@@ -1538,6 +1538,40 @@ function setupEvents() {
                     logMsg(`【${card.name}】の効果：山札がありませんでした。`);
                 }
             }
+            if (card.name === 'クイックリロード') {
+                let remainingCost = 6;
+                const showQuickReloadModal = () => {
+                    const validCards = player.deck.discard.filter(c => c.effect.includes('弾丸') && c.cost <= remainingCost);
+                    if (validCards.length === 0) {
+                        if (remainingCost === 6) {
+                            logMsg(`【クイックリロード】回収可能な「弾丸」カードが捨札にありませんでした。`);
+                        } else {
+                            logMsg(`【クイックリロード】回収を終了しました。（残りコスト枠: ${remainingCost}）`);
+                        }
+                        updateUI();
+                        return;
+                    }
+                    window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                        detail: {
+                            title: `クイックリロード (残り枠: ${remainingCost})`,
+                            desc: `回収する「弾丸」カードを選んでください。（右上の×で終了）`,
+                            playerObj: player,
+                            filterFunc: (c) => c.effect.includes('弾丸') && c.cost <= remainingCost,
+                            onSelect: (selectedCard) => {
+                                player.deck.hand.push(selectedCard);
+                                remainingCost -= selectedCard.cost;
+                                logMsg(`【クイックリロード】捨札から「${selectedCard.name}」を回収した！`);
+                                if (remainingCost > 0) {
+                                    setTimeout(showQuickReloadModal, 100);
+                                } else {
+                                    updateUI();
+                                }
+                            }
+                        }
+                    }));
+                };
+                showQuickReloadModal();
+            }
 
             if (card.name === '風読み' || card.effect.includes('イニシアチブフェイズに山札から1枚引き')) {
                 if (player.deck.mountain.length > 0) {
