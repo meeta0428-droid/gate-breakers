@@ -1738,6 +1738,18 @@ function setupEvents() {
                     return;
                 }
 
+                if (passiveCard.name === 'バディビースト') {
+                    const pIdx = player.deck.passives.findIndex(p => p === passiveCard);
+                    if (pIdx > -1) {
+                        player.deck.passives.splice(pIdx, 1);
+                        player.deck.summons.push({ card: passiveCard, stance: 'both' });
+                        logMsg(`【バディビースト】自身を召喚エリアに配置しました！`, 'important');
+                        els.modal.classList.add('hidden');
+                        updateUI();
+                    }
+                    return;
+                }
+
                 if (passiveCard.name === 'ファミリア') {
                     if (player.deck.mountain.length === 0) {
                         alert('山札がありません。');
@@ -2675,6 +2687,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'ファミリア') {
                     els.btnTriggerPassive.innerText = '効果を発動';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === 'バディビースト') {
+                    els.btnTriggerPassive.innerText = '自身を召喚する';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'エレメンタラー') {
                     els.btnTriggerPassive.innerText = '効果を発動（対象ユニットの攻防＋2）';
