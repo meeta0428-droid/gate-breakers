@@ -1245,6 +1245,29 @@ function setupEvents() {
         });
     });
     
+    const btnAllOut = document.getElementById('btn-all-out');
+    if (btnAllOut) {
+        btnAllOut.addEventListener('click', () => {
+            if (confirm('本当に「オールアウト」を実行しますか？\n手札と捨札がすべて廃棄札に送られ、ダメージを0にします。')) {
+                const handCount = player.deck.hand.length;
+                const discardCount = player.deck.discard.length;
+                
+                player.deck.void.push(...player.deck.hand);
+                player.deck.hand = [];
+                
+                player.deck.void.push(...player.deck.discard);
+                player.deck.discard = [];
+                
+                pendingDamage = 0;
+                logMsg(`【オールアウト発動】手札${handCount}枚・捨札${discardCount}枚をすべて廃棄し、ダメージを0にした！`, 'important');
+                
+                els.damageModal.classList.add('hidden');
+                isGuardStanceActive = false;
+                updateUI();
+            }
+        });
+    }
+    
     function openZeroStatRecoveryModal() {
         const renderList = (container, cardArray, sourceName) => {
             container.innerHTML = '';
