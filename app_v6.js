@@ -48,6 +48,7 @@ const els = {
     btnReact: document.getElementById('btn-react'),
     incomingDmg: document.getElementById('incoming-dmg'),
     chkIgnoreDef: document.getElementById('chk-ignore-def'),
+    chkAttackFromOpen: document.getElementById('chk-attack-from-open'),
     chkEnemyNoReact: document.getElementById('chk-enemy-no-react'),
     chkEnemyOpen: document.getElementById('chk-enemy-open'),
     
@@ -906,13 +907,23 @@ function setupEvents() {
         }
         
         actualDmg = Math.max(0, inputDmg - totalDef);
+        
+        // 予測防壁の効果：攻撃に使用されたカードが「公開状態」だった場合、ダメージを無効化
+        let yosokuTriggered = false;
+        if (els.chkAttackFromOpen && els.chkAttackFromOpen.checked) {
+            if (currentCombo.some(c => c.name === '予測防壁')) {
+                actualDmg = 0;
+                yosokuTriggered = true;
+            }
+        }
 
         const cardStr = currentCombo.length > 0 ? `使用カード:<br>${cardLogs}<br>` : 'カード使用なし<br>';
+        const yosokuMsg = yosokuTriggered ? `<br><span style="color:#00ffff; font-weight:bold;">【予測防壁】攻撃元が公開状態だったため、ダメージを完全に無効化！</span>` : '';
         
         if (ignoreDef) {
-            logMsg(`${cardStr}${summonLog}敵からの攻撃（<span style="color:#cc44ff;">軽減無視！</span>）<br>元ダメージ: ${inputDmg}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
+            logMsg(`${cardStr}${summonLog}敵からの攻撃（<span style="color:#cc44ff;">軽減無視！</span>）<br>元ダメージ: ${inputDmg}${yosokuMsg}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
         } else {
-            logMsg(`${cardStr}${summonLog}敵からの攻撃！<br>元ダメージ: ${inputDmg}<br>カード軽減: ${totalDef}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
+            logMsg(`${cardStr}${summonLog}敵からの攻撃！<br>元ダメージ: ${inputDmg}<br>カード軽減: ${totalDef}${yosokuMsg}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
         }
         
         if (actualDmg === 0) {
@@ -990,6 +1001,7 @@ function setupEvents() {
         currentCombo = [];
         els.incomingDmg.value = '';
         els.chkIgnoreDef.checked = false; // チェックをリセット
+        els.chkAttackFromOpen.checked = false;
         
         // --- フックシステムの呼び出し（ダメージ計算後、適用前） ---
         const activeCards = [...player.deck.passives, ...player.deck.summons];
