@@ -702,6 +702,9 @@ function setupEvents() {
     const btnReactionDone = document.getElementById('btn-reaction-done');
 
     function updateReactionModalUI() {
+        const dmgLabel = document.getElementById('reaction-pending-dmg');
+        if (dmgLabel) dmgLabel.innerText = pendingInputDmg;
+
         reactionList.innerHTML = '';
         reactionComboCount.innerText = currentCombo.length;
         
@@ -729,6 +732,20 @@ function setupEvents() {
                 player.deck.discard.push(c);
                 currentCombo.push(c);
                 logMsg(`「${c.name}」をリアクションとして場に出した！`);
+
+                if (c.name === '錬成壁') {
+                    if (player.deck.mountain.length > 0) {
+                        const drawnCard = player.deck.mountain.shift();
+                        player.deck.hand.push(drawnCard);
+                        const oldDmg = pendingInputDmg;
+                        pendingInputDmg = Math.max(0, pendingInputDmg - drawnCard.cost);
+                        if (els.incomingDmg) els.incomingDmg.value = pendingInputDmg; // メイン画面の入力欄も同期
+                        logMsg(`【錬成壁】山札から「${drawnCard.name}」を引いた！<br>現在の被ダメージを <b>${drawnCard.cost}</b> 点軽減！（残り: ${pendingInputDmg}）`, 'important');
+                    } else {
+                        logMsg(`【錬成壁】効果不発：山札がありませんでした。`);
+                    }
+                }
+
                 updateUI();
                 updateReactionModalUI(); // 再描画
             };
@@ -745,6 +762,20 @@ function setupEvents() {
                 // セットカードはすでにcurrentComboにあるので、リアクションとして使用済みにマーク
                 item.card._addedToReaction = true;
                 logMsg(`「${item.card.name}」を闘禅一致のリアクションとして発動準備！`);
+
+                if (item.card.name === '錬成壁') {
+                    if (player.deck.mountain.length > 0) {
+                        const drawnCard = player.deck.mountain.shift();
+                        player.deck.hand.push(drawnCard);
+                        const oldDmg = pendingInputDmg;
+                        pendingInputDmg = Math.max(0, pendingInputDmg - drawnCard.cost);
+                        if (els.incomingDmg) els.incomingDmg.value = pendingInputDmg;
+                        logMsg(`【錬成壁(闘禅)】山札から「${drawnCard.name}」を引いた！<br>現在の被ダメージを <b>${drawnCard.cost}</b> 点軽減！（残り: ${pendingInputDmg}）`, 'important');
+                    } else {
+                        logMsg(`【錬成壁(闘禅)】効果不発：山札がありませんでした。`);
+                    }
+                }
+
                 updateUI();
                 updateReactionModalUI(); // 再描画
             };
@@ -1629,21 +1660,6 @@ function setupEvents() {
                     }));
                 };
                 showQuickReloadModal();
-            }
-
-            if (card.name === '錬成壁') {
-                if (player.deck.mountain.length > 0) {
-                    const drawnCard = player.deck.mountain.shift();
-                    player.deck.hand.push(drawnCard);
-                    
-                    const currentDmg = parseInt(els.incomingDmg.value) || 0;
-                    const newDmg = Math.max(0, currentDmg - drawnCard.cost);
-                    els.incomingDmg.value = newDmg;
-                    
-                    logMsg(`【錬成壁】山札から「${drawnCard.name}」を引いた！<br>被ダメージ表示をその場で直接 <b>${drawnCard.cost}</b> 点減らしました！（残り: ${newDmg}）`, 'important');
-                } else {
-                    logMsg(`【錬成壁】効果不発：山札がありませんでした。`);
-                }
             }
 
             if (card.name === '風読み' || card.effect.includes('イニシアチブフェイズに山札から1枚引き')) {
