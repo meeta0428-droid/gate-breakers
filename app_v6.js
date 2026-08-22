@@ -898,6 +898,11 @@ function setupEvents() {
                     summonLog += `・召喚「${s.card.name}」の防御 (軽減 ${defVal})<br>`;
                 }
             }
+            
+            if (s.card.name === 'ノーム') {
+                summonDef += 2;
+                summonLog += `・【ノーム】常時効果 (軽減 2)<br>`;
+            }
         });
         
         let totalDef = defense + summonDef;
@@ -1624,7 +1629,17 @@ function setupEvents() {
     if (els.btnTriggerPassive) {
         els.btnTriggerPassive.addEventListener('click', () => {
             if (selectedCardIndex !== null) {
-                const passiveCard = player.deck.passives[selectedCardIndex];
+                let passiveCard = null;
+                if (selectedCardIndex >= 0) {
+                    passiveCard = player.deck.passives[selectedCardIndex];
+                } else {
+                    const cardName = els.mTitle.innerText;
+                    passiveCard = player.deck.summons.find(s => s.card.name === cardName)?.card;
+                    if (!passiveCard) passiveCard = player.deck.passives.find(p => p.name === cardName);
+                }
+                
+                if (!passiveCard) return;
+                
                 els.modal.classList.add('hidden'); // 詳細モーダルを閉じる
 
                 if (passiveCard.name === '武具錬成') {
@@ -1651,6 +1666,18 @@ function setupEvents() {
                             }
                         }
                     }));
+                    return;
+                }
+
+                if (passiveCard.name === 'ノーム') {
+                    const summonIdx = player.deck.summons.findIndex(s => s.card.name === 'ノーム');
+                    if (summonIdx > -1) {
+                        const nohmCard = player.deck.summons[summonIdx].card;
+                        player.deck.summons.splice(summonIdx, 1);
+                        player.deck.void.push(nohmCard);
+                        logMsg(`【ノーム】ユニットを廃棄して効果発動！<br><span style="color:#00ffff; font-weight:bold;">※ダメージを8点まで無効化し、それ以上の攻撃を阻止した！</span>`, 'important');
+                        updateUI();
+                    }
                     return;
                 }
 
@@ -2427,6 +2454,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'ファミリア') {
                     els.btnTriggerPassive.innerText = '効果を発動';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === 'ノーム') {
+                    els.btnTriggerPassive.innerText = '効果を発動（ユニット廃棄）';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else {
                     els.btnTriggerPassive.classList.add('hidden');
