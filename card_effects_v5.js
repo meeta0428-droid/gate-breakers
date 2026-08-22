@@ -204,5 +204,16 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // 腐食酸：効果内容をログに出力
+    "腐食酸": {
+        onAttack: (context) => {
+            if (!context._fushokusanApplied) {
+                context._fushokusanApplied = true;
+                context.logMsg(`【腐食酸】強烈な酸が飛び散る！<br><span style="color:#ffcc00;">※この効果に対しリアクションをする対象は、<b>手札から1枚を廃棄札に移動</b>しなければなりません！</span>`, 'important');
+                return { _fushokusanApplied: true };
+            }
+            return {};
+        }
     }
 };
