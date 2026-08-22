@@ -340,5 +340,29 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // スキャン：敵の手札が公開状態の場合、追加ダメージ＋3
+    "スキャン": {
+        onAttack: (context) => {
+            if (context.enemyOpen && !context._scanApplied) {
+                // コンボの中にスキャンが何枚含まれているかチェック
+                let scanCount = 0;
+                if (context.currentCombo) {
+                    for (const c of context.currentCombo) {
+                        if (c.name === 'スキャン') {
+                            scanCount++;
+                        }
+                    }
+                }
+                
+                if (scanCount > 0) {
+                    const bonusDmg = 3 * scanCount;
+                    context._scanApplied = true;
+                    context.logMsg(`【スキャン】敵の弱点を捕捉！公開状態の隙を突き、ダメージ ＋${bonusDmg}！`, 'important');
+                    return { totalDmg: context.totalDmg + bonusDmg, _scanApplied: true };
+                }
+            }
+            return {};
+        }
     }
 };
