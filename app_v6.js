@@ -693,6 +693,24 @@ function setupEvents() {
             if (hasHonnou) {
                 logMsg(`【本能の覚醒】の効果が発動！このカードが捨札にある限り、召喚ユニットの攻/防が＋2されます。`, 'important');
             }
+            
+            // 大地の息吹の処理
+            const hasDaichi = currentCombo.some(c => c.name === '大地の息吹');
+            if (hasDaichi && player.deck.void.some(c => c.category.includes('召喚') || c.effect.includes('召喚・攻'))) {
+                window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                    detail: {
+                        filterFunc: c => c.category.includes('召喚') || c.effect.includes('召喚・攻'),
+                        title: "大地の息吹の効果",
+                        desc: "廃棄札から「召喚」カードを1枚選んで手札に加えます。",
+                        source: 'void',
+                        onSelect: (card) => {
+                            player.deck.hand.push(card);
+                            logMsg(`【大地の息吹】廃棄札から「${card.name}」を手札に加えました。`);
+                        },
+                        playerObj: player
+                    }
+                }));
+            }
 
             // ウンディーネ召喚時効果
             const hasUndine = currentCombo.some(c => c.name === 'ウンディーネ');
@@ -1069,6 +1087,24 @@ function setupEvents() {
                     onSelect: (card) => {
                         player.deck.hand.push(card);
                         logMsg(`【超速判断】捨札から「${card.name}」を手札に加えました。`);
+                    },
+                    playerObj: player
+                }
+            }));
+        }
+        
+        // 大地の息吹の処理
+        const hasDaichi = currentCombo.some(c => c.name === '大地の息吹');
+        if (hasDaichi && player.deck.void.some(c => c.category.includes('召喚') || c.effect.includes('召喚・攻'))) {
+            window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                detail: {
+                    filterFunc: c => c.category.includes('召喚') || c.effect.includes('召喚・攻'),
+                    title: "大地の息吹の効果",
+                    desc: "廃棄札から「召喚」カードを1枚選んで手札に加えます。",
+                    source: 'void',
+                    onSelect: (card) => {
+                        player.deck.hand.push(card);
+                        logMsg(`【大地の息吹】廃棄札から「${card.name}」を手札に加えました。`);
                     },
                     playerObj: player
                 }
