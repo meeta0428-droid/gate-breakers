@@ -1785,6 +1785,47 @@ function setupEvents() {
         updateUI();
     });
 
+
+    // --- 能力値回復イベント ---
+    window.addEventListener('requestStatHeal', (e) => {
+        const { amount, desc, onComplete, playerObj } = e.detail;
+        const modal = document.getElementById('heal-stat-modal');
+        document.getElementById('heal-stat-desc').innerText = desc || `回復する能力値を1つ選んでください。（各${amount}点回復します）`;
+
+        const updateBtn = (statId, statObj) => {
+            document.getElementById(`heal-curr-${statId}`).innerText = statObj.currentVal;
+            document.getElementById(`heal-max-${statId}`).innerText = statObj.maxVal;
+            const btn = document.getElementById(`btn-heal-${statId}`);
+            if (statObj.currentVal >= statObj.maxVal) {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            } else {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+            // 既存のリスナーを削除して新しく登録（簡易的にクローンする）
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            newBtn.addEventListener('click', () => {
+                statObj.currentVal = Math.min(statObj.maxVal, statObj.currentVal + amount);
+                logMsg(`【回復】${statId === 'body' ? '肉体' : statId === 'int' ? '知性' : '精神'}のダメージを ${amount} 点回復しました。`);
+                modal.classList.add('hidden');
+                updateUI();
+                if (onComplete) onComplete();
+            });
+        };
+
+        updateBtn('body', playerObj.stats.body);
+        updateBtn('int', playerObj.stats.int);
+        updateBtn('men', playerObj.stats.men);
+
+        document.getElementById('btn-close-heal-stat').onclick = () => {
+            modal.classList.add('hidden');
+        };
+
+        modal.classList.remove('hidden');
+    });
+
     // --- 汎用回収イベント（捨札/廃棄札/手札選択） ---
     window.addEventListener('requestRecoverCard', (e) => {
         const { filterFunc, title, desc, onSelect, playerObj, source } = e.detail;

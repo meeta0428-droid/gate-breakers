@@ -365,9 +365,9 @@
         </div>
     </div>
 
-    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v132 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v132 確認・更新</button>
+    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v133 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v133 確認・更新</button>
 
-    <script type="module" src="app_v6.js?v=132"></script>
+    <script type="module" src="app_v6.js?v=133"></script>
     <!-- 残心モーダル -->
     <div id="zanshin-modal" class="modal hidden" style="z-index: 2600;">
         <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
@@ -412,6 +412,20 @@
                 <button id="btn-kazeyomi-hand" class="btn btn-primary" style="flex:1;">手札に加える</button>
                 <button id="btn-kazeyomi-discard" class="btn btn-secondary" style="flex:1;">捨札にする</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 能力値回復モーダル -->
+    <div id="heal-stat-modal" class="modal hidden" style="z-index: 2900;">
+        <div class="modal-content">
+            <h3 style="color:#4dff88; margin-bottom:10px;">能力値の回復</h3>
+            <p style="font-size:0.9rem; margin-bottom:15px;" id="heal-stat-desc">回復する能力値を1つ選んでください。（各1点回復します）</p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button id="btn-heal-body" class="btn btn-primary" style="background-color: #f44336; font-size:1.1rem; padding:10px;">肉体を回復 (<span id="heal-curr-body">0</span>/<span id="heal-max-body">0</span>)</button>
+                <button id="btn-heal-int" class="btn btn-primary" style="background-color: #2196f3; font-size:1.1rem; padding:10px;">知性を回復 (<span id="heal-curr-int">0</span>/<span id="heal-max-int">0</span>)</button>
+                <button id="btn-heal-men" class="btn btn-primary" style="background-color: #4caf50; font-size:1.1rem; padding:10px;">精神を回復 (<span id="heal-curr-men">0</span>/<span id="heal-max-men">0</span>)</button>
+            </div>
+            <button id="btn-close-heal-stat" class="btn btn-secondary" style="margin-top:15px; width:100%;">キャンセル</button>
         </div>
     </div>
 

@@ -216,12 +216,23 @@ export const cardEffects = {
             return {};
         }
     },
-    // 賦活の秘薬：回復の指示をログに出力
+    // 賦活の秘薬：回復の指示をログに出力し、回復モーダルを呼ぶ
     "賦活の秘薬": {
         onAttack: (context) => {
             if (!context._fukatsuApplied) {
                 context._fukatsuApplied = true;
                 context.logMsg(`【賦活の秘薬】生命力がみなぎる！<br>※<b>自身とその他１体</b>を対象として、<b>任意の一つの能力値のダメージを１点回復</b>させてください。<br>また、このカードが捨札にある間、すべての回収ポイントが＋１されます！`, 'important');
+                
+                if (context.player) {
+                    window.dispatchEvent(new CustomEvent('requestStatHeal', {
+                        detail: {
+                            amount: 1,
+                            playerObj: context.player,
+                            desc: "【自身への回復】回復する能力値を1つ選んでください。（各1点回復）※味方1体は手動で回復してください"
+                        }
+                    }));
+                }
+                
                 return { _fukatsuApplied: true };
             }
             return {};
