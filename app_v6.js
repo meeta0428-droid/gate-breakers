@@ -1716,6 +1716,17 @@ function setupEvents() {
             pendingDamage -= mitigation;
             logMsg(`${stat.name}で受けた！(現在値-1) ダメージを ${mitigation} 点軽減！`);
             
+            const hasBoar = player.deck.summons.some(s => s.card.name === 'ライトニングボア');
+            if (hasBoar) {
+                logMsg('【ライトニングボアの効果】ダメージを受けたため、対象へ「1点」のダメージを返す！', 'important');
+                if (typeof enemyHp !== 'undefined') {
+                    enemyHp -= 1;
+                }
+                if (typeof showDamagePopup === 'function') {
+                    showDamagePopup(1);
+                }
+            }
+            
             if (pendingDamage <= 0) {
                 pendingDamage = 0;
                 logMsg('ダメージ処理が完了しました。');
