@@ -1658,7 +1658,20 @@ function setupEvents() {
     });
 
     let recoveringCards = new Set();
+    let manualRecoveryBonus = { body: 0, int: 0, men: 0 };
     
+    // 捨札回収モーダルの手動補正ボタンリスナー（document全体で1回だけ登録する想定だが、動的追加要素ではないためinit時に登録でOK。ここではイベントデリゲーションを利用）
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-adj-recover')) {
+            const stat = e.target.getAttribute('data-stat');
+            const val = parseInt(e.target.getAttribute('data-val'));
+            if (manualRecoveryBonus[stat] !== undefined) {
+                manualRecoveryBonus[stat] += val;
+                updateDiscardModalUI();
+            }
+        }
+    });
+
     function updateDiscardModalUI() {
         const hasHotLimit = player.deck.passives.some(p => p.effect.includes('能力値にダメージを受けていても、回収ポイントが下がらない'));
         const getRecoveryMax = (stat) => hasHotLimit ? stat.maxVal : stat.currentVal;
@@ -1705,9 +1718,9 @@ function setupEvents() {
         player.deck.discard.forEach(c => checkRecoveryBonus(c, false));
         player.deck.void.forEach(c => checkRecoveryBonus(c, true));
 
-        const maxBody = maxBodyBase + bonusBody;
-        const maxInt = maxIntBase + bonusInt;
-        const maxMen = maxMenBase + bonusMen;
+        const maxBody = maxBodyBase + bonusBody + manualRecoveryBonus.body;
+        const maxInt = maxIntBase + bonusInt + manualRecoveryBonus.int;
+        const maxMen = maxMenBase + bonusMen + manualRecoveryBonus.men;
 
         const hasMadanjushi = player.deck.passives.some(p => p.name === '魔弾銃士');
         let costBody = 0, costInt = 0, costMen = 0;
@@ -1844,6 +1857,7 @@ function setupEvents() {
     // 捨札回収モーダルを開く
     els.btnDiscardView.addEventListener('click', () => {
         recoveringCards.clear();
+        manualRecoveryBonus = { body: 0, int: 0, men: 0 };
         updateDiscardModalUI();
         els.discardModal.classList.remove('hidden');
     });
