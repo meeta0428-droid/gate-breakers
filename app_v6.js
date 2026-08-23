@@ -2448,6 +2448,39 @@ function setupEvents() {
                     }
                     return;
                 }
+                
+                if (passiveCard.name === '金の加護') {
+                    const passiveVoidCards = player.deck.void.filter(c => c.category.includes('パッシブ'));
+                    if (passiveVoidCards.length === 0) {
+                        alert('廃棄札の中にパッシブカテゴリーのカードがありません。');
+                        return;
+                    }
+                    
+                    window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                        detail: {
+                            title: "金の加護：山札に戻すカードを選択",
+                            desc: "廃棄札からパッシブカードを1枚選んでください。",
+                            playerObj: player,
+                            source: 'void',
+                            filterFunc: (c) => c.category.includes('パッシブ'),
+                            onSelect: (recoveredCard) => {
+                                // 山札に戻す（シャッフルするわけではないが、一番下でも上でもシステム上山札に入ればドローできるようになる。末尾に追加。）
+                                player.deck.mountain.push(recoveredCard);
+                                
+                                // 金の加護自身を廃棄札へ移動
+                                const pIdx = player.deck.passives.indexOf(passiveCard);
+                                if (pIdx > -1) {
+                                    player.deck.passives.splice(pIdx, 1);
+                                }
+                                player.deck.void.push(passiveCard);
+                                
+                                logMsg(`【金の加護】効果発動！廃棄札から「${recoveredCard.name}」を山札に戻しました。<br><small>※金の加護は使用されたため廃棄札に移動しました。</small>`, 'important');
+                                updateUI();
+                            }
+                        }
+                    }));
+                    return;
+                }
 
                 if (passiveCard.name === 'ファミリア') {
                     if (player.deck.mountain.length === 0) {
@@ -3474,6 +3507,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'バディビースト') {
                     els.btnTriggerPassive.innerText = '自身を召喚する';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === '金の加護') {
+                    els.btnTriggerPassive.innerText = '効果を発動';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'エレメンタラー') {
                     els.btnTriggerPassive.innerText = '効果を発動（対象ユニットの攻防＋2）';
