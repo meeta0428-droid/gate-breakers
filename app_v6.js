@@ -1783,12 +1783,25 @@ function setupEvents() {
                             ${isSelected ? '<div style="color:#4caf50; font-size:0.75rem;">✔ 選択中</div>' : ''}
                             <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:5px;">
                                 ${useBtnHtml}
+                                <button class="btn btn-secondary btn-return-hand-item" style="font-size:0.7rem; padding:2px 5px;">手札へ</button>
                                 <button class="btn btn-danger btn-void-discard-item" style="font-size:0.7rem; padding:2px 5px;">廃棄</button>
                             </div>
                         </div>
                     `;
                     
                     item.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('btn-return-hand-item')) {
+                            e.stopPropagation();
+                            if (confirm(`上限を無視して捨札から「${card.name}」を手札に戻しますか？（※英雄のファンファーレ等のバフ効果用）`)) {
+                                const targetCard = player.deck.discard.splice(idx, 1)[0];
+                                player.deck.hand.push(targetCard);
+                                logMsg(`味方からの効果等により、捨札から「${targetCard.name}」を手動で手札に戻した。`, 'important');
+                                updateDiscardModalUI();
+                                updateUI();
+                            }
+                            return;
+                        }
+
                         if (e.target.classList.contains('btn-void-discard-item')) {
                             e.stopPropagation();
                             if (confirm(`捨札から「${card.name}」を廃棄札へ移動させますか？（敵からの効果用など）`)) {
@@ -2352,6 +2365,10 @@ function setupEvents() {
             // 魂の応援歌のログ出力
             if (card.name === '魂の応援歌') {
                 logMsg(`【魂の応援歌】コンボ元のカードは、使用者の該当能力値以下のコストだった場合、即座に対象の手札に戻ります！（※味方は対象カードを手動で手札に戻してください）`, 'important');
+            }
+            // 英雄のファンファーレのログ出力
+            if (card.name === '英雄のファンファーレ') {
+                logMsg(`【英雄のファンファーレ】対象の味方1人のイニシアチブを＋3！<br>さらに、対象の味方はこのラウンドの回収フェイズ時、任意の能力値の回収枠が＋2されます。（※回収枠を超える場合は、捨札リストの『手札へ』ボタンで手動回収してください）<br><span style="color:#ffcc00; font-size:0.8rem;">※この効果はこのカードが捨札にある間持続します。手札や山札、廃棄札など、捨札以外に移動した時に効果は失われます。</span>`, 'important');
             }
             if (card.name === 'クイックリロード') {
                 let remainingCost = 6;
