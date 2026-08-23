@@ -1049,7 +1049,6 @@ function setupEvents() {
             updateUI();
         });
     }
-);
 
     // 防御/被弾（リアクション）
     let pendingDamage = 0;
