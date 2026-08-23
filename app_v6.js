@@ -2609,7 +2609,6 @@ function setupEvents() {
 
     if (els.btnTriggerPassive) {
         els.btnTriggerPassive.addEventListener('click', () => {
-            console.log('[DEBUG] btnTriggerPassive clicked! selectedCardIndex=', selectedCardIndex);
             if (selectedCardIndex !== null) {
                 let passiveCard = null;
                 if (selectedCardIndex >= 0) {
@@ -2620,8 +2619,7 @@ function setupEvents() {
                     if (!passiveCard) passiveCard = player.deck.passives.find(p => p.name === cardName);
                 }
                 
-                console.log('[DEBUG] passiveCard=', passiveCard ? passiveCard.name : 'null');
-                if (!passiveCard) { alert('DEBUG: passiveCardがnullです。selectedCardIndex=' + selectedCardIndex); return; }
+                if (!passiveCard) return;
                 
                 els.modal.classList.add('hidden'); // 詳細モーダルを閉じる
 
@@ -2862,13 +2860,14 @@ function setupEvents() {
                         let totalDef = 0;
                         const originalCards = [];
                         
-                        // 合算処理
+                        // 合算処理（効果文は「召喚・攻X / Y」形式）
                         player.deck.summons.forEach(s => {
                             totalCost += s.card.cost;
-                            const atkMatch = s.card.effect.match(/攻([0-9０-９]+)/);
-                            const defMatch = s.card.effect.match(/防([0-9０-９]+)/);
-                            if (atkMatch) totalAtk += parseInt(atkMatch[1], 10);
-                            if (defMatch) totalDef += parseInt(defMatch[1], 10);
+                            const atkDefMatch = s.card.effect.match(/攻([0-9０-９]+)\s*[/／]\s*([0-9０-９]+)/);
+                            if (atkDefMatch) {
+                                totalAtk += parseInt(atkDefMatch[1], 10);
+                                totalDef += parseInt(atkDefMatch[2], 10);
+                            }
                             originalCards.push(s.card);
                         });
                         
