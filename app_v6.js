@@ -137,11 +137,14 @@ function sendDiscordWebhook(msgHtml) {
 
 function logMsg(msg, type = '') {
     const p = document.createElement('p');
-    p.innerHTML = msg;
+    const playerName = (typeof player !== 'undefined' && player.name) ? player.name : 'プレイヤー';
+    const prefix = `[${playerName}] `;
+    
+    p.innerHTML = `<span style="color:#aaa; font-size:0.75rem;">${prefix}</span>` + msg;
     if (type) p.classList.add(type);
     els.log.prepend(p);
     
-    sendDiscordWebhook(msg);
+    sendDiscordWebhook(prefix + msg);
 }
 
 async function loadCards() {
@@ -282,6 +285,7 @@ function loadDeckFromSlot(slotIndex) {
     const slot = saved[slotIndex];
     if (!slot || !slot.cards || slot.cards.length === 0) return false;
     
+    player.name = slot.name || `スロット${slotIndex}`;
     selectedCardsForDeck = [];
     for (const name of slot.cards) {
         let cardName = name;
