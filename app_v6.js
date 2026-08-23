@@ -2184,9 +2184,21 @@ function setupEvents() {
             maxMen += wispCount;
         }
 
+        // ★回収可能リストの生成（不死者対応）
+        window._currentRecoverableCards = player.deck.discard.map((card, originalIdx) => ({ card, originalIdx, source: 'discard' }));
+        const hasUndead = player.deck.passives.some(p => p.name === '『不死者』');
+        if (hasUndead) {
+            const undeadVoidCards = player.deck.void
+                .map((card, originalIdx) => ({ card, originalIdx, source: 'void' }))
+                .filter(item => item.card.cost <= 3);
+            window._currentRecoverableCards = window._currentRecoverableCards.concat(undeadVoidCards);
+        }
+
         let costBody = 0, costInt = 0, costMen = 0, costAll = 0;
         recoveringCards.forEach(idx => {
-            const card = player.deck.discard[idx];
+            const cardItem = window._currentRecoverableCards[idx];
+            if (!cardItem) return;
+            const card = cardItem.card;
             let actualCost = getDisplayCost(card, player);
             if (card.category.includes('肉体')) costBody += actualCost;
             else if (card.category.includes('知性')) costInt += actualCost;
@@ -2228,10 +2240,12 @@ function setupEvents() {
         executeBtn.style.opacity = executeBtn.disabled ? '0.5' : '1';
 
         els.discardList.innerHTML = '';
-        if (player.deck.discard.length === 0) {
-            els.discardList.innerHTML = '<p style="color:#aaa;">捨札はありません</p>';
+        if (window._currentRecoverableCards.length === 0) {
+            els.discardList.innerHTML = '<p style="color:#aaa;">回収可能なカードがありません</p>';
         } else {
-            player.deck.discard.forEach((card, idx) => {
+            window._currentRecoverableCards.forEach((cardItem, idx) => {
+                const card = cardItem.card;
+                const isFromVoid = cardItem.source === 'void';
                 const item = document.createElement('div');
                 item.className = 'discard-item';
                 
@@ -2307,10 +2321,10 @@ function setupEvents() {
 
                         if (e.target.classList.contains('btn-use-discard')) {
                             e.stopPropagation();
-                            const targetCard = player.deck.discard[idx];
+                            const targetCard = window._currentRecoverableCards[idx].card;
                             targetCard._fromDiscard = true;
                             currentCombo.push(targetCard);
-                            logMsg(`【${targetCard.name}】の効果！捨札から場に出した！`);
+                            logMsg(`【${targetCard.name}】の効果！捨札（または廃棄札）から場に出した！`);
                             els.discardModal.classList.add('hidden');
                             updateUI();
                             return;
@@ -2360,16 +2374,25 @@ function setupEvents() {
     document.getElementById('btn-execute-recover').addEventListener('click', () => {
         if (recoveringCards.size === 0) return;
         
-        // idxの降順で処理しないとspliceでズレるため、降順ソート
-        const sortedIndices = Array.from(recoveringCards).sort((a, b) => b - a);
+        const selectedItems = Array.from(recoveringCards).map(idx => window._currentRecoverableCards[idx]).filter(item => item);
         let recoveredNames = [];
-        for (const idx of sortedIndices) {
-            const card = player.deck.discard[idx];
-            player.deck.discard.splice(idx, 1);
-            player.deck.hand.push(card);
-            recoveredNames.push(card.name);
+        
+        // 元の配列から削除するため、sourceごとに分けて originalIdx の降順でソート
+        const discardItems = selectedItems.filter(i => i.source === 'discard').sort((a, b) => b.originalIdx - a.originalIdx);
+        const voidItems = selectedItems.filter(i => i.source === 'void').sort((a, b) => b.originalIdx - a.originalIdx);
+        
+        for (const item of discardItems) {
+            player.deck.discard.splice(item.originalIdx, 1);
+            player.deck.hand.push(item.card);
+            recoveredNames.push(item.card.name);
         }
-        logMsg(`捨札から ${recoveredNames.length}枚 回収しました！<br><small>(${recoveredNames.join(', ')})</small>`);
+        for (const item of voidItems) {
+            player.deck.void.splice(item.originalIdx, 1);
+            player.deck.hand.push(item.card);
+            recoveredNames.push(item.card.name);
+        }
+        
+        logMsg(`手札に ${recoveredNames.length}枚 回収しました！<br><small>(${recoveredNames.join(', ')})</small>`);
         els.discardModal.classList.add('hidden');
         
         // パッシブ「武術家」のチェック
