@@ -1068,6 +1068,10 @@ function setupEvents() {
                             const drawn = player.deck.draw(1);
                             if (drawn > 0) logMsg(`【ウィスプ】召喚時効果：山札からカードを1枚引いた！`, 'important');
                         }
+                        if (card.name === 'ケットシー') {
+                            const drawn = player.deck.draw(2);
+                            if (drawn > 0) logMsg(`【ケットシー】召喚時効果：山札からカードを${drawn}枚引いた！`, 'important');
+                        }
                     }
                 } else if (toVoid.has(idx)) {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
@@ -1484,6 +1488,10 @@ function setupEvents() {
                     if (card.name === 'ウィスプ') {
                         const drawn = player.deck.draw(1);
                         if (drawn > 0) logMsg(`【ウィスプ】召喚時効果：山札からカードを1枚引いた！`, 'important');
+                    }
+                    if (card.name === 'ケットシー') {
+                        const drawn = player.deck.draw(2);
+                        if (drawn > 0) logMsg(`【ケットシー】召喚時効果：山札からカードを${drawn}枚引いた！`, 'important');
                     }
                 }
             } else if (toVoid.has(idx)) {
