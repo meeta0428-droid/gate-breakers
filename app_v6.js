@@ -146,10 +146,19 @@ function sendDiscordWebhook(msgHtml) {
 function getDisplayCost(card, playerObj) {
     if (!playerObj || !playerObj.deck) return card.cost;
     let displayCost = card.cost;
+    
+    // 魔導杖ウィル
     const hasWill = playerObj.deck.passives.some(p => p.name === '魔導杖ウィル');
     if (hasWill && card.category.includes('知性') && card.category.includes('アクション')) {
         displayCost = Math.max(0, displayCost - 1);
     }
+    
+    // 魔弾銃士
+    const hasMadanjushi = playerObj.deck.passives.some(p => p.name === '魔弾銃士');
+    if (hasMadanjushi && card.effect.includes('弾丸')) {
+        displayCost = Math.max(0, displayCost - 1);
+    }
+    
     return displayCost;
 }
 
@@ -2133,14 +2142,10 @@ function setupEvents() {
         const maxInt = maxIntBase + bonusInt + manualRecoveryBonus.int;
         const maxMen = maxMenBase + bonusMen + manualRecoveryBonus.men;
 
-        const hasMadanjushi = player.deck.passives.some(p => p.name === '魔弾銃士');
         let costBody = 0, costInt = 0, costMen = 0, costAll = 0;
         recoveringCards.forEach(idx => {
             const card = player.deck.discard[idx];
-            let actualCost = card.cost;
-            if (hasMadanjushi && card.effect.includes('弾丸')) {
-                actualCost = Math.max(0, actualCost - 1);
-            }
+            let actualCost = getDisplayCost(card, player);
             if (card.category.includes('肉体')) costBody += actualCost;
             else if (card.category.includes('知性')) costInt += actualCost;
             else if (card.category.includes('精神')) costMen += actualCost;
@@ -2214,11 +2219,10 @@ function setupEvents() {
                     const canUseFromDiscard = card.effect.includes('手札にあるように使用できる');
                     const useBtnHtml = canUseFromDiscard ? `<button class="btn btn-action btn-use-discard" data-idx="${idx}" style="font-size:0.7rem; padding:2px 5px; margin-top:5px; width:100%;">捨札から使用</button>` : '';
 
-                    const hasMadanjushi = player.deck.passives.some(p => p.name === '魔弾銃士');
-                    const isBullet = card.effect.includes('弾丸');
+                    const dCost = getDisplayCost(card, player);
                     let costDisplay = `コスト: ${card.cost}`;
-                    if (hasMadanjushi && isBullet) {
-                        costDisplay = `コスト: <span style="text-decoration: line-through;">${card.cost}</span> <span style="color:#ffcc00;">${Math.max(0, card.cost - 1)}</span> <span style="color:#ffcc00; font-size:0.7rem;">(魔弾)</span>`;
+                    if (dCost < card.cost) {
+                        costDisplay = `コスト: <span style="text-decoration: line-through;">${card.cost}</span> <span style="color:#ffcc00;">${dCost}</span> <span style="color:#ffcc00; font-size:0.7rem;">(軽減適用)</span>`;
                     }
 
                     item.innerHTML = `
@@ -3098,11 +3102,10 @@ function setupEvents() {
             validCards.forEach(card => {
                 const item = document.createElement('div');
                 item.className = 'discard-item';
-                const hasMadanjushi = playerObj.deck.passives.some(p => p.name === '魔弾銃士');
-                const isBullet = card.effect.includes('弾丸');
+                const dCost = getDisplayCost(card, playerObj);
                 let costDisplay = `コスト: ${card.cost}`;
-                if (hasMadanjushi && isBullet) {
-                    costDisplay = `コスト: <span style="text-decoration: line-through;">${card.cost}</span> <span style="color:#ffcc00;">${Math.max(0, card.cost - 1)}</span> <span style="color:#ffcc00; font-size:0.7rem;">(魔弾)</span>`;
+                if (dCost < card.cost) {
+                    costDisplay = `コスト: <span style="text-decoration: line-through;">${card.cost}</span> <span style="color:#ffcc00;">${dCost}</span> <span style="color:#ffcc00; font-size:0.7rem;">(軽減適用)</span>`;
                 }
 
                 item.innerHTML = `
