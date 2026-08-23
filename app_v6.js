@@ -465,6 +465,32 @@ function renderCardPool() {
                     return;
                 }
             }
+            
+            // 「ブーステッド」選択時の特別ルール
+            const hasBoosted = selectedCardsForDeck.some(c => c.name === '『ブーステッド』');
+            
+            if (card.name === '『ブーステッド』') {
+                // ブーステッドを追加しようとした場合、すでにデッキにあるコスト4以上のアクション・リアクションを除外
+                const originalLength = selectedCardsForDeck.length;
+                selectedCardsForDeck = selectedCardsForDeck.filter(c => {
+                    const isActionOrReaction = c.category.includes('アクション') || c.category.includes('リアクション');
+                    if (isActionOrReaction && c.cost >= 4) {
+                        return false; // 除外
+                    }
+                    return true;
+                });
+                if (selectedCardsForDeck.length < originalLength) {
+                    alert('【ブーステッド制限】デッキに入っていたコスト4以上のアクション/リアクションカードを自動除外しました。');
+                }
+            } else if (hasBoosted) {
+                // すでにブーステッドがデッキにある場合、コスト4以上のアクション・リアクションは追加できない
+                const isActionOrReaction = card.category.includes('アクション') || card.category.includes('リアクション');
+                if (isActionOrReaction && card.cost >= 4) {
+                    alert('【ブーステッド制限】コスト4以上のアクション/リアクションカードはデッキに追加できません。');
+                    return;
+                }
+            }
+            
             selectedCardsForDeck.push(card);
             renderSelectedDeck();
         });
