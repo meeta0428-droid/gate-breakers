@@ -3245,6 +3245,14 @@ function updateUI() {
                 }
                 atkVal += honnouBuff + jusoBuff;
                 defVal += honnouBuff + jusoBuff;
+                
+                // スプリガンの独自処理（パッシブ強度の合計値を攻防に加算）
+                if (s.card.name === 'スプリガン') {
+                    const passiveStrSum = player.deck.passives.reduce((sum, p) => sum + (p.strength || 0), 0);
+                    atkVal += passiveStrSum;
+                    defVal += passiveStrSum;
+                }
+                
                 atk = atkVal;
                 def = defVal;
             }
@@ -3293,7 +3301,11 @@ function updateUI() {
                         logMsg(`「${s.card.name}」は破壊され、手札に戻った！`);
                     } else {
                         player.deck.void.push(s.card);
-                        logMsg(`召喚ユニット「${s.card.name}」を廃棄札へ移動しました！<br><span style="color:#aaa; font-size:0.8rem;">【効果】${s.card.effect}</span>`, 'important');
+                        let effectText = s.card.effect;
+                        if (s.card.name === 'スプリガン') {
+                            effectText = `<span style="color:#ffcc00; font-weight:bold;">※現在の「攻」の数値： ${atk} </span><br>` + effectText;
+                        }
+                        logMsg(`召喚ユニット「${s.card.name}」を廃棄札へ移動しました！<br><span style="color:#aaa; font-size:0.8rem;">【効果】${effectText}</span>`, 'important');
                     }
                     updateUI();
                 }
