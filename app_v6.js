@@ -1911,11 +1911,11 @@ function setupEvents() {
                     const endurance = s.card.cost;
                     
                     if (s.card.name === '彷徨う砂塵霊') {
-                        // ダメージを全て無効化し、捨札へ移動する
+                        // ダメージを全て無効化し、廃棄札へ移動する
                         player.deck.summons.splice(idx, 1);
-                        player.deck.discard.push(s.card);
+                        player.deck.void.push(s.card);
                         pendingDamage = 0;
-                        logMsg(`「${s.card.name}」がダメージを身代わりにした！<br><span style="color:#00ffff; font-weight:bold;">【特殊効果】自身が受けるダメージを0にし、自身の捨札へ移動した！</span>`, 'important');
+                        logMsg(`「${s.card.name}」がダメージを身代わりにした！<br><span style="color:#00ffff; font-weight:bold;">【特殊効果】ダメージを0にし、廃棄札へ移動した！</span>`, 'important');
                     } else if (dmgToTake > endurance) {
                         // 破壊される
                         player.deck.summons.splice(idx, 1);
