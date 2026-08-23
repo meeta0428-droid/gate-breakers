@@ -475,6 +475,22 @@ function setupEvents() {
         updateUI();
     });
 
+    // 任意のタイミングで1枚手動ドローする機能（味方からの効果など）
+    const btnManualDraw = document.getElementById('btn-manual-draw');
+    if (btnManualDraw) {
+        btnManualDraw.addEventListener('click', () => {
+            if (player.deck.mountain.length > 0) {
+                if (confirm('山札から1枚ドローしますか？（※味方からの効果用などの手動ドロー）')) {
+                    player.deck.draw(1);
+                    logMsg('手動で山札から1枚ドローしました！', 'important');
+                    updateUI();
+                }
+            } else {
+                alert('山札がありません。');
+            }
+        });
+    }
+
     // ドロー（手札上限まで引く）
     els.btnDraw.addEventListener('click', () => {
         const drawAmount = Math.max(0, player.maxHandSize - player.deck.hand.length);
