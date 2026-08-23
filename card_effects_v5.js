@@ -450,15 +450,28 @@ export const cardEffects = {
                 const hasCard = context.currentCombo && context.currentCombo.some(c => c.name === '秘策は我にあり');
                 if (hasCard && context.player && context.player.deck.discard.length > 0) {
                     if (confirm('【秘策は我にあり】の効果で、捨札を全て山札に戻してシャッフルしますか？')) {
-                        const discarded = context.player.deck.discard.splice(0, context.player.deck.discard.length);
-                        context.player.deck.mountain.push(...discarded);
+                        const toMountain = [];
+                        const toKeepInDiscard = [];
+                        
+                        context.player.deck.discard.forEach(card => {
+                            // 現在場に出しているカード（コンボ中）は回収対象から外す
+                            if (context.currentCombo.includes(card)) {
+                                toKeepInDiscard.push(card);
+                            } else {
+                                toMountain.push(card);
+                            }
+                        });
+                        
+                        context.player.deck.discard.splice(0, context.player.deck.discard.length, ...toKeepInDiscard);
+                        context.player.deck.mountain.push(...toMountain);
+                        
                         // シャッフル
                         for (let i = context.player.deck.mountain.length - 1; i > 0; i--) {
                             const j = Math.floor(Math.random() * (i + 1));
                             [context.player.deck.mountain[i], context.player.deck.mountain[j]] = [context.player.deck.mountain[j], context.player.deck.mountain[i]];
                         }
                         if (context.logMsg) {
-                            context.logMsg(`【秘策は我にあり】の効果発動！<br>捨札 ${discarded.length} 枚をすべて山札に戻し、シャッフルした！`, 'important');
+                            context.logMsg(`【秘策は我にあり】の効果発動！<br>捨札 ${toMountain.length} 枚をすべて山札に戻し、シャッフルした！`, 'important');
                         }
                     }
                 }
