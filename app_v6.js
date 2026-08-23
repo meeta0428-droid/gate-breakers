@@ -613,17 +613,50 @@ function setupEvents() {
             currentCombo.forEach(c => {
                 let statVal = 0;
                 let statName = 'なし';
-                if (c.category.includes('肉体')) { statVal = player.stats.body.maxVal; statName = '肉体'; }
-                else if (c.category.includes('知性')) { statVal = player.stats.int.maxVal; statName = '知性'; }
-                else if (c.category.includes('精神')) { statVal = player.stats.men.maxVal; statName = '精神'; }
+                let passiveBonus = 0;
+                
+                const getPassiveBonus = (categoryFilter) => {
+                    return player.deck.passives.reduce((sum, p) => {
+                        if (p.category.includes(categoryFilter) || p.category.includes('全て')) {
+                            return sum + (p.strength || 0);
+                        }
+                        return sum;
+                    }, 0);
+                };
+
+                if (c.category.includes('肉体')) { 
+                    statVal = player.stats.body.maxVal; 
+                    statName = '肉体'; 
+                    passiveBonus = getPassiveBonus('肉体');
+                }
+                else if (c.category.includes('知性')) { 
+                    statVal = player.stats.int.maxVal; 
+                    statName = '知性'; 
+                    passiveBonus = getPassiveBonus('知性');
+                }
+                else if (c.category.includes('精神')) { 
+                    statVal = player.stats.men.maxVal; 
+                    statName = '精神'; 
+                    passiveBonus = getPassiveBonus('精神');
+                }
                 else if (c.category.includes('全て')) {
-                    statVal = Math.max(player.stats.body.maxVal, player.stats.int.maxVal, player.stats.men.maxVal);
-                    statName = '最大能力値';
+                    const bTotal = player.stats.body.maxVal + getPassiveBonus('肉体');
+                    const iTotal = player.stats.int.maxVal + getPassiveBonus('知性');
+                    const mTotal = player.stats.men.maxVal + getPassiveBonus('精神');
+                    const maxTotal = Math.max(bTotal, iTotal, mTotal);
+                    
+                    if (maxTotal === bTotal) {
+                        statVal = player.stats.body.maxVal; statName = '最大(肉体)'; passiveBonus = getPassiveBonus('肉体');
+                    } else if (maxTotal === iTotal) {
+                        statVal = player.stats.int.maxVal; statName = '最大(知性)'; passiveBonus = getPassiveBonus('知性');
+                    } else {
+                        statVal = player.stats.men.maxVal; statName = '最大(精神)'; passiveBonus = getPassiveBonus('精神');
+                    }
                 }
                 
                 const str = c.strength || 0;
-                const total = statVal + str;
-                logs.push(`・「${c.name}」：判定結果 <b style="color:#00ffff; font-size:1.1rem;">${total}</b> （${statName} ${statVal} ＋ 強度 ${str}）`);
+                const total = statVal + str + passiveBonus;
+                logs.push(`・「${c.name}」：判定結果 <b style="color:#00ffff; font-size:1.1rem;">${total}</b> （${statName} ${statVal} ＋ 強度 ${str} ＋ パッシブ補正 ${passiveBonus}）`);
                 
                 if (/このカードは廃棄札[へ]?[と]?移動する/.test(c.effect)) {
                     const discardIdx = player.deck.discard.lastIndexOf(c);
