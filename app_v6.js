@@ -1940,6 +1940,10 @@ function setupEvents() {
                             logMsg('【赫怒の熔魔の効果】廃棄札に移動したため、任意の対象全てに3点のダメージを与える！', 'damage');
                         }
                         
+                        if (s.card.name === '呪響骸鳥') {
+                            logMsg('【呪響骸鳥の効果】自身が廃棄札に移動したため、対象のコスト3以下の捨札1枚を強制的に廃棄札へと移動させる！', 'damage');
+                        }
+                        
                         if (s.card.name === 'ライトニングボア') {
                             logMsg('【ライトニングボアの効果】自身がダメージを受けたため、対象へ「1点」のダメージを返す！', 'important');
                             if (typeof enemyHp !== 'undefined') enemyHp -= 1;
