@@ -543,6 +543,7 @@ function setupEvents() {
         const { toVoid } = executeCardEffects(currentCombo, player, logMsg);
         
         let nextCardBonus = 0;
+        let continuousBonus = 0;
         const cardLogs = currentCombo.map((c, idx) => {
             let detail = '';
             let currentCardDmg = 0;
@@ -599,12 +600,23 @@ function setupEvents() {
                 nextCardBonus = 0; // いずれにせよボーナスは消費される
             }
             
+            if (continuousBonus > 0 && isDamageCard) {
+                detail += `（継続コンボボーナス＋${continuousBonus}）`;
+                currentCardDmg += continuousBonus;
+            }
+            
             if (match) detail = `（基本ダメージ＋${match[1]}）` + detail;
             
             const nextMatch = c.effect.match(/この次のカードのダメージを[＋\+](\d+)/);
             if (nextMatch) {
                 nextCardBonus += parseInt(nextMatch[1]);
                 detail += `（次カードのダメージ＋${nextMatch[1]}）`;
+            }
+            
+            const continuousMatch = c.effect.match(/コンボしたあらゆるカードのダメージが[＋\+](\d+)/);
+            if (continuousMatch) {
+                continuousBonus += parseInt(continuousMatch[1]);
+                detail += `（これ以降のダメージに＋${continuousMatch[1]}）`;
             }
             
             if (toVoid.has(idx)) detail += ` [廃棄へ]`;

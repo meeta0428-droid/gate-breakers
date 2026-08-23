@@ -205,6 +205,7 @@ export class Character {
 export function calculateDamageFromCards(cards, player) {
     let total = 0;
     let nextCardBonus = 0;
+    let continuousBonus = 0;
     
     for (const card of cards) {
         let cardDamage = 0;
@@ -256,12 +257,23 @@ export function calculateDamageFromCards(cards, player) {
             nextCardBonus = 0; // カードの種類に関わらずボーナスは消費される
         }
         
+        // 継続ボーナス（黒狼の牙など）の適用
+        if (continuousBonus > 0 && isDamageCard) {
+            cardDamage += continuousBonus;
+        }
+        
         total += cardDamage;
         
         // このカード自身が「次のカードのダメージを+Xする」を持っている場合
         const nextMatch = card.effect.match(/この次のカードのダメージを[＋\+](\d+)/);
         if (nextMatch) {
             nextCardBonus += parseInt(nextMatch[1]);
+        }
+        
+        // 「このカードにコンボしたあらゆるカードのダメージが+Xされる」
+        const continuousMatch = card.effect.match(/コンボしたあらゆるカードのダメージが[＋\+](\d+)/);
+        if (continuousMatch) {
+            continuousBonus += parseInt(continuousMatch[1]);
         }
     }
     return total;
