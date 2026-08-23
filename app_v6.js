@@ -1455,6 +1455,11 @@ function setupEvents() {
                 summonDef += 2;
                 summonLog += `・【アイアン・タイガー】常時効果 (軽減 2)<br>`;
             }
+            
+            if (s.card.name === '菌糸の獣骸') {
+                summonDef += 1;
+                summonLog += `・【菌糸の獣骸】常時効果 (軽減 1)<br>`;
+            }
         });
         
         let totalDef = defense + summonDef;
@@ -3514,10 +3519,6 @@ function updateUI() {
                     logMsg(`【泥濘の人形の効果】任意の対象全ては、そのターンの「コンボ」を最大2枚までに制限される！<br><span style="color:#aaa; font-size:0.8rem;">（※対象となったプレイヤーは、このラウンドのコンボ枚数を自己管理してください）</span>`, 'important');
                 }
                 
-                if (s.card.name === '菌糸の獣骸') {
-                    logMsg(`【菌糸の獣骸の宣言】このユニットが場に存在する限り、任意の対象全ての与えるダメージを常時「-1」する！`, 'important');
-                }
-                
                 if (s.card.name === '狂雷の凶鳥') {
                     logMsg(`【狂雷の凶鳥の攻撃】このユニットのダメージはリアクションすることができない！`, 'damage');
                 }
@@ -3575,10 +3576,6 @@ function updateUI() {
                 
                 if (s.card.name === '泥濘の人形') {
                     logMsg(`【泥濘の人形の効果】任意の対象全ては、そのターンの「コンボ」を最大2枚までに制限される！<br><span style="color:#aaa; font-size:0.8rem;">（※対象となったプレイヤーは、このラウンドのコンボ枚数を自己管理してください）</span>`, 'important');
-                }
-                
-                if (s.card.name === '菌糸の獣骸') {
-                    logMsg(`【菌糸の獣骸の宣言】このユニットが場に存在する限り、任意の対象全ての与えるダメージを常時「-1」する！`, 'important');
                 }
                 
                 updateUI();
