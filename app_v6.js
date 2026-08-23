@@ -1907,8 +1907,16 @@ function setupEvents() {
                 cDiv.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#111; padding:5px; border-radius:3px; font-size:0.8rem;';
                 cDiv.innerHTML = `<span>${s.card.name} (コスト${s.card.cost})</span> <button class="btn btn-primary" style="padding:2px 6px; font-size:0.7rem;">ダメージを受ける</button>`;
                 cDiv.querySelector('button').addEventListener('click', () => {
-                    const dmgToTake = pendingDamage;
-                    const endurance = s.card.cost;
+                    let dmgToTake = pendingDamage;
+                    let endurance = s.card.cost;
+                    
+                    if (s.card.name === '古の屍竜') {
+                        const isFlesh = confirm("【古の屍竜】の特殊効果について確認します。\nこの攻撃によるダメージは「肉体カテゴリー」によるものですか？\n（※「OK」を押すと、自身に対するダメージを3点軽減して判定します）");
+                        if (isFlesh) {
+                            dmgToTake = Math.max(0, dmgToTake - 3);
+                            logMsg(`【古の屍竜の効果】「肉体カテゴリー」のダメージを3点軽減！（${pendingDamage} → ${dmgToTake}）`, 'important');
+                        }
+                    }
                     
                     if (s.card.name === '彷徨う砂塵霊') {
                         // ダメージを全て無効化し、廃棄札へ移動する
