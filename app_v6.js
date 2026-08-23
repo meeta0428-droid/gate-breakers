@@ -1736,7 +1736,7 @@ function setupEvents() {
         const maxMen = maxMenBase + bonusMen + manualRecoveryBonus.men;
 
         const hasMadanjushi = player.deck.passives.some(p => p.name === '魔弾銃士');
-        let costBody = 0, costInt = 0, costMen = 0;
+        let costBody = 0, costInt = 0, costMen = 0, costAll = 0;
         recoveringCards.forEach(idx => {
             const card = player.deck.discard[idx];
             let actualCost = card.cost;
@@ -1746,7 +1746,21 @@ function setupEvents() {
             if (card.category.includes('肉体')) costBody += actualCost;
             else if (card.category.includes('知性')) costInt += actualCost;
             else if (card.category.includes('精神')) costMen += actualCost;
+            else if (card.category.includes('全て')) costAll += actualCost;
         });
+        
+        let remB = Math.max(0, maxBody - costBody);
+        let remI = Math.max(0, maxInt - costInt);
+        let remM = Math.max(0, maxMen - costMen);
+        
+        while (costAll > 0 && (remB > 0 || remI > 0 || remM > 0)) {
+            if (remB > 0) { remB--; costBody++; costAll--; continue; }
+            if (remI > 0) { remI--; costInt++; costAll--; continue; }
+            if (remM > 0) { remM--; costMen++; costAll--; continue; }
+        }
+        if (costAll > 0) {
+            costBody += costAll; // 余ってしまった場合はとりあえず肉体に足してエラーを出す
+        }
 
         document.getElementById('recover-cost-body').innerText = costBody;
         document.getElementById('recover-max-body').innerText = maxBody;
@@ -1780,6 +1794,7 @@ function setupEvents() {
                 if (card.category.includes('肉体')) relatedStat = player.stats.body;
                 else if (card.category.includes('知性')) relatedStat = player.stats.int;
                 else if (card.category.includes('精神')) relatedStat = player.stats.men;
+                else if (card.category.includes('全て')) relatedStat = true;
 
                 if (!relatedStat) {
                     item.style.opacity = '0.5';
