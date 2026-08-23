@@ -1751,11 +1751,26 @@ function setupEvents() {
                         <div style="text-align:right;">
                             <div>${costDisplay}</div>
                             ${isSelected ? '<div style="color:#4caf50; font-size:0.75rem;">✔ 選択中</div>' : ''}
-                            ${useBtnHtml}
+                            <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:5px;">
+                                ${useBtnHtml}
+                                <button class="btn btn-danger btn-void-discard-item" style="font-size:0.7rem; padding:2px 5px;">廃棄</button>
+                            </div>
                         </div>
                     `;
                     
                     item.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('btn-void-discard-item')) {
+                            e.stopPropagation();
+                            if (confirm(`捨札から「${card.name}」を廃棄札へ移動させますか？（敵からの効果用など）`)) {
+                                const targetCard = player.deck.discard.splice(idx, 1)[0];
+                                player.deck.void.push(targetCard);
+                                logMsg(`捨札から「${targetCard.name}」を廃棄した。`);
+                                updateDiscardModalUI();
+                                updateUI();
+                            }
+                            return;
+                        }
+
                         if (e.target.classList.contains('btn-use-discard')) {
                             e.stopPropagation();
                             const targetCard = player.deck.discard[idx];
