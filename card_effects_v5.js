@@ -382,7 +382,14 @@ export const cardEffects = {
     // キュウソネコカミ：能力値が0になるたび（現在値が0の能力値の数×3）ダメージ＋3、受けるダメージ（数×1）軽減。
     "キュウソネコカミ": {
         onAttack: (context) => {
-            if (!context.player) return {};
+            if (!context.player || !context.currentCombo) return {};
+            
+            // ダメージ表記があるカード（またはアクションカード）が含まれているかチェック
+            const hasDamageCard = context.currentCombo.some(c => c.effect.includes('ダメージ') || c.category.includes('アクション'));
+            
+            // ダメージを与えるつもりのないカードには適用しない
+            if (!hasDamageCard && context.totalDmg <= 0) return {};
+
             const zeroCount = [
                 context.player.stats.body, 
                 context.player.stats.int, 
