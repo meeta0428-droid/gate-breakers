@@ -1448,9 +1448,7 @@ function setupEvents() {
             actualDmg = 0;
         }
         
-        if (stagHalved) {
-            actualDmg = Math.ceil(actualDmg / 2);
-        }
+
         
         // 予測防壁の効果：攻撃に使用されたカードが「公開状態」だった場合、ダメージを無効化
         let yosokuTriggered = false;
@@ -1464,8 +1462,7 @@ function setupEvents() {
         const cardStr = currentCombo.length > 0 ? `使用カード:<br>${cardLogs}<br>` : 'カード使用なし<br>';
         const yosokuMsg = yosokuTriggered ? `<br><span style="color:#00ffff; font-weight:bold;">【予測防壁】攻撃元が公開状態だったため、ダメージを完全に無効化！</span>` : '';
         const nohmMsg = nohmBlocked ? `<br><span style="color:#00ffff; font-weight:bold;">【ノーム】ユニットを廃棄し、ダメージを無効化（阻止）した！</span>` : '';
-        const stagMsg = stagHalved ? `<br><span style="color:#00ffff; font-weight:bold;">【エルダースタッグ】ユニットを廃棄し、受けるダメージを半減した！</span>` : '';
-        const additionalMsg = yosokuMsg + nohmMsg + stagMsg;
+        const additionalMsg = yosokuMsg + nohmMsg;
         
         if (ignoreDef) {
             logMsg(`${cardStr}${summonLog}敵からの攻撃（<span style="color:#cc44ff;">軽減無視！</span>）<br>元ダメージ: ${inputDmg}${additionalMsg}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');

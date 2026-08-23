@@ -2,12 +2,27 @@ export const cardEffects = {
     // サンプル実装１：ダメージを半減する
     "エルダースタッグ": {
         onBeforeDamageTaken: (context) => {
-            let { pendingDamage, logMsg, card } = context;
-            const reduced = Math.floor(pendingDamage / 2);
+            let { pendingDamage, logMsg, card, player } = context;
             if (pendingDamage > 0) {
-                logMsg(`【${card.name}】の効果発動！ダメージを半減（${pendingDamage} → ${reduced}）`, 'important');
+                const doStagHalf = confirm(`【エルダースタッグ】が場にいます。\nエルダースタッグを廃棄して、受けるダメージ（${pendingDamage}点）を「半減」しますか？\n（※OKを押すと廃棄札に移動し、計算後の最終ダメージが半分(端数切り上げ)になります）`);
+                if (doStagHalf) {
+                    const reduced = Math.ceil(pendingDamage / 2);
+                    logMsg(`【${card.name}】ユニットを廃棄し、受けるダメージを半減した！（${pendingDamage} → ${reduced}）`, 'important');
+                    
+                    // 廃棄札へ移動
+                    if (player && player.deck && player.deck.summons) {
+                        const stagIdx = player.deck.summons.findIndex(s => s.card.name === 'エルダースタッグ');
+                        if (stagIdx > -1) {
+                            const stagCard = player.deck.summons[stagIdx].card;
+                            player.deck.summons.splice(stagIdx, 1);
+                            player.deck.void.push(stagCard);
+                        }
+                    }
+                    
+                    return { pendingDamage: reduced };
+                }
             }
-            return { pendingDamage: reduced };
+            return context;
         }
     },
     // サンプル実装２：ダメージを0にする
