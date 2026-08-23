@@ -466,5 +466,30 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // 戦術眼：対象のカードを無効化し、相手の消費コスト分だけ捨札を回収
+    "戦術眼": {
+        onBeforeDamageTaken: (context) => {
+            if (context.isPreview) return {};
+            if (!context._senjuganApplied) {
+                context._senjuganApplied = true;
+                if (context.logMsg) {
+                    context.logMsg(`【戦術眼】<br><span style="color:#ffcc00; font-weight:bold;">※対象が使ったカードを無効化します（対象に伝えてください）。<br>その後、相手が使ったコストと同じ合計コストになるまで、捨札から任意のカードを全て手動で手札に回収してください。</span>`, 'important');
+                }
+                return { _senjuganApplied: true };
+            }
+            return {};
+        },
+        onAttack: (context) => {
+            if (context.isPreview) return {};
+            if (!context._senjuganApplied) {
+                context._senjuganApplied = true;
+                if (context.logMsg) {
+                    context.logMsg(`【戦術眼】<br><span style="color:#ffcc00; font-weight:bold;">※対象が使ったカードを無効化します（対象に伝えてください）。<br>その後、相手が使ったコストと同じ合計コストになるまで、捨札から任意のカードを全て手動で手札に回収してください。</span>`, 'important');
+                }
+                return { _senjuganApplied: true };
+            }
+            return {};
+        }
     }
 };
