@@ -665,7 +665,7 @@ function setupEvents() {
                 const total = statVal + str + passiveBonus;
                 logs.push(`・「${c.name}」：判定結果 <b style="color:#00ffff; font-size:1.1rem;">${total}</b> （${statName} ${statVal} ＋ 強度 ${str} ＋ パッシブ補正 ${passiveBonus}）`);
                 
-                if (/このカードは.*?廃棄札[へ]?[と]?移動する/.test(c.effect)) {
+                if (/このカードは.*?廃棄札.*?移動する/.test(c.effect)) {
                     // Preview時には移動させない
                     if (!isPreview) {
                         const discardIdx = player.deck.discard.lastIndexOf(c);
@@ -918,7 +918,7 @@ function setupEvents() {
                     return;
                 }
                 
-                if (/このカードは.*?廃棄札[へ]?[と]?移動する/.test(card.effect)) {
+                if (/このカードは.*?廃棄札.*?移動する/.test(card.effect)) {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
                     if (discardIdx > -1) {
                         player.deck.discard.splice(discardIdx, 1);
@@ -1305,7 +1305,7 @@ function setupEvents() {
             }
 
             // 使用後廃棄のテキストを持つカード
-            if (/このカードは.*?廃棄札[へ]?[と]?移動する/.test(card.effect)) {
+            if (/このカードは.*?廃棄札.*?移動する/.test(card.effect)) {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
                     player.deck.discard.splice(discardIdx, 1);
