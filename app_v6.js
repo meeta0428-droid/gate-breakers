@@ -1513,11 +1513,24 @@ function setupEvents() {
                 yosokuTriggered = true;
             }
         }
+        
+        // マナカウンターの効果：ダメージを0にし、相手のコンボ枚数分の反射ダメージを与える
+        let manaCounterTriggered = false;
+        let counterDamage = 0;
+        if (currentCombo.some(c => c.name === '『マナカウンター』')) {
+            actualDmg = 0;
+            manaCounterTriggered = true;
+            const enemyComboCount = prompt("【『マナカウンター』効果】\n相手がこの攻撃で繋げた「コンボ枚数」を入力してください。\n（※その数値がそのまま相手への反射ダメージになります）", "0");
+            if (enemyComboCount && !isNaN(enemyComboCount)) {
+                counterDamage = parseInt(enemyComboCount);
+            }
+        }
 
         const cardStr = currentCombo.length > 0 ? `使用カード:<br>${cardLogs}<br>` : 'カード使用なし<br>';
         const yosokuMsg = yosokuTriggered ? `<br><span style="color:#00ffff; font-weight:bold;">【予測防壁】攻撃元が公開状態だったため、ダメージを完全に無効化！</span>` : '';
         const nohmMsg = nohmBlocked ? `<br><span style="color:#00ffff; font-weight:bold;">【ノーム】ユニットを廃棄し、ダメージを無効化（阻止）した！</span>` : '';
-        const additionalMsg = yosokuMsg + nohmMsg;
+        const manaCounterMsg = manaCounterTriggered ? `<br><span style="color:#ffcc00; font-weight:bold;">【『マナカウンター』】ダメージを完全に無効化（0にする）！<br>さらに、相手に「${counterDamage}点」のカウンターダメージを反射！</span>` : '';
+        const additionalMsg = yosokuMsg + nohmMsg + manaCounterMsg;
         
         if (ignoreDef) {
             logMsg(`${cardStr}${summonLog}敵からの攻撃（<span style="color:#cc44ff;">軽減無視！</span>）<br>元ダメージ: ${inputDmg}${additionalMsg}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
@@ -1527,6 +1540,10 @@ function setupEvents() {
         
         if (actualDmg === 0) {
             // 流し斬りチェックはすべての軽減適用後に行うため、ここでは判定しない
+        }
+        
+        if (manaCounterTriggered && counterDamage > 0) {
+            enemyHp -= counterDamage;
         }
         
         currentCombo.forEach((card, idx) => {
