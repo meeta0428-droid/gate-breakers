@@ -56,6 +56,7 @@ const els = {
     btnDeckToChara: document.getElementById('btn-deck-to-chara'),
     btnBattleToChara: document.getElementById('btn-battle-to-chara'),
     btnShareStatus: document.getElementById('btn-share-status'),
+    btnToggleMode: document.getElementById('btn-toggle-mode'),
     btnOpenDiscordModal: document.getElementById('btn-open-discord-modal'),
     discordModal: document.getElementById('discord-modal'),
     discordWebhookUrl: document.getElementById('discord-webhook-url'),
@@ -110,6 +111,7 @@ const els = {
 
 let selectedCardIndex = null;
 let currentCombo = [];
+let isGeneralMode = false;
 
 function sendDiscordWebhook(msgHtml) {
     const webhookUrl = localStorage.getItem('discordWebhookUrl');
@@ -603,6 +605,38 @@ function setupEvents() {
         if (currentCombo.length === 0 && !hasAttackingSummons) {
             logMsg('出すカードがありません。手札からアクションカードを選ぶか、攻撃可能な召喚ユニットを用意してください。');
             currentCombo = [...currentCombo, ...setCards];
+            return;
+        }
+
+        if (isGeneralMode) {
+            let logs = [];
+            currentCombo.forEach(c => {
+                let statVal = 0;
+                let statName = 'なし';
+                if (c.category.includes('肉体')) { statVal = player.stats.body.maxVal; statName = '肉体'; }
+                else if (c.category.includes('知性')) { statVal = player.stats.int.maxVal; statName = '知性'; }
+                else if (c.category.includes('精神')) { statVal = player.stats.men.maxVal; statName = '精神'; }
+                else if (c.category.includes('全て')) {
+                    statVal = Math.max(player.stats.body.maxVal, player.stats.int.maxVal, player.stats.men.maxVal);
+                    statName = '最大能力値';
+                }
+                
+                const str = c.strength || 0;
+                const total = statVal + str;
+                logs.push(`・「${c.name}」：判定結果 <b style="color:#00ffff; font-size:1.1rem;">${total}</b> （${statName} ${statVal} ＋ 強度 ${str}）`);
+                
+                if (/このカードは廃棄札[へ]?[と]?移動する/.test(c.effect)) {
+                    const discardIdx = player.deck.discard.lastIndexOf(c);
+                    if (discardIdx > -1) {
+                        player.deck.discard.splice(discardIdx, 1);
+                        player.deck.void.push(c);
+                        logs.push(`　┗「${c.name}」は効果により廃棄札に移動した。`);
+                    }
+                }
+            });
+            logMsg(`【一般判定】<br>${logs.join('<br>')}`, 'important');
+            currentCombo = [...setCards]; // セットカードは維持
+            updateUI();
             return;
         }
         
@@ -1733,6 +1767,27 @@ function setupEvents() {
                         `捨札: ${player.deck.discard.length}枚 | ` +
                         `廃棄: ${player.deck.void.length}枚`;
             logMsg(msg, 'important');
+        });
+    }
+
+    if (els.btnToggleMode) {
+        els.btnToggleMode.addEventListener('click', () => {
+            isGeneralMode = !isGeneralMode;
+            if (isGeneralMode) {
+                els.btnToggleMode.innerText = 'バトルモードに戻す';
+                els.btnToggleMode.style.background = '#8e24aa'; // 色を変えて目立たせる
+                els.btnAttack.innerText = '一般判定を実行';
+                els.btnAttack.style.background = '#8e24aa';
+                els.btnReact.style.display = 'none'; // 防御ボタンは隠す
+                logMsg('【システム】一般判定モードに切り替えました。手札の効果は無視され、能力値＋強度で判定を行います。', 'important');
+            } else {
+                els.btnToggleMode.innerText = '一般モード';
+                els.btnToggleMode.style.background = '#555';
+                els.btnAttack.innerText = '攻撃実行';
+                els.btnAttack.style.background = '#1976d2';
+                els.btnReact.style.display = 'block'; // 防御ボタンを戻す
+                logMsg('【システム】バトルモードに戻りました。', 'important');
+            }
         });
     }
 
