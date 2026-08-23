@@ -316,7 +316,7 @@ export function executeCardEffects(cards, player, logMsg) {
         triggerHook('onPlay', { player, logMsg }, [card]);
         
         // ドロー効果
-        const drawMatch = card.effect.match(/山札から([0-9０-９]+)枚.*?手札に加える/);
+        const drawMatch = card.effect.match(/山札から(?:カードを)?([0-9０-９]+)枚.*?手札に加える/);
         if (drawMatch) {
             const parseFullWidthIntLocal = (str) => {
                 if (!str) return 0;
