@@ -3409,6 +3409,11 @@ function updateUI() {
                 } else {
                     s.stance = 'defend';
                 }
+                
+                if (s.card.name === 'ガイアグリズリー') {
+                    logMsg(`【ガイアグリズリーの防御】コスト1のカードを無効化する！`, 'important');
+                }
+                
                 updateUI();
             });
             sDiv.querySelector('.summon-btn-dismiss').addEventListener('click', () => {
