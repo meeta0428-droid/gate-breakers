@@ -3321,6 +3321,11 @@ function updateUI() {
                 } else {
                     s.stance = 'attack';
                 }
+                
+                if (s.card.name === 'ベヒーモス') {
+                    logMsg(`【ベヒーモスの攻撃】任意の対象全員に対して、それぞれ「3点」のダメージ！`, 'damage');
+                }
+                
                 updateUI();
             });
             sDiv.querySelector('.btn-def').addEventListener('click', () => {
@@ -3343,6 +3348,9 @@ function updateUI() {
                         let effectText = s.card.effect;
                         if (s.card.name === 'スプリガン') {
                             effectText = `<span style="color:#ffcc00; font-weight:bold;">※現在の「攻」の数値： ${atk} </span><br>` + effectText;
+                        }
+                        if (s.card.name === 'ベヒーモス') {
+                            effectText = `<span style="color:#ffcc00; font-weight:bold;">※任意の対象全員に対して、それぞれ「6点」のダメージ！</span><br>` + effectText;
                         }
                         logMsg(`召喚ユニット「${s.card.name}」を廃棄札へ移動しました！<br><span style="color:#aaa; font-size:0.8rem;">【効果】${effectText}</span>`, 'important');
                     }
