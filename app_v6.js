@@ -469,24 +469,26 @@ function renderCardPool() {
             // 「ブーステッド」選択時の特別ルール
             const hasBoosted = selectedCardsForDeck.some(c => c.name === '『ブーステッド』');
             
-            if (card.name === '『ブーステッド』') {
-                // ブーステッドを追加しようとした場合、すでにデッキにあるコスト4以上のアクション・リアクションを除外
-                const originalLength = selectedCardsForDeck.length;
-                selectedCardsForDeck = selectedCardsForDeck.filter(c => {
-                    const isActionOrReaction = c.category.includes('アクション') || c.category.includes('リアクション');
-                    if (isActionOrReaction && c.cost >= 4) {
-                        return false; // 除外
-                    }
+            const isProhibitedByBoosted = (c) => {
+                if (c.effect && c.effect.includes('【メビウス専用】')) return false; // 専用カードは許可
+                
+                // コスト4以上の アクション・リアクション・召喚・弾丸 を禁止
+                const isTargetCat = c.category.includes('アクション') || c.category.includes('リアクション') || c.category.includes('召喚') || c.category.includes('弾丸');
+                if (isTargetCat && c.cost >= 4) {
                     return true;
-                });
+                }
+                return false;
+            };
+            
+            if (card.name === '『ブーステッド』') {
+                const originalLength = selectedCardsForDeck.length;
+                selectedCardsForDeck = selectedCardsForDeck.filter(c => !isProhibitedByBoosted(c));
                 if (selectedCardsForDeck.length < originalLength) {
-                    alert('【ブーステッド制限】デッキに入っていたコスト4以上のアクション/リアクションカードを自動除外しました。');
+                    alert('【ブーステッド制限】デッキに入っていたコスト4以上の対象カード（アクション/リアクション/召喚/弾丸）を自動除外しました。');
                 }
             } else if (hasBoosted) {
-                // すでにブーステッドがデッキにある場合、コスト4以上のアクション・リアクションは追加できない
-                const isActionOrReaction = card.category.includes('アクション') || card.category.includes('リアクション');
-                if (isActionOrReaction && card.cost >= 4) {
-                    alert('【ブーステッド制限】コスト4以上のアクション/リアクションカードはデッキに追加できません。');
+                if (isProhibitedByBoosted(card)) {
+                    alert('【ブーステッド制限】コスト4以上の対象カード（アクション/リアクション/召喚/弾丸）はデッキに追加できません。');
                     return;
                 }
             }
