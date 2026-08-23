@@ -3396,6 +3396,10 @@ function updateUI() {
                     logMsg(`【エアロタロンの効果】任意の一体のイニシアチブを「-2」する！`, 'important');
                 }
                 
+                if (s.card.name === 'ヴェノムラプター') {
+                    logMsg(`【ヴェノムラプターの攻撃】このユニットの攻撃がダメージを与えた時、対象は任意の手札1枚を捨札に移動する。`, 'damage');
+                }
+                
                 updateUI();
             });
             sDiv.querySelector('.btn-def').addEventListener('click', () => {
