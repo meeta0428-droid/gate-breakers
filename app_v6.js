@@ -3858,6 +3858,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
                 } else if (card.name === '『ブーステッド』') {
                     els.btnTriggerPassive.innerText = '効果を発動（能力値+2）';
                     els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === '『キメラドライブ』') {
+                    els.btnTriggerPassive.innerText = '効果を発動（合成）';
+                    els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === '『アポクリファ』') {
                     els.btnTriggerPassive.innerText = '効果を発動';
                     els.btnTriggerPassive.classList.remove('hidden');
