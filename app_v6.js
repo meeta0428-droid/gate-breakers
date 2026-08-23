@@ -3826,6 +3826,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
                 if (card.name === '錬金術師') {
                     els.btnTriggerPassive.innerText = '効果を発動';
                     els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === '『アポクリファ』') {
+                    els.btnTriggerPassive.innerText = '効果を発動';
+                    els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === '武具錬成') {
                     els.btnTriggerPassive.innerText = '効果を共有';
                     els.btnTriggerPassive.classList.remove('hidden');
