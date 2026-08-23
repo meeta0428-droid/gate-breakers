@@ -3497,6 +3497,10 @@ function updateUI() {
                     logMsg(`【呪縛の悪霊の効果】任意の対象1体はコスト2以下のカードを使用できない！<br><span style="color:#aaa; font-size:0.8rem;">（※この効果は、このユニットが場から廃棄札に送られるまで持続する）</span>`, 'important');
                 }
                 
+                if (s.card.name === '砂の呪骸') {
+                    logMsg(`【砂の呪骸の効果】任意の対象1体のイニシアチブを「-2」する！`, 'important');
+                }
+                
                 if (s.card.name === '狂雷の凶鳥') {
                     logMsg(`【狂雷の凶鳥の攻撃】このユニットのダメージはリアクションすることができない！`, 'damage');
                 }
@@ -3537,6 +3541,10 @@ function updateUI() {
                 
                 if (s.card.name === '呪縛の悪霊') {
                     logMsg(`【呪縛の悪霊の効果】任意の対象1体はコスト2以下のカードを使用できない！<br><span style="color:#aaa; font-size:0.8rem;">（※この効果は、このユニットが場から廃棄札に送られるまで持続する）</span>`, 'important');
+                }
+                
+                if (s.card.name === '砂の呪骸') {
+                    logMsg(`【砂の呪骸の効果】任意の対象1体のイニシアチブを「-2」する！`, 'important');
                 }
                 
                 updateUI();
