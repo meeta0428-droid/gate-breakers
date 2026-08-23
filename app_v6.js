@@ -143,6 +143,16 @@ function sendDiscordWebhook(msgHtml) {
     }).catch(e => console.error("Discord Webhook Error:", e));
 }
 
+function getDisplayCost(card, playerObj) {
+    if (!playerObj || !playerObj.deck) return card.cost;
+    let displayCost = card.cost;
+    const hasWill = playerObj.deck.passives.some(p => p.name === '魔導杖ウィル');
+    if (hasWill && card.category.includes('知性') && card.category.includes('アクション')) {
+        displayCost = Math.max(0, displayCost - 1);
+    }
+    return displayCost;
+}
+
 function logMsg(msg, type = '') {
     const p = document.createElement('p');
     const playerName = (typeof player !== 'undefined' && player.name) ? player.name : 'プレイヤー';
@@ -2795,15 +2805,10 @@ function setupEvents() {
             player.deck.discard.push(card); 
             currentCombo.push(card);
             
-            let displayCost = card.cost;
-            const hasWill = player.deck.passives.some(p => p.name === '魔導杖ウィル');
-            if (hasWill && card.category.includes('知性') && card.category.includes('アクション')) {
-                displayCost = Math.max(0, displayCost - 1);
-            }
-            
+            const displayCost = getDisplayCost(card, player);
             logMsg(`「${card.name}」（コスト:${displayCost} / 強度:${card.strength || 0}）を場に出した！`);
-            if (hasWill && card.category.includes('知性') && card.category.includes('アクション')) {
-                logMsg(`<span style="color:#ffcc00; font-size:0.8rem;">※【魔導杖ウィル】効果でコスト-1</span>`);
+            if (displayCost < card.cost) {
+                logMsg(`<span style="color:#ffcc00; font-size:0.8rem;">※効果によりコストが軽減されています</span>`);
             }
             
             // 汎用ドロー効果（山札からX枚引く）
@@ -3288,10 +3293,12 @@ function updateUI() {
     player.deck.hand.forEach((card, index) => {
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card';
+        const dCost = getDisplayCost(card, player);
+        const costColor = dCost < card.cost ? '#ffcc00' : 'inherit';
         cardDiv.innerHTML = `
             <div class="card-name">${card.name}</div>
             <div class="card-cat">${card.category}</div>
-            <div class="card-stats"><span>C:${card.cost}</span><span>S:+${card.strength}</span></div>
+            <div class="card-stats"><span>C:<span style="color:${costColor}">${dCost}</span></span><span>S:+${card.strength}</span></div>
             <div class="card-effect">${card.effect}</div>
         `;
         cardDiv.addEventListener('click', () => openCardModal(card, index));
@@ -3315,10 +3322,12 @@ function updateUI() {
                 cardDiv.className = 'card';
                 cardDiv.style.transform = 'scale(0.9)'; // 少し小さめに
                 cardDiv.style.transformOrigin = 'top left';
+                const dCost = getDisplayCost(card, player);
+                const costColor = dCost < card.cost ? '#ffcc00' : 'inherit';
                 cardDiv.innerHTML = `
                     <div class="card-name">${card.name}</div>
                     <div class="card-cat">${card.category}</div>
-                    <div class="card-stats"><span>C:${card.cost}</span><span>S:+${card.strength}</span></div>
+                    <div class="card-stats"><span>C:<span style="color:${costColor}">${dCost}</span></span><span>S:+${card.strength}</span></div>
                     <div class="card-effect">${card.effect}</div>
                 `;
                 cardDiv.addEventListener('click', () => openCardModal(card, i, false, false, true));
@@ -3415,7 +3424,13 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
     selectedCardSource = isPsychometry ? 'psychometry' : 'hand';
     els.mTitle.innerText = card.name;
     els.mCat.innerText = card.category;
-    els.mCost.innerText = card.cost;
+    const dCost = getDisplayCost(card, player);
+    els.mCost.innerText = dCost;
+    if (dCost < card.cost) {
+        els.mCost.style.color = '#ffcc00';
+    } else {
+        els.mCost.style.color = 'inherit';
+    }
     els.mStr.innerText = card.strength;
     els.mDesc.innerHTML = card.effect;
     
