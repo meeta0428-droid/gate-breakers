@@ -459,6 +459,12 @@ function renderCardPool() {
                 alert(`コストオーバーです！（上限: ${player.deckCapacity}）`);
                 return;
             }
+            if (card.effect.includes('制限：デッキ1枚') || card.effect.includes('【制限：デッキ1枚')) {
+                if (selectedCardsForDeck.some(c => c.name === card.name)) {
+                    alert(`「${card.name}」はデッキに1枚しか入れられません。`);
+                    return;
+                }
+            }
             selectedCardsForDeck.push(card);
             renderSelectedDeck();
         });
@@ -542,6 +548,17 @@ function setupEvents() {
             alert('カードを選択してください！');
             return;
         }
+        
+        // ウィスプ（他召喚カードを所有）のバリデーション
+        const wispCards = selectedCardsForDeck.filter(c => c.name === 'ウィスプ');
+        if (wispCards.length > 0) {
+            const hasOtherSummon = selectedCardsForDeck.some(c => c.name !== 'ウィスプ' && (c.category.includes('召喚') || c.effect.includes('召喚・攻')));
+            if (!hasOtherSummon) {
+                alert('【制限】「ウィスプ」をデッキに入れるには、他に「召喚」カードを入れる必要があります。');
+                return;
+            }
+        }
+        
         if (currentCost !== player.deckCapacity) {
             if(!confirm(`現在のコスト合計(${currentCost})がデッキ上限(${player.deckCapacity})と等しくありません。このまま開始しますか？\n※仕様:コストが等しくなるように組むのが推奨されます。`)){
                 return;
@@ -1047,6 +1064,10 @@ function setupEvents() {
                         player.deck.discard.splice(discardIdx, 1);
                         const initStance = card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack';
                         player.deck.summons.push({ card: card, stance: initStance });
+                        if (card.name === 'ウィスプ') {
+                            const drawn = player.deck.draw(1);
+                            if (drawn > 0) logMsg(`【ウィスプ】召喚時効果：山札からカードを1枚引いた！`, 'important');
+                        }
                     }
                 } else if (toVoid.has(idx)) {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
@@ -1460,6 +1481,10 @@ function setupEvents() {
                     player.deck.discard.splice(discardIdx, 1);
                     const initStance = card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'defend';
                     player.deck.summons.push({ card: card, stance: initStance });
+                    if (card.name === 'ウィスプ') {
+                        const drawn = player.deck.draw(1);
+                        if (drawn > 0) logMsg(`【ウィスプ】召喚時効果：山札からカードを1枚引いた！`, 'important');
+                    }
                 }
             } else if (toVoid.has(idx)) {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
@@ -2138,9 +2163,15 @@ function setupEvents() {
         player.deck.discard.forEach(c => checkRecoveryBonus(c, false));
         player.deck.void.forEach(c => checkRecoveryBonus(c, true));
 
-        const maxBody = maxBodyBase + bonusBody + manualRecoveryBonus.body;
-        const maxInt = maxIntBase + bonusInt + manualRecoveryBonus.int;
-        const maxMen = maxMenBase + bonusMen + manualRecoveryBonus.men;
+        let maxBody = maxBodyBase + bonusBody + manualRecoveryBonus.body;
+        let maxInt = maxIntBase + bonusInt + manualRecoveryBonus.int;
+        let maxMen = maxMenBase + bonusMen + manualRecoveryBonus.men;
+        
+        // ウィスプの召喚ボーナス（場にいれば精神回収ポイント＋1）
+        const wispCount = player.deck.summons.filter(s => s.card.name === 'ウィスプ').length;
+        if (wispCount > 0) {
+            maxMen += wispCount;
+        }
 
         let costBody = 0, costInt = 0, costMen = 0, costAll = 0;
         recoveringCards.forEach(idx => {
