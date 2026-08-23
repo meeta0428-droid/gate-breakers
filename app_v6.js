@@ -3329,6 +3329,15 @@ function updateUI() {
                     logMsg(`【ベヒーモスの攻撃】任意の対象全員に対して、それぞれ「3点」のダメージ！`, 'damage');
                 }
                 
+                if (s.card.name === 'シャドウストーカー') {
+                    logMsg(`【シャドウストーカーの攻撃】相手の手札を全て公開させ、その中から1枚を指定して捨札に移動させる！<br><span style="color:#aaa; font-size:0.8rem;">（※対象以外が代わりに受けることはできない）</span>`, 'damage');
+                    player.deck.summons.splice(idx, 1);
+                    player.deck.void.push(s.card);
+                    logMsg(`「シャドウストーカー」は攻撃使用後、自身の効果によって廃棄札に移動した。`, 'important');
+                    updateUI();
+                    return;
+                }
+                
                 updateUI();
             });
             sDiv.querySelector('.btn-def').addEventListener('click', () => {
