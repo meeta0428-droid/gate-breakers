@@ -161,6 +161,18 @@ export class Character {
             checkPersistentBuff(card, true);
         }
         
+        // 召喚ユニットからのイニシアチブ
+        if (this.deck.summons) {
+            for (const s of this.deck.summons) {
+                const card = s.card;
+                const matchPlus = card.effect.match(/イニシアチブ\s*[＋\+]\s*([0-9０-９]+)/);
+                if (matchPlus) total += parseFullWidthInt(matchPlus[1]);
+                
+                const matchMinus = card.effect.match(/イニシアチブ\s*[\-ー\-－]\s*([0-9０-９]+)/);
+                if (matchMinus) total -= parseFullWidthInt(matchMinus[1]);
+            }
+        }
+        
         // 手動調整値（影縫い等の効果）
         total += (this.initiativeModifier || 0);
         
