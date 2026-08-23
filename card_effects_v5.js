@@ -378,5 +378,45 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // キュウソネコカミ：能力値が0になるたび（現在値が0の能力値の数×3）ダメージ＋3、受けるダメージ（数×1）軽減。
+    "キュウソネコカミ": {
+        onAttack: (context) => {
+            if (!context.player) return {};
+            const zeroCount = [
+                context.player.stats.body, 
+                context.player.stats.int, 
+                context.player.stats.men
+            ].filter(s => s.currentVal === 0).length;
+            
+            if (zeroCount > 0 && !context._kyusoAttackApplied) {
+                const bonusDmg = zeroCount * 3;
+                context._kyusoAttackApplied = true;
+                if (context.logMsg) {
+                    context.logMsg(`【パッシブ】キュウソネコカミの効果！0になった能力値が${zeroCount}つあるため、ダメージ ＋${bonusDmg}！`, 'important');
+                }
+                return { totalDmg: context.totalDmg + bonusDmg, _kyusoAttackApplied: true };
+            }
+            return {};
+        },
+        onBeforeDamageTaken: (context) => {
+            if (!context.player || context.pendingDamage <= 0) return {};
+            const zeroCount = [
+                context.player.stats.body, 
+                context.player.stats.int, 
+                context.player.stats.men
+            ].filter(s => s.currentVal === 0).length;
+            
+            if (zeroCount > 0 && !context._kyusoDefendApplied) {
+                const reduceVal = zeroCount * 1;
+                context._kyusoDefendApplied = true;
+                const finalDamage = Math.max(0, context.pendingDamage - reduceVal);
+                if (context.logMsg) {
+                    context.logMsg(`【パッシブ】キュウソネコカミの効果！0になった能力値が${zeroCount}つあるため、ダメージを ${reduceVal} 点軽減！`);
+                }
+                return { pendingDamage: finalDamage, _kyusoDefendApplied: true };
+            }
+            return {};
+        }
     }
 };
