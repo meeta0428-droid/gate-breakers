@@ -3400,6 +3400,10 @@ function updateUI() {
                     logMsg(`【ヴェノムラプターの攻撃】このユニットの攻撃がダメージを与えた時、対象は任意の手札1枚を捨札に移動する。`, 'damage');
                 }
                 
+                if (s.card.name === 'ヴァイパーヴァイン') {
+                    logMsg(`【ヴァイパーヴァインの攻撃】ダメージを与えた時、対象のコスト3以下の捨札1枚を廃棄札に移動させる！`, 'damage');
+                }
+                
                 updateUI();
             });
             sDiv.querySelector('.btn-def').addEventListener('click', () => {
