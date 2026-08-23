@@ -1931,6 +1931,10 @@ function setupEvents() {
                             logMsg('【怨樹の角魔の効果】廃棄札に移動したため、攻撃者はコスト4以下のカード1枚を廃棄札に移動する！', 'damage');
                         }
                         
+                        if (s.card.name === '赫怒の熔魔') {
+                            logMsg('【赫怒の熔魔の効果】廃棄札に移動したため、任意の対象全てに3点のダメージを与える！', 'damage');
+                        }
+                        
                         if (s.card.name === 'ライトニングボア') {
                             logMsg('【ライトニングボアの効果】自身がダメージを受けたため、対象へ「1点」のダメージを返す！', 'important');
                             if (typeof enemyHp !== 'undefined') enemyHp -= 1;
