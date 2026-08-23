@@ -2786,7 +2786,17 @@ function setupEvents() {
             player.deck.hand.splice(selectedCardIndex, 1); 
             player.deck.discard.push(card); 
             currentCombo.push(card);
-            logMsg(`「${card.name}」（コスト:${card.cost} / 強度:${card.strength || 0}）を場に出した！`);
+            
+            let displayCost = card.cost;
+            const hasWill = player.deck.passives.some(p => p.name === '魔導杖ウィル');
+            if (hasWill && card.category.includes('知性') && card.category.includes('アクション')) {
+                displayCost = Math.max(0, displayCost - 1);
+            }
+            
+            logMsg(`「${card.name}」（コスト:${displayCost} / 強度:${card.strength || 0}）を場に出した！`);
+            if (hasWill && card.category.includes('知性') && card.category.includes('アクション')) {
+                logMsg(`<span style="color:#ffcc00; font-size:0.8rem;">※【魔導杖ウィル】効果でコスト-1</span>`);
+            }
             
             // 汎用ドロー効果（山札からX枚引く）
             const drawMatch = card.effect.match(/山札から([0-9０-９]+)枚引く/);
