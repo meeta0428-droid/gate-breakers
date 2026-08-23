@@ -1048,16 +1048,6 @@ function setupEvents() {
                     return;
                 }
                 
-                if (/このカードは.*?廃棄札.*?移動する/.test(card.effect)) {
-                    const discardIdx = player.deck.discard.lastIndexOf(card);
-                    if (discardIdx > -1) {
-                        player.deck.discard.splice(discardIdx, 1);
-                        player.deck.void.push(card);
-                        originalLogMsg(`「${card.name}」は使用されたため廃棄札に移動した。`);
-                    }
-                    return;
-                }
-                
                 if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
                     if (discardIdx > -1) {
@@ -1073,7 +1063,20 @@ function setupEvents() {
                             if (drawn > 0) logMsg(`【ケットシー】召喚時効果：山札からカードを${drawn}枚引いた！`, 'important');
                         }
                     }
-                } else if (toVoid.has(idx)) {
+                    return;
+                }
+                
+                if (/このカードは.*?廃棄札.*?移動する/.test(card.effect)) {
+                    const discardIdx = player.deck.discard.lastIndexOf(card);
+                    if (discardIdx > -1) {
+                        player.deck.discard.splice(discardIdx, 1);
+                        player.deck.void.push(card);
+                        originalLogMsg(`「${card.name}」は使用されたため廃棄札に移動した。`);
+                    }
+                    return;
+                }
+                
+                if (toVoid.has(idx)) {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
                     if (discardIdx > -1) {
                         player.deck.discard.splice(discardIdx, 1);
