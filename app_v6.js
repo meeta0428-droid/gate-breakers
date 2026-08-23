@@ -3119,6 +3119,7 @@ function setupEvents() {
         else if (source === 'hand') sourceArray = playerObj.deck.hand;
         else if (source === 'mountain') sourceArray = playerObj.deck.mountain;
         else if (source === 'void_or_discard') sourceArray = [...playerObj.deck.void, ...playerObj.deck.discard];
+        else if (source === 'hand_or_discard') sourceArray = [...playerObj.deck.hand, ...playerObj.deck.discard];
         else sourceArray = playerObj.deck.discard;
 
         const validCards = sourceArray.filter(filterFunc);
@@ -3153,6 +3154,14 @@ function setupEvents() {
                         const vIdx = playerObj.deck.void.lastIndexOf(card);
                         if (vIdx > -1) {
                             playerObj.deck.void.splice(vIdx, 1);
+                        } else {
+                            const dIdx = playerObj.deck.discard.lastIndexOf(card);
+                            if (dIdx > -1) playerObj.deck.discard.splice(dIdx, 1);
+                        }
+                    } else if (source === 'hand_or_discard') {
+                        const hIdx = playerObj.deck.hand.lastIndexOf(card);
+                        if (hIdx > -1) {
+                            playerObj.deck.hand.splice(hIdx, 1);
                         } else {
                             const dIdx = playerObj.deck.discard.lastIndexOf(card);
                             if (dIdx > -1) playerObj.deck.discard.splice(dIdx, 1);
