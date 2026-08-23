@@ -3296,6 +3296,7 @@ function setupEvents() {
         if (source === 'void') sourceArray = playerObj.deck.void;
         else if (source === 'hand') sourceArray = playerObj.deck.hand;
         else if (source === 'mountain') sourceArray = playerObj.deck.mountain;
+        else if (source === 'all') sourceArray = cardPool;
         else if (source === 'void_or_discard') sourceArray = [...playerObj.deck.void, ...playerObj.deck.discard];
         else if (source === 'hand_or_discard') sourceArray = [...playerObj.deck.hand, ...playerObj.deck.discard];
         else sourceArray = playerObj.deck.discard;
