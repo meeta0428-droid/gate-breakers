@@ -94,7 +94,27 @@
             </div>
             
             <div class="card-pool-area">
-                <h3 style="font-size: 0.9rem; color: #aaa; margin-bottom: 10px;">カード一覧 (タップで追加)</h3>
+                <h3 style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">カード一覧 (タップで追加)</h3>
+                <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; font-size:0.8rem;">
+                    <select id="filter-attr" style="padding:3px; border-radius:3px; background:#333; color:#fff; border:1px solid #555;">
+                        <option value="all">全属性</option>
+                        <option value="肉体">肉体のみ</option>
+                        <option value="知性">知性のみ</option>
+                        <option value="精神">精神のみ</option>
+                        <option value="全て">全てのみ</option>
+                    </select>
+                    <select id="filter-type" style="padding:3px; border-radius:3px; background:#333; color:#fff; border:1px solid #555;">
+                        <option value="all">全種類</option>
+                        <option value="パッシブ">パッシブ</option>
+                        <option value="アクション">アクション</option>
+                        <option value="リアクション">リアクション</option>
+                    </select>
+                    <select id="sort-cost" style="padding:3px; border-radius:3px; background:#333; color:#fff; border:1px solid #555;">
+                        <option value="default">デフォルト順</option>
+                        <option value="asc">コスト低い順</option>
+                        <option value="desc">コスト高い順</option>
+                    </select>
+                </div>
                 <div id="card-pool-list" class="vertical-list"></div>
             </div>
         </div>
@@ -401,9 +421,9 @@
         </div>
     </div>
 
-    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v192 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v192 確認・更新</button>
+    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v193 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v193 確認・更新</button>
 
-    <script type="module" src="app_v6.js?v=192"></script>
+    <script type="module" src="app_v6.js?v=193"></script>
     <!-- 残心モーダル -->
     <div id="zanshin-modal" class="modal hidden" style="z-index: 2600;">
         <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">

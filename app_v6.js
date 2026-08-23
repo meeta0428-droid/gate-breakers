@@ -357,7 +357,28 @@ function openLoadModal() {
 
 function renderCardPool() {
     els.cardPoolList.innerHTML = '';
-    cardPool.forEach(card => {
+    
+    const filterAttr = document.getElementById('filter-attr') ? document.getElementById('filter-attr').value : 'all';
+    const filterType = document.getElementById('filter-type') ? document.getElementById('filter-type').value : 'all';
+    const sortCost = document.getElementById('sort-cost') ? document.getElementById('sort-cost').value : 'default';
+
+    let displayPool = [...cardPool];
+
+    if (filterAttr !== 'all') {
+        displayPool = displayPool.filter(c => c.category.includes(filterAttr));
+    }
+    
+    if (filterType !== 'all') {
+        displayPool = displayPool.filter(c => c.category.includes(filterType));
+    }
+
+    if (sortCost === 'asc') {
+        displayPool.sort((a, b) => a.cost - b.cost);
+    } else if (sortCost === 'desc') {
+        displayPool.sort((a, b) => b.cost - a.cost);
+    }
+    
+    displayPool.forEach(card => {
         const div = document.createElement('div');
         div.className = 'pool-item';
         div.innerHTML = `
@@ -381,6 +402,16 @@ function renderCardPool() {
         els.cardPoolList.appendChild(div);
     });
 }
+
+// フィルター・ソート用のイベントリスナーを登録
+setTimeout(() => {
+    const attrSel = document.getElementById('filter-attr');
+    const typeSel = document.getElementById('filter-type');
+    const costSel = document.getElementById('sort-cost');
+    if (attrSel) attrSel.addEventListener('change', renderCardPool);
+    if (typeSel) typeSel.addEventListener('change', renderCardPool);
+    if (costSel) costSel.addEventListener('change', renderCardPool);
+}, 100);
 
 function renderSelectedDeck() {
     const currentCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
