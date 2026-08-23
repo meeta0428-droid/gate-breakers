@@ -3459,6 +3459,10 @@ function updateUI() {
                     logMsg(`【ガイアグリズリーの防御】コスト1のカードを無効化する！`, 'important');
                 }
                 
+                if (s.card.name === 'ガイアギガース') {
+                    logMsg(`【ガイアギガースの防御】そのラウンドの「精神」または「知性」カテゴリーの効果を1枚無効化する！`, 'important');
+                }
+                
                 updateUI();
             });
             sDiv.querySelector('.summon-btn-dismiss').addEventListener('click', () => {
