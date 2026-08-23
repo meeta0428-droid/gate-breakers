@@ -55,6 +55,7 @@ const els = {
     // Navigation
     btnDeckToChara: document.getElementById('btn-deck-to-chara'),
     btnBattleToChara: document.getElementById('btn-battle-to-chara'),
+    btnShareStatus: document.getElementById('btn-share-status'),
     btnPrintDeck: document.getElementById('btn-print-deck'),
     printArea: document.getElementById('print-area'),
 
@@ -1685,6 +1686,20 @@ function setupEvents() {
         els.battleScreen.classList.add('hidden');
         showCharaScreen();
     });
+
+    if (els.btnShareStatus) {
+        els.btnShareStatus.addEventListener('click', () => {
+            const msg = `【現在のステータス】<br>` +
+                        `肉体: ${player.stats.body.currentVal}/${player.stats.body.maxVal} | ` +
+                        `知性: ${player.stats.int.currentVal}/${player.stats.int.maxVal} | ` +
+                        `精神: ${player.stats.men.currentVal}/${player.stats.men.maxVal}<br>` +
+                        `手札: ${player.deck.hand.length}枚 | ` +
+                        `山札: ${player.deck.mountain.length}枚 | ` +
+                        `捨札: ${player.deck.discard.length}枚 | ` +
+                        `廃棄: ${player.deck.void.length}枚`;
+            logMsg(msg, 'important');
+        });
+    }
 
     // リフレッシュ
     els.btnRefresh.addEventListener('click', () => {
