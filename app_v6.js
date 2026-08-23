@@ -3392,6 +3392,10 @@ function updateUI() {
                     logMsg(`【ブラッドピット・バットの攻撃】攻撃でダメージを与えた時、対象の任意の手札を捨札へ送る。その後、自身の山札から1枚ドローする。`, 'damage');
                 }
                 
+                if (s.card.name === 'エアロタロン') {
+                    logMsg(`【エアロタロンの効果】任意の一体のイニシアチブを「-2」する！`, 'important');
+                }
+                
                 updateUI();
             });
             sDiv.querySelector('.btn-def').addEventListener('click', () => {
