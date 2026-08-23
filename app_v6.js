@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=180';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=258';
 
 let cardPool = [];
 let player = null;
@@ -1907,16 +1907,22 @@ function setupEvents() {
                             player.deck.void.push(s.card);
                             logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊され、廃棄札に移動した！（残り: ${pendingDamage}）`, 'damage');
                         }
+                        
+                        if (s.card.name === 'ライトニングボア') {
+                            logMsg('【ライトニングボアの効果】自身がダメージを受けたため、対象へ「1点」のダメージを返す！', 'important');
+                            if (typeof enemyHp !== 'undefined') enemyHp -= 1;
+                            if (typeof showDamagePopup === 'function') showDamagePopup(1);
+                        }
                     } else {
                         // 耐え切る
                         pendingDamage = 0;
                         logMsg(`「${s.card.name}」でダメージを受け止めた！`, 'important');
-                    }
-                    
-                    if (s.card.name === 'ライトニングボア') {
-                        logMsg('【ライトニングボアの効果】自身がダメージを受けたため、対象へ「1点」のダメージを返す！', 'important');
-                        if (typeof enemyHp !== 'undefined') enemyHp -= 1;
-                        if (typeof showDamagePopup === 'function') showDamagePopup(1);
+                        
+                        if (s.card.name === 'ライトニングボア') {
+                            logMsg('【ライトニングボアの効果】自身がダメージを受けたため、対象へ「1点」のダメージを返す！', 'important');
+                            if (typeof enemyHp !== 'undefined') enemyHp -= 1;
+                            if (typeof showDamagePopup === 'function') showDamagePopup(1);
+                        }
                     }
                     
                     if (pendingDamage <= 0) {
