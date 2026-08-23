@@ -1141,6 +1141,7 @@ function setupEvents() {
         
         // 流し斬りの判定用にカウンターフラグを保持（comboクリア前に判定）
         const hasNagashigiri = currentCombo.some(c => c.name === '流し斬り' || c.effect.includes('この効果でダメージを防ぎ切った場合、対象にダメージ＋5を与える'));
+        const hasGenwaku = currentCombo.some(c => c.name === '幻惑のコーラス');
         
         // 超速判断の処理
         const hasChosoku = currentCombo.some(c => c.name === '超速判断' || c.effect.includes('捨札からコスト3以下のカードを1枚引く'));
@@ -1235,6 +1236,11 @@ function setupEvents() {
             enemyHp -= counterDmg;
             logMsg(`【流し斬り】の効果発動！すべての軽減でダメージを防ぎ切り、カウンターで敵に ${counterDmg} ダメージを与えた！`, 'important');
             if (typeof showDamagePopup === 'function') showDamagePopup(counterDmg);
+        }
+        
+        // --- 幻惑のコーラス判定 ---
+        if (actualDmg <= 0 && hasGenwaku) {
+            logMsg(`【幻惑のコーラス】ダメージを完全に防ぎ切った！<br><span style="color:#ffcc00; font-weight:bold;">※この攻撃を受けた対象者は、山札からカードを1枚引いてください。</span>`, 'important');
         }
         
         // --- トラップコンボカウンター判定 ---
