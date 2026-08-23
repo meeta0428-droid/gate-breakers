@@ -38,6 +38,8 @@ const els = {
     discardCount: document.getElementById('discard-count'),
     voidCount: document.getElementById('void-count'),
     handContainer: document.getElementById('hand-container'),
+    psychometryArea: document.getElementById('psychometry-area'),
+    psychometryContainer: document.getElementById('psychometry-container'),
     
     // Buttons
     btnDraw: document.getElementById('btn-draw'),
@@ -2756,7 +2758,9 @@ function setupEvents() {
     
     els.btnUseCard.addEventListener('click', () => {
         if (selectedCardIndex !== null) {
-            const card = player.deck.hand[selectedCardIndex];
+            const card = selectedCardSource === 'psychometry' 
+                ? player.deck.mountain[selectedCardIndex] 
+                : player.deck.hand[selectedCardIndex];
             
             // プレイ条件チェック
             if (card.name === '血の咆哮') {
@@ -2783,7 +2787,11 @@ function setupEvents() {
                 }
             }
             
-            player.deck.hand.splice(selectedCardIndex, 1); 
+            if (selectedCardSource === 'psychometry') {
+                player.deck.mountain.splice(selectedCardIndex, 1);
+            } else {
+                player.deck.hand.splice(selectedCardIndex, 1); 
+            }
             player.deck.discard.push(card); 
             currentCombo.push(card);
             
@@ -3290,6 +3298,37 @@ function updateUI() {
         cardDiv.style.zIndex = index;
         els.handContainer.appendChild(cardDiv);
     });
+    
+    // ---------------------------------
+    // サイコメトリーの描画
+    // ---------------------------------
+    const hasPsychometry = player.deck.passives.some(p => p.name === 'サイコメトリー');
+    if (els.psychometryArea && els.psychometryContainer) {
+        if (hasPsychometry && player.deck.mountain.length > 0) {
+            els.psychometryArea.classList.remove('hidden');
+            els.psychometryContainer.innerHTML = '';
+            
+            const maxView = Math.min(3, player.deck.mountain.length);
+            for (let i = 0; i < maxView; i++) {
+                const card = player.deck.mountain[i];
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card';
+                cardDiv.style.transform = 'scale(0.9)'; // 少し小さめに
+                cardDiv.style.transformOrigin = 'top left';
+                cardDiv.innerHTML = `
+                    <div class="card-name">${card.name}</div>
+                    <div class="card-cat">${card.category}</div>
+                    <div class="card-stats"><span>C:${card.cost}</span><span>S:+${card.strength}</span></div>
+                    <div class="card-effect">${card.effect}</div>
+                `;
+                cardDiv.addEventListener('click', () => openCardModal(card, i, false, false, true));
+                els.psychometryContainer.appendChild(cardDiv);
+            }
+        } else {
+            els.psychometryArea.classList.add('hidden');
+            els.psychometryContainer.innerHTML = '';
+        }
+    }
 
     // 戦闘不能の判定（山札、手札、コンボエリアがすべて空で、捨札もなく、攻撃可能な召喚もない場合）
     const hasAttackingSummons = player.deck.summons.some(s => s.stance === 'attack' || s.stance === 'both');
@@ -3370,8 +3409,10 @@ function showDamagePopup(dmg) {
     setTimeout(() => popup.remove(), 1300);
 }
 
-function openCardModal(card, index, isPassive = false, isCombo = false) {
+let selectedCardSource = 'hand'; // 'hand' or 'psychometry'
+function openCardModal(card, index, isPassive = false, isCombo = false, isPsychometry = false) {
     selectedCardIndex = index;
+    selectedCardSource = isPsychometry ? 'psychometry' : 'hand';
     els.mTitle.innerText = card.name;
     els.mCat.innerText = card.category;
     els.mCost.innerText = card.cost;
