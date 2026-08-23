@@ -1913,6 +1913,12 @@ function setupEvents() {
                         logMsg(`「${s.card.name}」でダメージを受け止めた！`, 'important');
                     }
                     
+                    if (s.card.name === 'ライトニングボア') {
+                        logMsg('【ライトニングボアの効果】自身がダメージを受けたため、対象へ「1点」のダメージを返す！', 'important');
+                        if (typeof enemyHp !== 'undefined') enemyHp -= 1;
+                        if (typeof showDamagePopup === 'function') showDamagePopup(1);
+                    }
+                    
                     if (pendingDamage <= 0) {
                         pendingDamage = 0;
                         els.damageModal.classList.add('hidden'); isGuardStanceActive = false;
