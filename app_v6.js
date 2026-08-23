@@ -3409,6 +3409,10 @@ function updateUI() {
                     logMsg(`【ヴァイパーヴァインの攻撃】ダメージを与えた時、対象のコスト3以下の捨札1枚を廃棄札に移動させる！`, 'damage');
                 }
                 
+                if (s.card.name === 'テクトニックライノ') {
+                    logMsg(`【テクトニックライノの効果】任意の全ての対象は、手札からコスト3以下のカード1枚を選び捨札に移動する！`, 'damage');
+                }
+                
                 updateUI();
             });
             sDiv.querySelector('.btn-def').addEventListener('click', () => {
