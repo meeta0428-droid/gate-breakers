@@ -832,8 +832,11 @@ function setupEvents() {
                     
                     summonDmg += atk;
                     let extraInfo = '';
-                    if (s.card.name === 'サラマンダー' || s.card.name === 'ファントムレオ' || s.card.name === '狂雷の凶鳥') {
+                    if (s.card.name === 'サラマンダー' || s.card.name === 'ファントムレオ') {
                         extraInfo = ' <span style="color:#ffcc00; font-weight:bold;">[リアクション不可]</span>';
+                    }
+                    if (s.card.name === '狂雷の凶鳥') {
+                        extraInfo = ' <span style="color:#ffcc00; font-weight:bold;">[リアクション不可]</span><br><span style="color:#ff5252; font-weight:bold;">※このユニットのダメージはリアクションすることができない！</span>';
                     }
                     if (s.card.name === 'フォレストコング') {
                         extraInfo = ' <span style="color:#ffcc00; font-weight:bold;">[身代わり無視／狙い撃ち]</span>';
