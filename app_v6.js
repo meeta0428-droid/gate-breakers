@@ -485,6 +485,10 @@ function setupEvents() {
         const drawn = player.deck.draw(drawAmount);
         if (drawn > 0) logMsg(`${drawn}枚ドローしました。`);
         else logMsg('山札がありません！リフレッシュを使用してください。', 'damage');
+        
+        // 新ラウンド開始時にサイオマンサーのフラグをリセット
+        player.deck.hasUsedCyomancer = false;
+        
         updateUI();
     });
     
@@ -545,6 +549,13 @@ function setupEvents() {
                 currentCardDmg += bonus;
                 detail += `（手札0ボーナス＋${bonus}）`;
             }
+            
+            const hasCyomancer = player.deck.passives.some(p => p.name === 'サイオマンサー');
+            if (hasCyomancer && c.category.includes('精神') && c.category.includes('アクション')) {
+                currentCardDmg += 1;
+                detail += `（サイオマンサー＋1）`;
+            }
+            
             let isDamageCard = currentCardDmg > 0 || c.effect.includes('ダメージ');
             if (nextCardBonus > 0) {
                 if (isDamageCard) {
@@ -1881,6 +1892,24 @@ function setupEvents() {
 
                 if (passiveCard.name === '武具錬成') {
                     logMsg(`【武具錬成】効果を対象に共有しました！<br><span style="color:#ffcc00; font-size:0.9rem;">（対象の攻撃ダメージ＋1、または受けるダメージ1点軽減）</span>`, 'important');
+                    return;
+                }
+
+                if (passiveCard.name === 'サイオマンサー') {
+                    if (player.deck.hasUsedCyomancer) {
+                        alert('この効果は1ラウンドに1回しか使用できません。（手札補充でラウンドが更新されます）');
+                        return;
+                    }
+                    if (player.deck.mountain.length === 0) {
+                        alert('山札がありません。');
+                        return;
+                    }
+                    const drawn = player.deck.draw(1);
+                    if (drawn > 0) {
+                        logMsg(`【サイオマンサー】の効果で山札から1枚ドローしました！`, 'important');
+                        player.deck.hasUsedCyomancer = true;
+                        updateUI();
+                    }
                     return;
                 }
 

@@ -239,6 +239,13 @@ export function calculateDamageFromCards(cards, player) {
             cardDamage += parseInt(emptyHandMatch[1]);
         }
         
+        // サイオマンサー
+        if (player && player.deck.passives.some(p => p.name === 'サイオマンサー')) {
+            if (card.category.includes('精神') && card.category.includes('アクション')) {
+                cardDamage += 1;
+            }
+        }
+        
         let isDamageCard = cardDamage > 0 || card.effect.includes('ダメージ');
         
         // 常に次のカードにボーナスを適用・消費する
