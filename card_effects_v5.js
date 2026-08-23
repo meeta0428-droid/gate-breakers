@@ -504,5 +504,23 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // トラップマスター：カテゴリー「リアクション」のカードを使用したとき、ダメージ＋６
+    "トラップマスター": {
+        onAttack: (context) => {
+            if (!context.currentCombo) return {};
+            if (!context._trapMasterApplied) {
+                const usedReactionCount = context.currentCombo.filter(c => c.category.includes('リアクション')).length;
+                if (usedReactionCount > 0) {
+                    const bonusDmg = 6 * usedReactionCount;
+                    context._trapMasterApplied = true;
+                    if (context.logMsg) {
+                        context.logMsg(`・【パッシブ】トラップマスターの効果！ リアクションカードを使用しているため、ダメージ ＋${bonusDmg}`);
+                    }
+                    return { totalDmg: context.totalDmg + bonusDmg, _trapMasterApplied: true };
+                }
+            }
+            return {};
+        }
     }
 };
