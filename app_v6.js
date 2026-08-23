@@ -3505,6 +3505,11 @@ function updateUI() {
                     logMsg(`【深淵の触魔の効果】対象の任意の手札1枚を指定し、その戦闘中使用不可（ロック）にする！<br><span style="color:#aaa; font-size:0.8rem;">（※対象となったプレイヤーは、指定された手札をこの戦闘中使わないようにしてください）</span>`, 'important');
                 }
                 
+                if (s.card.name === '浸食の骸樹') {
+                    logMsg(`【浸食の骸樹の効果】任意の捨札1枚を廃棄札に移動させる！その後、自身の山札から1枚ドローした！`, 'important');
+                    player.deck.draw(1);
+                }
+                
                 if (s.card.name === '狂雷の凶鳥') {
                     logMsg(`【狂雷の凶鳥の攻撃】このユニットのダメージはリアクションすることができない！`, 'damage');
                 }
@@ -3553,6 +3558,11 @@ function updateUI() {
                 
                 if (s.card.name === '深淵の触魔') {
                     logMsg(`【深淵の触魔の効果】対象の任意の手札1枚を指定し、その戦闘中使用不可（ロック）にする！<br><span style="color:#aaa; font-size:0.8rem;">（※対象となったプレイヤーは、指定された手札をこの戦闘中使わないようにしてください）</span>`, 'important');
+                }
+                
+                if (s.card.name === '浸食の骸樹') {
+                    logMsg(`【浸食の骸樹の効果】任意の捨札1枚を廃棄札に移動させる！その後、自身の山札から1枚ドローした！`, 'important');
+                    player.deck.draw(1);
                 }
                 
                 updateUI();
