@@ -832,7 +832,7 @@ function setupEvents() {
                     
                     summonDmg += atk;
                     let extraInfo = '';
-                    if (s.card.name === 'サラマンダー') {
+                    if (s.card.name === 'サラマンダー' || s.card.name === 'ファントムレオ') {
                         extraInfo = ' <span style="color:#ffcc00; font-weight:bold;">[リアクション不可]</span>';
                     }
                     summonLog += `・召喚「${s.card.name}」の追撃 (＋${atk})${extraInfo}<br>`;
@@ -3422,6 +3422,10 @@ function updateUI() {
                 
                 if (s.card.name === 'テクトニックライノ') {
                     logMsg(`【テクトニックライノの効果】任意の全ての対象は、手札からコスト3以下のカード1枚を選び捨札に移動する！`, 'damage');
+                }
+                
+                if (s.card.name === 'ファントムレオ') {
+                    logMsg(`【ファントムレオの攻撃】この攻撃はリアクション不可！`, 'damage');
                 }
                 
                 updateUI();
