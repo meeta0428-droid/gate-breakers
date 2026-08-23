@@ -1882,20 +1882,9 @@ function setupEvents() {
                 cDiv.innerHTML = `<span>${s.card.name} (コスト${s.card.cost})</span> <button class="btn btn-primary" style="padding:2px 6px; font-size:0.7rem;">ダメージを受ける</button>`;
                 cDiv.querySelector('button').addEventListener('click', () => {
                     const dmgToTake = pendingDamage;
+                    const endurance = s.card.cost;
                     
-                    let defVal = 0;
-                    const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
-                    if (match) {
-                        defVal = parseInt(match[2], 10);
-                    }
-                    if (s.elementalerBuff) defVal += 2 * s.elementalerBuff;
-                    const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
-                    const jusoBuff = player.deck.passives.filter(c => c.name === '獣操棍').length * 1;
-                    defVal += honnouBuff + jusoBuff;
-                    
-                    const endurance = s.card.cost + defVal;
-                    
-                    if (dmgToTake >= endurance) {
+                    if (dmgToTake > endurance) {
                         // 破壊される
                         player.deck.summons.splice(idx, 1);
                         pendingDamage -= endurance;
