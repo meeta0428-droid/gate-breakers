@@ -418,5 +418,18 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // 奇跡の雫：強度以下の廃棄札を1枚手札に戻し、一つの能力値を全回復
+    "奇跡の雫": {
+        onAttack: (context) => {
+            if (!context._kisekiApplied) {
+                context._kisekiApplied = true;
+                if (context.logMsg) {
+                    context.logMsg(`【奇跡の雫】<br><span style="color:#ffcc00; font-weight:bold;">※強度(8)以下の廃棄札を1枚選び、手動で手札に戻してください。</span><br><span style="color:#4caf50; font-weight:bold;">※一つの能力値を選び、ダメージを全て回復（現在値を最大値まで回復）してください。</span>`, 'important');
+                }
+                return { _kisekiApplied: true };
+            }
+            return {};
+        }
     }
 };
