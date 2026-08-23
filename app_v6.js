@@ -838,6 +838,9 @@ function setupEvents() {
                     if (s.card.name === 'フォレストコング') {
                         extraInfo = ' <span style="color:#ffcc00; font-weight:bold;">[身代わり無視／狙い撃ち]</span>';
                     }
+                    if (s.card.name === 'ミストストーカー') {
+                        extraInfo = ' <span style="color:#ffcc00; font-weight:bold;">[「肉体」リアクション不可]</span>';
+                    }
                     summonLog += `・召喚「${s.card.name}」の追撃 (＋${atk})${extraInfo}<br>`;
                 }
             }
@@ -3438,6 +3441,10 @@ function updateUI() {
                 
                 if (s.card.name === 'フォレストコング') {
                     logMsg(`【フォレストコングの攻撃】任意のカードを指定して攻撃する！（身代わり無視／狙い撃ち）`, 'damage');
+                }
+                
+                if (s.card.name === 'ミストストーカー') {
+                    logMsg(`【ミストストーカーの攻撃】この攻撃に対し、対象は「肉体」カテゴリーのリアクションを使用することができない！`, 'damage');
                 }
                 
                 updateUI();
