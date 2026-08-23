@@ -835,6 +835,9 @@ function setupEvents() {
                     if (s.card.name === 'サラマンダー' || s.card.name === 'ファントムレオ') {
                         extraInfo = ' <span style="color:#ffcc00; font-weight:bold;">[リアクション不可]</span>';
                     }
+                    if (s.card.name === 'フォレストコング') {
+                        extraInfo = ' <span style="color:#ffcc00; font-weight:bold;">[身代わり無視／狙い撃ち]</span>';
+                    }
                     summonLog += `・召喚「${s.card.name}」の追撃 (＋${atk})${extraInfo}<br>`;
                 }
             }
@@ -3426,6 +3429,10 @@ function updateUI() {
                 
                 if (s.card.name === 'ファントムレオ') {
                     logMsg(`【ファントムレオの攻撃】この攻撃はリアクション不可！`, 'damage');
+                }
+                
+                if (s.card.name === 'フォレストコング') {
+                    logMsg(`【フォレストコングの攻撃】任意のカードを指定して攻撃する！（身代わり無視／狙い撃ち）`, 'damage');
                 }
                 
                 updateUI();
