@@ -3388,6 +3388,10 @@ function updateUI() {
                     return;
                 }
                 
+                if (s.card.name === 'ブラッドピット・バット') {
+                    logMsg(`【ブラッドピット・バットの攻撃】攻撃でダメージを与えた時、対象の任意の手札を捨札へ送る。その後、自身の山札から1枚ドローする。`, 'damage');
+                }
+                
                 updateUI();
             });
             sDiv.querySelector('.btn-def').addEventListener('click', () => {
