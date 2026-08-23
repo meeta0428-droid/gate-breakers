@@ -1892,6 +1892,15 @@ function setupEvents() {
                         if (s.card.name === 'シルフ') {
                             player.deck.hand.push(s.card);
                             logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊され、<span style="color:#00ffff; font-weight:bold;">手札に戻った！</span>（残り: ${pendingDamage}）`, 'damage');
+                        } else if (s.card.name === 'フリップサイド・ヒュドラ') {
+                            const doRegen = confirm(`【フリップサイド・ヒュドラ】が破壊されました。\n②『超再生』を発動しますか？\n（※OKを押すと、ヒュドラは廃棄札ではなく山札の一番上に戻ります。捨札からコスト合計8になるよう手動でカードを廃棄してください）`);
+                            if (doRegen) {
+                                player.deck.deck.unshift(s.card);
+                                logMsg(`「${s.card.name}」が破壊されたが、<span style="color:#00ffff; font-weight:bold;">『超再生』により山札の一番上に戻った！</span><br>（※捨札からコスト8分を手動で廃棄してください）`, 'important');
+                            } else {
+                                player.deck.void.push(s.card);
+                                logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊され、廃棄札に移動した！（残り: ${pendingDamage}）`, 'damage');
+                            }
                         } else {
                             player.deck.void.push(s.card);
                             logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊され、廃棄札に移動した！（残り: ${pendingDamage}）`, 'damage');
@@ -3435,6 +3444,10 @@ function updateUI() {
                 
                 if (s.card.name === 'マインドブレイク・フラウ') {
                     logMsg(`【マインドブレイク・フラウの宣言】このユニットが場に存在する限り、相手陣営は回収タイミングの合計ポイントが-1される！`, 'important');
+                }
+                
+                if (s.card.name === 'フリップサイド・ヒュドラ') {
+                    logMsg(`【フリップサイド・ヒュドラの攻撃】①『多頭の暴虐』：任意の対象全員に4点のダメージ！`, 'damage');
                 }
                 
                 if (s.card.name === 'テクトニックライノ') {
