@@ -810,6 +810,10 @@ function setupEvents() {
                 detail += `（これ以降のダメージに＋${continuousMatch[1]}）`;
             }
             
+            if (!isDamageCard) {
+                detail += `<br><span style="color:#aaa; font-size:0.8rem; margin-left:1em;">【効果】${c.effect}</span>`;
+            }
+            
             if (toVoid.has(idx)) detail += ` [廃棄へ]`;
             return `・「${c.name}」${detail}`;
         }).join('<br>');
