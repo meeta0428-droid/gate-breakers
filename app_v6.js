@@ -2348,6 +2348,11 @@ function setupEvents() {
                     logMsg(`【${card.name}】の効果：山札がありませんでした。`);
                 }
             }
+            
+            // 魂の応援歌のログ出力
+            if (card.name === '魂の応援歌') {
+                logMsg(`【魂の応援歌】コンボ元のカードは、使用者の該当能力値以下のコストだった場合、即座に対象の手札に戻ります！（※味方は対象カードを手動で手札に戻してください）`, 'important');
+            }
             if (card.name === 'クイックリロード') {
                 let remainingCost = 6;
                 const showQuickReloadModal = () => {
