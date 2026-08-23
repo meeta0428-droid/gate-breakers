@@ -502,8 +502,9 @@ function setupEvents() {
         if (drawn > 0) logMsg(`${drawn}枚ドローしました。`);
         else logMsg('山札がありません！リフレッシュを使用してください。', 'damage');
         
-        // 新ラウンド開始時にサイオマンサーのフラグをリセット
+        // 新ラウンド開始時に各ターン1回フラグをリセット
         player.deck.hasUsedCyomancer = false;
+        player.deck.hasUsedKyoudousensen = false;
         
         updateUI();
     });
@@ -2115,6 +2116,17 @@ function setupEvents() {
                     }
                     return;
                 }
+
+                if (passiveCard.name === '共同戦線') {
+                    if (player.deck.hasUsedKyoudousensen) {
+                        alert('【共同戦線】の効果は1ラウンドに1回しか使用できません。（手札補充でラウンドが更新されます）');
+                        return;
+                    }
+                    logMsg(`【共同戦線】効果発動！<br><span style="color:#ffcc00; font-weight:bold;">※味方の捨札にあるコスト4以下のカード1枚を指定し、自身がコストを支払う（能力値を消費する）ことで即座に使用してください！<br>（手動で能力値を消費し、使用処理を行ってください）</span>`, 'important');
+                    player.deck.hasUsedKyoudousensen = true;
+                    updateUI();
+                    return;
+                }
                 
                 if (passiveCard.name === 'サラマンダー') {
                     const summonIdx = player.deck.summons.findIndex(s => s.card.name === 'サラマンダー');
@@ -2989,6 +3001,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false) {
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'シルフ') {
                     els.btnTriggerPassive.innerText = '効果を発動（イニシアチブ＋5）';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === '共同戦線') {
+                    els.btnTriggerPassive.innerText = '効果を発動（味方のカードを使用）';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'ウンディーネ') {
                     els.btnTriggerPassive.innerText = '効果を発動（廃棄札2枚を山札へ）';
