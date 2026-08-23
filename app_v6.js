@@ -56,6 +56,11 @@ const els = {
     btnDeckToChara: document.getElementById('btn-deck-to-chara'),
     btnBattleToChara: document.getElementById('btn-battle-to-chara'),
     btnShareStatus: document.getElementById('btn-share-status'),
+    btnOpenDiscordModal: document.getElementById('btn-open-discord-modal'),
+    discordModal: document.getElementById('discord-modal'),
+    discordWebhookUrl: document.getElementById('discord-webhook-url'),
+    btnSaveDiscord: document.getElementById('btn-save-discord'),
+    btnCloseDiscordModal: document.getElementById('btn-close-discord-modal'),
     btnPrintDeck: document.getElementById('btn-print-deck'),
     printArea: document.getElementById('print-area'),
 
@@ -106,11 +111,37 @@ const els = {
 let selectedCardIndex = null;
 let currentCombo = [];
 
+function sendDiscordWebhook(msgHtml) {
+    const webhookUrl = localStorage.getItem('discordWebhookUrl');
+    if (!webhookUrl) return;
+
+    // HTMLタグを取り除いてプレーンテキストに（簡易的）
+    let plainMsg = msgHtml.replace(/<br\s*\/?>/ig, '\n');
+    plainMsg = plainMsg.replace(/<\/?[^>]+(>|$)/g, "");
+    
+    // 文字実体参照の戻し（必要最低限）
+    plainMsg = plainMsg.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+
+    const payload = {
+        content: plainMsg
+    };
+
+    fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    }).catch(e => console.error("Discord Webhook Error:", e));
+}
+
 function logMsg(msg, type = '') {
     const p = document.createElement('p');
     p.innerHTML = msg;
     if (type) p.classList.add(type);
     els.log.prepend(p);
+    
+    sendDiscordWebhook(msg);
 }
 
 async function loadCards() {
@@ -1698,6 +1729,34 @@ function setupEvents() {
                         `捨札: ${player.deck.discard.length}枚 | ` +
                         `廃棄: ${player.deck.void.length}枚`;
             logMsg(msg, 'important');
+        });
+    }
+
+    if (els.btnOpenDiscordModal) {
+        els.btnOpenDiscordModal.addEventListener('click', () => {
+            const savedUrl = localStorage.getItem('discordWebhookUrl');
+            if (savedUrl) els.discordWebhookUrl.value = savedUrl;
+            els.discordModal.classList.remove('hidden');
+        });
+    }
+
+    if (els.btnSaveDiscord) {
+        els.btnSaveDiscord.addEventListener('click', () => {
+            const url = els.discordWebhookUrl.value.trim();
+            if (url) {
+                localStorage.setItem('discordWebhookUrl', url);
+                alert('Discord Webhook URL を保存しました！');
+            } else {
+                localStorage.removeItem('discordWebhookUrl');
+                alert('Discord送信設定を解除しました。');
+            }
+            els.discordModal.classList.add('hidden');
+        });
+    }
+
+    if (els.btnCloseDiscordModal) {
+        els.btnCloseDiscordModal.addEventListener('click', () => {
+            els.discordModal.classList.add('hidden');
         });
     }
 
