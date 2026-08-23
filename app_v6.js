@@ -1791,14 +1791,40 @@ function setupEvents() {
 
     if (els.btnShareStatus) {
         els.btnShareStatus.addEventListener('click', () => {
-            const msg = `【現在のステータス】<br>` +
-                        `肉体: ${player.stats.body.currentVal}/${player.stats.body.maxVal} | ` +
-                        `知性: ${player.stats.int.currentVal}/${player.stats.int.maxVal} | ` +
-                        `精神: ${player.stats.men.currentVal}/${player.stats.men.maxVal}<br>` +
-                        `手札: ${player.deck.hand.length}枚 | ` +
-                        `山札: ${player.deck.mountain.length}枚 | ` +
-                        `捨札: ${player.deck.discard.length}枚 | ` +
-                        `廃棄: ${player.deck.void.length}枚`;
+            let msg = '';
+            if (isGeneralMode) {
+                const getPassiveBonus = (categoryFilter) => {
+                    return player.deck.passives.reduce((sum, p) => {
+                        if (p.category.includes(categoryFilter) || p.category.includes('全て')) {
+                            return sum + (p.strength || 0);
+                        }
+                        return sum;
+                    }, 0);
+                };
+                const bodyBonus = getPassiveBonus('肉体');
+                const intBonus = getPassiveBonus('知性');
+                const menBonus = getPassiveBonus('精神');
+                
+                const bodyTotal = player.stats.body.maxVal + bodyBonus;
+                const intTotal = player.stats.int.maxVal + intBonus;
+                const menTotal = player.stats.men.maxVal + menBonus;
+                
+                msg = `【一般判定ステータス（最大値＋パッシブ補正）】<br>` +
+                      `肉体: ${bodyTotal} (基本${player.stats.body.maxVal}+補正${bodyBonus}) | ` +
+                      `知性: ${intTotal} (基本${player.stats.int.maxVal}+補正${intBonus}) | ` +
+                      `精神: ${menTotal} (基本${player.stats.men.maxVal}+補正${menBonus})<br>`;
+            } else {
+                msg = `【現在のステータス】<br>` +
+                      `肉体: ${player.stats.body.currentVal}/${player.stats.body.maxVal} | ` +
+                      `知性: ${player.stats.int.currentVal}/${player.stats.int.maxVal} | ` +
+                      `精神: ${player.stats.men.currentVal}/${player.stats.men.maxVal}<br>`;
+            }
+            
+            msg += `手札: ${player.deck.hand.length}枚 | ` +
+                   `山札: ${player.deck.mountain.length}枚 | ` +
+                   `捨札: ${player.deck.discard.length}枚 | ` +
+                   `廃棄: ${player.deck.void.length}枚`;
+                   
             logMsg(msg, 'important');
         });
     }
