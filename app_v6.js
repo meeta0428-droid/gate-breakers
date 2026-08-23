@@ -1423,6 +1423,11 @@ function setupEvents() {
                 summonDef += 2;
                 summonLog += `・【ノーム】常時効果 (軽減 2)<br>`;
             }
+            
+            if (s.card.name === 'アイアン・タイガー') {
+                summonDef += 2;
+                summonLog += `・【アイアン・タイガー】常時効果 (軽減 2)<br>`;
+            }
         });
         
         let totalDef = defense + summonDef;
