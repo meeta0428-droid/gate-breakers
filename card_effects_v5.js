@@ -364,5 +364,19 @@ export const cardEffects = {
             }
             return {};
         }
+    },
+    // エンターテイナー：アクションカードを含みダメージを与えた場合、合計ダメージ＋1
+    "エンターテイナー": {
+        onAttack: (context) => {
+            if (context.currentCombo && context.currentCombo.length > 0 && context.totalDmg > 0 && !context._entertainerApplied) {
+                const hasAction = context.currentCombo.some(c => c.category.includes('アクション'));
+                if (hasAction) {
+                    context._entertainerApplied = true;
+                    context.logMsg(`【エンターテイナー】魅惑のパフォーマンス！アクション攻撃の合計ダメージ ＋1！`, 'important');
+                    return { totalDmg: context.totalDmg + 1, _entertainerApplied: true };
+                }
+            }
+            return {};
+        }
     }
 };
