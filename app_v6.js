@@ -603,7 +603,7 @@ function setupEvents() {
         logMsg('戦闘開始！パッシブカードは自動的に装備されました。', 'important');
         
         // 忍者パッシブの戦闘開始時効果（重複しない）
-        const hasNinja = player.deck.passives.some(p => p.name === '忍者');
+        const hasNinja = player.deck.passives.some(p => p.name === '忍者' && !p.isDisabled);
         if (hasNinja) {
             const drawn = player.deck.draw(1);
             if (drawn > 0) {
@@ -691,6 +691,7 @@ function setupEvents() {
                 
                 const getPassiveBonus = (categoryFilter) => {
                     return player.deck.passives.reduce((sum, p) => {
+                        if (p.isDisabled) return sum; // 無効化されている場合は加算しない
                         if (p.category.includes(categoryFilter) || p.category.includes('全て')) {
                             return sum + (p.strength || 0);
                         }
@@ -804,7 +805,7 @@ function setupEvents() {
                 detail += `（手札0ボーナス＋${bonus}）`;
             }
             
-            const hasCyomancer = player.deck.passives.some(p => p.name === 'サイオマンサー');
+            const hasCyomancer = player.deck.passives.some(p => p.name === 'サイオマンサー' && !p.isDisabled);
             if (hasCyomancer && c.category.includes('精神') && c.category.includes('アクション')) {
                 currentCardDmg += 1;
                 detail += `（サイオマンサー＋1）`;
@@ -849,7 +850,7 @@ function setupEvents() {
         let summonDmg = 0;
         let summonLog = '';
         const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
-        const jusoBuff = player.deck.passives.filter(c => c.name === '獣操棍').length * 1;
+        const jusoBuff = player.deck.passives.filter(c => c.name === '獣操棍' && !c.isDisabled).length * 1;
         player.deck.summons.forEach(s => {
             if (s.stance === 'attack' || s.stance === 'both') {
                 const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
@@ -958,7 +959,7 @@ function setupEvents() {
             });
             
             // ガトリングガンの追加UI
-            const hasGatling = player.deck.passives.some(p => p.name === 'ガトリングガン');
+            const hasGatling = player.deck.passives.some(p => p.name === 'ガトリングガン' && !p.isDisabled);
             if (hasGatling) {
                 const gatlingDiv = document.createElement('div');
                 gatlingDiv.style.marginTop = '15px';
@@ -1001,7 +1002,7 @@ function setupEvents() {
             }
             
             // ハルバードの追加UI
-            const hasHalberd = player.deck.passives.some(p => p.name === 'ハルバード');
+            const hasHalberd = player.deck.passives.some(p => p.name === 'ハルバード' && !p.isDisabled);
             if (hasHalberd) {
                 const halberdDiv = document.createElement('div');
                 halberdDiv.style.marginTop = '15px';
@@ -1696,7 +1697,7 @@ function setupEvents() {
             overlay.appendChild(title);
             
             const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
-            const jusoBuff = player.deck.passives.filter(c => c.name === '獣操棍').length * 1;
+            const jusoBuff = player.deck.passives.filter(c => c.name === '獣操棍' && !c.isDisabled).length * 1;
             
             player.deck.summons.forEach(s => {
                 const btn = document.createElement('button');
@@ -2134,6 +2135,7 @@ function setupEvents() {
             if (isGeneralMode) {
                 const getPassiveBonus = (categoryFilter) => {
                     return player.deck.passives.reduce((sum, p) => {
+                        if (p.isDisabled) return sum; // 無効化されている場合は加算しない
                         if (p.category.includes(categoryFilter) || p.category.includes('全て')) {
                             return sum + (p.strength || 0);
                         }
@@ -2248,7 +2250,7 @@ function setupEvents() {
     });
 
     function updateDiscardModalUI() {
-        const hasHotLimit = player.deck.passives.some(p => p.effect.includes('能力値にダメージを受けていても、回収ポイントが下がらない'));
+        const hasHotLimit = player.deck.passives.some(p => p.effect.includes('能力値にダメージを受けていても、回収ポイントが下がらない') && !p.isDisabled);
         const getRecoveryMax = (stat) => hasHotLimit ? stat.maxVal : stat.currentVal;
 
         const maxBodyBase = getRecoveryMax(player.stats.body);
@@ -2508,7 +2510,7 @@ function setupEvents() {
         els.discardModal.classList.add('hidden');
         
         // パッシブ「武術家」のチェック
-        const hasBujutsuka = player.deck.passives.some(p => p.name === '武術家' || p.effect.includes('回収タイミングで肉体カテゴリーのコスト3以下'));
+        const hasBujutsuka = player.deck.passives.some(p => (p.name === '武術家' || p.effect.includes('回収タイミングで肉体カテゴリーのコスト3以下')) && !p.isDisabled);
         if (hasBujutsuka) {
             const validCards = player.deck.discard.filter(c => c.category.includes('肉体') && c.cost <= 3);
             if (validCards.length > 0) {
@@ -2520,7 +2522,7 @@ function setupEvents() {
         }
         
         // パッシブ「戦術解析士」のチェック
-        const hasSenjutsu = player.deck.passives.some(p => p.name === '戦術解析士');
+        const hasSenjutsu = player.deck.passives.some(p => p.name === '戦術解析士' && !p.isDisabled);
         if (hasSenjutsu) {
             logMsg(`【戦術解析士】情報のアドバンテージ！<br><span style="color:#ffcc00; font-weight:bold;">※任意の対象の手札1枚を公開状態にしてください！</span><br>（公開状態にした場合は、画面下部の「敵手札オープン中」にチェックを入れてください）`, 'important');
         }
@@ -3402,33 +3404,31 @@ function updateUI() {
     
     els.passiveArea.innerHTML = '';
     if (player.deck.passives.length > 0) {
-        const groupedPassives = {};
         player.deck.passives.forEach((card, originalIdx) => {
-            if (!groupedPassives[card.name]) {
-                groupedPassives[card.name] = { 
-                    card: card,
-                    name: card.name,
-                    strength: card.strength,
-                    count: 1,
-                    noDuplicate: card.effect.includes('重複しない'),
-                    originalIdx: originalIdx
-                };
-            } else {
-                if (!groupedPassives[card.name].noDuplicate) {
-                    groupedPassives[card.name].strength += card.strength;
-                }
-                groupedPassives[card.name].count++;
-            }
-        });
-
-        Object.values(groupedPassives).forEach(group => {
             const pDiv = document.createElement('div');
             pDiv.className = 'passive-card';
-            // 重複しないカードで複数枚ある場合はカウントだけ表示するか、あるいは強度だけ固定にする
-            pDiv.innerHTML = `<strong>${group.name}${group.count > 1 ? ` x${group.count}` : ''}</strong> (強度+${group.strength})`;
-            pDiv.addEventListener('click', () => {
-                openCardModal(group.card, group.originalIdx, true); // isPassive = true
+            if (card.isDisabled) pDiv.classList.add('disabled-passive');
+            
+            pDiv.innerHTML = `
+                <div class="passive-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="passive-name" style="cursor:pointer;">
+                        <strong>${card.name}</strong> ${card.isDisabled ? '<span style="color:#ff5252; font-size:0.7rem;">[無効]</span>' : `(強度+${card.strength || 0})`}
+                    </div>
+                    <label style="font-size:0.7rem; color:#aaa; margin-left:10px;" onclick="event.stopPropagation();">
+                        <input type="checkbox" class="passive-disable-chk" ${card.isDisabled ? 'checked' : ''}> 裏返し
+                    </label>
+                </div>
+            `;
+            
+            pDiv.querySelector('.passive-name').addEventListener('click', () => {
+                openCardModal(card, originalIdx, true); // isPassive = true
             });
+            
+            pDiv.querySelector('.passive-disable-chk').addEventListener('change', (e) => {
+                card.isDisabled = e.target.checked;
+                updateUI();
+            });
+            
             els.passiveArea.appendChild(pDiv);
         });
     } else {
@@ -3439,7 +3439,7 @@ function updateUI() {
     els.summonArea.innerHTML = '';
     if (player.deck.summons.length > 0) {
         const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
-        const jusoBuff = player.deck.passives.filter(c => c.name === '獣操棍').length * 1;
+        const jusoBuff = player.deck.passives.filter(c => c.name === '獣操棍' && !c.isDisabled).length * 1;
         player.deck.summons.forEach((s, idx) => {
             let atk = "?", def = "?";
             const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
@@ -3455,7 +3455,7 @@ function updateUI() {
                 
                 // スプリガンの独自処理（パッシブ強度の合計値を攻防に加算）
                 if (s.card.name === 'スプリガン') {
-                    const passiveStrSum = player.deck.passives.reduce((sum, p) => sum + (p.strength || 0), 0);
+                    const passiveStrSum = player.deck.passives.reduce((sum, p) => sum + (p.isDisabled ? 0 : (p.strength || 0)), 0);
                     atkVal += passiveStrSum;
                     defVal += passiveStrSum;
                 }
@@ -3707,7 +3707,7 @@ function updateUI() {
     // ---------------------------------
     // サイコメトリーの描画
     // ---------------------------------
-    const hasPsychometry = player.deck.passives.some(p => p.name === 'サイコメトリー');
+    const hasPsychometry = player.deck.passives.some(p => p.name === 'サイコメトリー' && !p.isDisabled);
     if (els.psychometryArea && els.psychometryContainer) {
         if (hasPsychometry && player.deck.mountain.length > 0) {
             els.psychometryArea.classList.remove('hidden');
@@ -3786,7 +3786,7 @@ function updateUI() {
         
         const hasHyosetsu = player.deck.discard.some(c => c.name === '氷雪魔弾');
         if (hasHyosetsu) {
-            const hasMadanjushi = player.deck.passives.some(p => p.name === '魔弾銃士');
+            const hasMadanjushi = player.deck.passives.some(p => p.name === '魔弾銃士' && !p.isDisabled);
             const str = hasMadanjushi ? 4 : 3;
             debuffArea.innerHTML += `
                 <div style="background-color: rgba(50, 150, 255, 0.2); border-left: 4px solid #66b3ff; padding: 5px; font-size: 0.8rem; color: #cce6ff; border-radius: 3px;">
@@ -3852,6 +3852,10 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
 
             // 発動可能なパッシブ効果の判定
             if (els.btnTriggerPassive) {
+                if (isPassive && card.isDisabled) {
+                    els.btnTriggerPassive.classList.add('hidden');
+                    return;
+                }
                 if (card.name === '錬金術師') {
                     els.btnTriggerPassive.innerText = '効果を発動';
                     els.btnTriggerPassive.classList.remove('hidden');
@@ -3922,7 +3926,7 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
             if (btnVoid) btnVoid.classList.remove('hidden');
             els.btnUseCard.classList.remove('hidden');
             if (els.btnSetCard) {
-                const hasTouzen = player.deck.passives.some(p => p.name === '闘禅一致');
+                const hasTouzen = player.deck.passives.some(p => p.name === '闘禅一致' && !p.isDisabled);
                 if (hasTouzen && card.category.includes('アクション')) {
                     els.btnSetCard.classList.remove('hidden');
                 } else {
