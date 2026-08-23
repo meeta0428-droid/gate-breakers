@@ -1150,6 +1150,19 @@ function setupEvents() {
                 }));
             }
             
+            
+            // マナパージのデバフログ
+            const hasPurge = currentCombo.some(c => c.name === '『マナパージ』');
+            if (hasPurge) {
+                originalLogMsg(`【『マナパージ』のデバフ効果】<br><span style="color:#ffcc00; font-weight:bold;">この攻撃でダメージを受けた対象は、現在配置している「すべてのパッシブカード」を裏返し（無効化）にしなければならない！</span><br><span style="color:#aaa; font-size:0.8rem;">※裏返されたパッシブは、パッシブ名の横にある「裏返し」チェックを手動で付けてください。次のラウンドから毎ターン1枚ずつ表に戻せます。</span>`, 'important');
+            }
+            
+            // アニマドレインの回収案内ログ
+            const hasAnima = currentCombo.some(c => c.name === '『アニマドレイン』');
+            if (hasAnima) {
+                originalLogMsg(`【『アニマドレイン』の回収効果】<br><span style="color:#ffcc00; font-weight:bold;">相手がこの攻撃に対して「リアクション」を使用した場合、相手が使用したカードと同じコストまでのカードを1枚、自分の捨札から手札に戻すことができる！</span><br><span style="color:#aaa; font-size:0.8rem;">※通信対戦ではないため、相手のリアクションを確認後、画面下部の「捨札確認」から手動で回収を行ってください。</span>`, 'important');
+            }
+
             currentCombo = [...setCards];
             updateUI();
         };
