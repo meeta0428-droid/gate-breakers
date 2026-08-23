@@ -252,7 +252,10 @@ function loadDeckFromSlot(slotIndex) {
     
     selectedCardsForDeck = [];
     for (const name of slot.cards) {
-        const cardData = cardPool.find(c => c.name === name);
+        let cardName = name;
+        if (cardName === '獣の共鳴') cardName = '獣操棍';
+        
+        const cardData = cardPool.find(c => c.name === cardName);
         if (cardData) selectedCardsForDeck.push({ ...cardData });
     }
     
@@ -566,13 +569,14 @@ function setupEvents() {
         let summonDmg = 0;
         let summonLog = '';
         const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
+        const jusoBuff = player.deck.passives.filter(c => c.name === '獣操棍').length * 1;
         player.deck.summons.forEach(s => {
             if (s.stance === 'attack' || s.stance === 'both') {
                 const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
                 if (match) {
                     let atk = parseInt(match[1]);
                     if (s.elementalerBuff) atk += 2 * s.elementalerBuff;
-                    atk += honnouBuff;
+                    atk += honnouBuff + jusoBuff;
                     
                     summonDmg += atk;
                     let extraInfo = '';
@@ -1190,6 +1194,7 @@ function setupEvents() {
             overlay.appendChild(title);
             
             const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
+            const jusoBuff = player.deck.passives.filter(c => c.name === '獣操棍').length * 1;
             
             player.deck.summons.forEach(s => {
                 const btn = document.createElement('button');
@@ -1204,7 +1209,7 @@ function setupEvents() {
                     if (match) {
                         let atk = parseInt(match[1]);
                         if (s.elementalerBuff) atk += 2 * s.elementalerBuff;
-                        atk += honnouBuff;
+                        atk += honnouBuff + jusoBuff;
                         trapCounterDmg += atk;
                     }
                     
@@ -1426,7 +1431,8 @@ function setupEvents() {
                     }
                     if (s.elementalerBuff) defVal += 2 * s.elementalerBuff;
                     const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
-                    defVal += honnouBuff;
+                    const jusoBuff = player.deck.passives.filter(c => c.name === '獣操棍').length * 1;
+                    defVal += honnouBuff + jusoBuff;
                     
                     const endurance = s.card.cost + defVal;
                     
@@ -2601,6 +2607,7 @@ function updateUI() {
     els.summonArea.innerHTML = '';
     if (player.deck.summons.length > 0) {
         const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
+        const jusoBuff = player.deck.passives.filter(c => c.name === '獣操棍').length * 1;
         player.deck.summons.forEach((s, idx) => {
             let atk = "?", def = "?";
             const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
@@ -2611,8 +2618,8 @@ function updateUI() {
                     atkVal += 2 * s.elementalerBuff;
                     defVal += 2 * s.elementalerBuff;
                 }
-                atkVal += honnouBuff;
-                defVal += honnouBuff;
+                atkVal += honnouBuff + jusoBuff;
+                defVal += honnouBuff + jusoBuff;
                 atk = atkVal;
                 def = defVal;
             }
