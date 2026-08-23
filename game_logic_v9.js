@@ -281,6 +281,11 @@ export function calculateDefenseFromCards(cards, player) {
             continue;
         }
         
+        if (card.effect.includes('完全に無効化する')) {
+            total += 9999;
+            continue;
+        }
+        
         if (card.name === 'トラップコンボ' && player) {
             let maxStr = 0;
             player.deck.summons.forEach(s => {

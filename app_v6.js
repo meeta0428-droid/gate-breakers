@@ -1083,12 +1083,12 @@ function setupEvents() {
             }
 
             // 使用後廃棄のテキストを持つカード
-            if (card.effect.includes('使用後このカードは廃棄札へと移動する')) {
+            if (card.effect.includes('使用後このカードは廃棄札へと移動する') || card.effect.includes('このカードは廃棄札へと移動する')) {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
                     player.deck.discard.splice(discardIdx, 1);
                     player.deck.void.push(card);
-                    logMsg(`「${card.name}」は使用されたため廃棄札に移動した。`);
+                    logMsg(`「${card.name}」は効果により廃棄札に移動した。`);
                 }
                 return;
             }
