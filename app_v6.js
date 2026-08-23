@@ -62,6 +62,10 @@ const els = {
     discordWebhookUrl: document.getElementById('discord-webhook-url'),
     btnSaveDiscord: document.getElementById('btn-save-discord'),
     btnCloseDiscordModal: document.getElementById('btn-close-discord-modal'),
+    attackConfirmModal: document.getElementById('attack-confirm-modal'),
+    attackConfirmList: document.getElementById('attack-confirm-list'),
+    btnConfirmAttackFinal: document.getElementById('btn-confirm-attack-final'),
+    btnCancelAttackConfirm: document.getElementById('btn-cancel-attack-confirm'),
     btnPrintDeck: document.getElementById('btn-print-deck'),
     printArea: document.getElementById('print-area'),
 
@@ -596,9 +600,12 @@ function setupEvents() {
     }
     
     // 攻撃実行
-    els.btnAttack.addEventListener('click', () => {
+    
+    const doAttackProcess = (isPreview = false) => {
         let hasAttackingSummons = player.deck.summons.some(s => s.stance === 'attack');
         
+        // setCards は preview 時にも分離し、final 時にも分離する。
+        // final時にはすでに preview 時点で分離されている可能性もあるが安全のため。
         const setCards = currentCombo.filter(c => c.isSetReaction);
         currentCombo = currentCombo.filter(c => !c.isSetReaction);
         
@@ -659,12 +666,15 @@ function setupEvents() {
                 logs.push(`・「${c.name}」：判定結果 <b style="color:#00ffff; font-size:1.1rem;">${total}</b> （${statName} ${statVal} ＋ 強度 ${str} ＋ パッシブ補正 ${passiveBonus}）`);
                 
                 if (/このカードは廃棄札[へ]?[と]?移動する/.test(c.effect)) {
-                    const discardIdx = player.deck.discard.lastIndexOf(c);
-                    if (discardIdx > -1) {
-                        player.deck.discard.splice(discardIdx, 1);
-                        player.deck.void.push(c);
-                        logs.push(`　┗「${c.name}」は効果により廃棄札に移動した。`);
+                    // Preview時には移動させない
+                    if (!isPreview) {
+                        const discardIdx = player.deck.discard.lastIndexOf(c);
+                        if (discardIdx > -1) {
+                            player.deck.discard.splice(discardIdx, 1);
+                            player.deck.void.push(c);
+                        }
                     }
+                    logs.push(`　┗「${c.name}」は効果により廃棄札に移動した。`);
                 }
             });
             logMsg(`【一般判定】<br>${logs.join('<br>')}`, 'important');
@@ -673,8 +683,16 @@ function setupEvents() {
             return;
         }
         
+        // --- プレビュー時用のダミーlogMsg ---
+        const originalLogMsg = logMsg;
+        let tempLogs = [];
+        const dummyLogMsg = (msg, type) => {
+            tempLogs.push({msg, type});
+        };
+        const currentLogMsg = isPreview ? dummyLogMsg : originalLogMsg;
+        
         const dmg = calculateDamageFromCards(currentCombo, player);
-        const { toVoid } = executeCardEffects(currentCombo, player, logMsg);
+        const { toVoid } = executeCardEffects(currentCombo, player, currentLogMsg);
         
         let nextCardBonus = 0;
         let continuousBonus = 0;
@@ -756,7 +774,7 @@ function setupEvents() {
             if (toVoid.has(idx)) detail += ` [廃棄へ]`;
             return `・「${c.name}」${detail}`;
         }).join('<br>');
-        // 召喚カードの追撃
+        
         let summonDmg = 0;
         let summonLog = '';
         const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
@@ -781,18 +799,17 @@ function setupEvents() {
         
         let totalDmg = dmg + summonDmg;
         
-        // --- フックシステムの呼び出し（攻撃ダメージ計算後、適用前） ---
+        // --- フックシステムの呼び出し ---
         const activeCards = [...player.deck.passives, ...player.deck.summons, ...currentCombo];
         const hookContext = triggerHook('onAttack', { 
             totalDmg: totalDmg, 
             player: player,
-            logMsg: logMsg,
+            logMsg: currentLogMsg,
             enemyNoReact: els.chkEnemyNoReact.checked,
             enemyOpen: els.chkEnemyOpen ? els.chkEnemyOpen.checked : false,
             currentCombo: currentCombo
         }, activeCards);
         totalDmg = hookContext.totalDmg;
-        // ----------------------------------------------------
         
         let manualLog = '';
         if (manualDmgBonus !== 0) {
@@ -801,17 +818,66 @@ function setupEvents() {
             manualLog = `<br><span style="color:#4caf50;">（味方からの効果補正 ${sign}${manualDmgBonus} を適用）</span>`;
         }
 
-        // 攻撃実行後、チェックボックスをリセット
-        els.chkEnemyNoReact.checked = false;
-
         const hasAllTarget = currentCombo.some(c => c.effect.includes('任意の対象全て') || c.effect.includes('任意の対象すべて'));
         const targetLog = hasAllTarget ? '<br><span style="color:#ffcc00; font-weight:bold;">【任意の対象すべてへの攻撃！】</span>' : '';
 
-        logMsg(`使用カード:<br>${cardLogs}<br>${summonLog}コンボ発動！ 合計 <span class="damage">${totalDmg}</span> のダメージを与えた！${targetLog}${manualLog}`, 'important');
+        const finalMsg = `使用カード:<br>${cardLogs}<br>${summonLog}コンボ発動！ 合計 <span class="damage">${totalDmg}</span> のダメージを与えた！${targetLog}${manualLog}`;
+
+        if (isPreview) {
+            // プレビュー時の処理：ログだけ流してモーダルを開く
+            originalLogMsg(`【攻撃仮計算】<br>${finalMsg}`, 'important');
+            
+            // 効果ログなども出力する
+            tempLogs.forEach(l => {
+                originalLogMsg(`【仮効果】${l.msg}`, l.type);
+            });
+            
+            // モーダルのリスト生成
+            els.attackConfirmList.innerHTML = '';
+            currentCombo.forEach((c, idx) => {
+                const div = document.createElement('div');
+                div.style.background = '#333';
+                div.style.padding = '8px';
+                div.style.marginBottom = '5px';
+                div.style.borderRadius = '4px';
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.innerText = c.name;
+                
+                const select = document.createElement('select');
+                select.className = 'confirm-action-select';
+                select.dataset.idx = idx;
+                select.innerHTML = `
+                    <option value="normal">通常処理（効果通り）</option>
+                    <option value="hand">手札に戻す（無効化等）</option>
+                    <option value="discard">捨札にする</option>
+                    <option value="void">廃棄札にする</option>
+                `;
+                
+                div.appendChild(nameSpan);
+                div.appendChild(select);
+                els.attackConfirmList.appendChild(div);
+            });
+            
+            els.attackConfirmModal.classList.remove('hidden');
+            currentCombo = [...currentCombo, ...setCards]; // セットカードを一時的に戻す
+            return;
+        }
+
+        // --- 確定時 (isPreview === false) の処理 ---
+        originalLogMsg(finalMsg, 'important');
+        tempLogs.forEach(l => {
+            originalLogMsg(l.msg, l.type);
+        });
         showDamagePopup(totalDmg);
         enemyHp -= totalDmg;
         
-        // 手動ダメージ補正をリセット
+        // 攻撃実行後、チェックボックスをリセット
+        els.chkEnemyNoReact.checked = false;
+        
         if (manualDmgBonus !== 0) {
             manualDmgBonus = 0;
             if (manualDmgVal) manualDmgVal.innerText = manualDmgBonus;
@@ -824,42 +890,39 @@ function setupEvents() {
                     if (discardIdx > -1) {
                         player.deck.discard.splice(discardIdx, 1);
                         player.deck.hand.push(card);
-                        logMsg(`【残心】の効果で「${card.name}」を手札に戻しました。`, 'important');
+                        originalLogMsg(`【残心】の効果で「${card.name}」を手札に戻しました。`, 'important');
                     }
                     return;
                 }
                 
-                // 影刃：リアクション無効化を使用した場合、廃棄札へ
                 if (card._kagejinUsed) {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
                     if (discardIdx > -1) {
                         player.deck.discard.splice(discardIdx, 1);
                         player.deck.void.push(card);
-                        logMsg(`「${card.name}」はリアクション無効化の代償として廃棄札に移動した。`);
+                        originalLogMsg(`「${card.name}」はリアクション無効化の代償として廃棄札に移動した。`);
                     }
                     delete card._kagejinUsed;
                     return;
                 }
 
-                // 影打ち等：捨札から使用した場合、廃棄札へ
                 if (card._fromDiscard) {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
                     if (discardIdx > -1) {
                         player.deck.discard.splice(discardIdx, 1);
                         player.deck.void.push(card);
-                        logMsg(`「${card.name}」は捨札から使用されたため廃棄札に移動した。`);
+                        originalLogMsg(`「${card.name}」は捨札から使用されたため廃棄札に移動した。`);
                     }
                     delete card._fromDiscard;
                     return;
                 }
                 
-                // 使用後廃棄のテキストを持つカード
                 if (/このカードは廃棄札[へ]?[と]?移動する/.test(card.effect)) {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
                     if (discardIdx > -1) {
                         player.deck.discard.splice(discardIdx, 1);
                         player.deck.void.push(card);
-                        logMsg(`「${card.name}」は使用されたため廃棄札に移動した。`);
+                        originalLogMsg(`「${card.name}」は使用されたため廃棄札に移動した。`);
                     }
                     return;
                 }
@@ -880,7 +943,6 @@ function setupEvents() {
                 }
             });
             
-            // 超速判断の処理
             const hasChosoku = currentCombo.some(c => c.name === '超速判断' || c.effect.includes('捨札からコスト3以下のカードを1枚引く'));
             if (hasChosoku) {
                 window.dispatchEvent(new CustomEvent('requestRecoverCard', {
@@ -890,121 +952,104 @@ function setupEvents() {
                         desc: "捨札からコスト3以下のカードを1枚引きます。",
                         onSelect: (card) => {
                             player.deck.hand.push(card);
-                            logMsg(`【超速判断】捨札から「${card.name}」を手札に加えました。`);
+                            originalLogMsg(`【超速判断】捨札から「${card.name}」を手札に加えました。`);
                         },
                         playerObj: player
                     }
                 }));
             }
             
-            const hasHonnou = currentCombo.some(c => c.name === '本能の覚醒');
-            if (hasHonnou) {
-                logMsg(`【本能の覚醒】の効果が発動！このカードが捨札にある限り、召喚ユニットの攻/防が＋2されます。`, 'important');
-            }
-            
-            // 大地の息吹の処理
-            const hasDaichi = currentCombo.some(c => c.name === '大地の息吹');
-            const daichiTargetCards = [...player.deck.void, ...player.deck.discard];
-            if (hasDaichi && daichiTargetCards.some(c => c.category.includes('召喚') || c.effect.includes('召喚・攻'))) {
-                window.dispatchEvent(new CustomEvent('requestRecoverCard', {
-                    detail: {
-                        filterFunc: c => c.category.includes('召喚') || c.effect.includes('召喚・攻'),
-                        title: "大地の息吹の効果",
-                        desc: "捨札または廃棄札から「召喚」カードを1枚選んで手札に加えます。",
-                        source: 'void_or_discard',
-                        onSelect: (card) => {
-                            player.deck.hand.push(card);
-                            logMsg(`【大地の息吹】「${card.name}」を手札に加えました。`);
-                        },
-                        playerObj: player
-                    }
-                }));
-            }
-
-            // ウンディーネ召喚時効果
-            const hasUndine = currentCombo.some(c => c.name === 'ウンディーネ');
-            if (hasUndine && player.deck.void.some(c => c.cost <= 2)) {
-                window.dispatchEvent(new CustomEvent('requestRecoverCard', {
-                    detail: {
-                        filterFunc: c => c.cost <= 2,
-                        title: "ウンディーネ：召喚時効果",
-                        desc: "山札に戻すコスト2以下の廃棄札を選んでください。",
-                        source: 'void',
-                        onSelect: (card) => {
-                            player.deck.mountain.push(card);
-                            logMsg(`【ウンディーネ】対象の廃棄札「${card.name}」を山札に戻した！`);
-                        },
-                        playerObj: player
-                    }
-                }));
-            }
-            
-            // ドロー効果の汎用処理（バックドア・アクセスなど）
-            let totalDraw = 0;
-            currentCombo.forEach(c => {
-                const drawMatch = c.effect.match(/山札から(?:カードを)?(\d+)枚引いて手札に加える/);
-                if (drawMatch) {
-                    totalDraw += parseInt(drawMatch[1], 10);
-                }
-            });
-            if (totalDraw > 0) {
-                const drawnCount = player.deck.draw(totalDraw);
-                logMsg(`カードの効果で山札から ${drawnCount} 枚ドローしました！`);
-            }
-
-            currentCombo = setCards;
+            currentCombo = [...setCards];
             updateUI();
         };
 
-        // --- 影刃のリアクション無効化チェック ---
-        const kagejinCards = currentCombo.filter(c => c.name === '影刃' || c.effect.includes('リアクションを無効化できる'));
-        
-        const proceedAfterKagejin = () => {
-            // --- 残心チェック ---
-            const hasZanshin = player.deck.passives.some(p => p.name === '残心' || p.effect.includes('使用したカード1枚は手札に戻る'));
-            const actionCardIndexes = currentCombo.map((c, i) => c.category.includes('アクション') ? i : -1).filter(i => i !== -1);
-            
-            if (hasZanshin && actionCardIndexes.length > 0) {
-                window.dispatchEvent(new CustomEvent('requestZanshinReturn', {
-                    detail: {
-                        actionCardIndexes,
-                        combo: currentCombo,
-                        callback: finalizeAttackCombo
-                    }
-                }));
-            } else {
-                finalizeAttackCombo();
-            }
-        };
-
-        if (kagejinCards.length > 0) {
-            const kagejinModal = document.getElementById('kagejin-modal');
-            kagejinModal.classList.remove('hidden');
-            
-            const btnYes = document.getElementById('btn-kagejin-yes');
-            const btnNo = document.getElementById('btn-kagejin-no');
-            
-            // イベントリスナーの重複防止
-            const newBtnYes = btnYes.cloneNode(true);
-            const newBtnNo = btnNo.cloneNode(true);
-            btnYes.parentNode.replaceChild(newBtnYes, btnYes);
-            btnNo.parentNode.replaceChild(newBtnNo, btnNo);
-            
-            newBtnYes.addEventListener('click', () => {
-                kagejinCards.forEach(c => { c._kagejinUsed = true; });
-                logMsg(`【影刃】の効果発動！敵のリアクションを無効化した！`, 'important');
-                kagejinModal.classList.add('hidden');
-                proceedAfterKagejin();
-            });
-            
-            newBtnNo.addEventListener('click', () => {
-                kagejinModal.classList.add('hidden');
-                proceedAfterKagejin();
-            });
+        const zanshinCardIdx = currentCombo.findIndex(c => c.name === '残心');
+        if (zanshinCardIdx !== -1) {
+            let options = currentCombo.map(c => c.name);
+            options.push('戻さない');
+            window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                detail: {
+                    filterFunc: c => currentCombo.includes(c),
+                    title: "残心の効果",
+                    desc: "このコンボで使用したカードのうち1枚を手札に戻すことができます。",
+                    onSelect: (card) => {
+                        const idx = currentCombo.indexOf(card);
+                        finalizeAttackCombo(idx);
+                    },
+                    onSkip: () => {
+                        finalizeAttackCombo(-1);
+                    },
+                    playerObj: player
+                }
+            }));
         } else {
-            proceedAfterKagejin();
+            finalizeAttackCombo();
         }
+    };
+
+    els.btnAttack.addEventListener('click', () => {
+        doAttackProcess(true);
     });
+
+    if (els.btnConfirmAttackFinal) {
+        els.btnConfirmAttackFinal.addEventListener('click', () => {
+            els.attackConfirmModal.classList.add('hidden');
+            
+            // モーダルでの選択を適用する
+            const selects = els.attackConfirmList.querySelectorAll('.confirm-action-select');
+            
+            // setCards は除外して処理するため分離
+            const setCards = currentCombo.filter(c => c.isSetReaction);
+            let activeCards = currentCombo.filter(c => !c.isSetReaction);
+            
+            // 後ろから削除していくとインデックスがずれないが、直接 splice などで処理する
+            // 選択されたアクションを適用
+            let finalActiveCards = [];
+            
+            selects.forEach(sel => {
+                const idx = parseInt(sel.dataset.idx);
+                const action = sel.value;
+                const card = activeCards[idx];
+                if (!card) return;
+                
+                if (action === 'normal') {
+                    finalActiveCards.push(card);
+                } else {
+                    // discard から取り出す
+                    const discardIdx = player.deck.discard.lastIndexOf(card);
+                    if (discardIdx > -1) {
+                        player.deck.discard.splice(discardIdx, 1);
+                    }
+                    
+                    if (action === 'hand') {
+                        player.deck.hand.push(card);
+                        logMsg(`「${card.name}」は妨害により手札に戻りました。（コストは自動回復しません）`);
+                    } else if (action === 'discard') {
+                        player.deck.discard.push(card);
+                        logMsg(`「${card.name}」は効果により捨札になりました。`);
+                    } else if (action === 'void') {
+                        player.deck.void.push(card);
+                        logMsg(`「${card.name}」は効果により廃棄札になりました。`);
+                    }
+                }
+            });
+            
+            // 新しい currentCombo で final 処理を実行
+            currentCombo = [...finalActiveCards, ...setCards];
+            
+            // 通常の攻撃処理（確定版）を呼び出す
+            doAttackProcess(false);
+        });
+    }
+
+    if (els.btnCancelAttackConfirm) {
+        els.btnCancelAttackConfirm.addEventListener('click', () => {
+            els.attackConfirmModal.classList.add('hidden');
+            logMsg('攻撃をキャンセルしました。手札やコンボの状態はそのままです。');
+            updateUI();
+        });
+    }
+);
 
     // 防御/被弾（リアクション）
     let pendingDamage = 0;
@@ -2623,7 +2668,7 @@ function setupEvents() {
             player.deck.hand.splice(selectedCardIndex, 1); 
             player.deck.discard.push(card); 
             currentCombo.push(card);
-            logMsg(`「${card.name}」を場に出した！`);
+            logMsg(`「${card.name}」（コスト:${card.cost} / 強度:${card.strength || 0}）を場に出した！`);
             
             // 汎用ドロー効果（山札からX枚引く）
             const drawMatch = card.effect.match(/山札から([0-9０-９]+)枚引く/);
