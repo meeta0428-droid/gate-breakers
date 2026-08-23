@@ -438,13 +438,17 @@ export function triggerHook(hookName, context, activeCards) {
             }
             
             if (hookName === 'onBeforeDamageTaken') {
-                // 例: "受けるダメージを1点軽減" または "ダメージを受けた時にダメージ -1"
-                const reduceMatch1 = actualCard.effect.match(/受ける(?:あらゆる)?ダメージを(\d+)点軽減/);
+                // 例: "受けるダメージを1点軽減", "ダメージを1点減少する", "ダメージ3点軽減"
+                const reduceMatch1 = actualCard.effect.match(/(?:受ける(?:あらゆる)?)?ダメージ(?:を)?([0-9０-９]+)点(?:軽減|減少)/);
                 const reduceMatch2 = actualCard.effect.match(/ダメージ(?:を受けた時|時)にダメージ\s*[-－]\s*(\d+)/);
                 
                 let reduceVal = 0;
-                if (reduceMatch1) reduceVal = parseInt(reduceMatch1[1], 10);
-                else if (reduceMatch2) reduceVal = parseInt(reduceMatch2[1], 10);
+                if (reduceMatch1) {
+                    const numStr = reduceMatch1[1].replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+                    reduceVal = parseInt(numStr, 10);
+                } else if (reduceMatch2) {
+                    reduceVal = parseInt(reduceMatch2[1], 10);
+                }
                 
                 if (reduceVal > 0 && currentContext.pendingDamage > 0) {
                     currentContext.pendingDamage = Math.max(0, currentContext.pendingDamage - reduceVal);
