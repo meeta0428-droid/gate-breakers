@@ -508,6 +508,23 @@ function setupEvents() {
         updateUI();
     });
     
+    // 手動ダメージ補正UIの制御
+    let manualDmgBonus = 0;
+    const btnManualMinus = document.getElementById('btn-manual-dmg-minus');
+    const btnManualPlus = document.getElementById('btn-manual-dmg-plus');
+    const manualDmgVal = document.getElementById('manual-dmg-val');
+    
+    if (btnManualMinus && btnManualPlus && manualDmgVal) {
+        btnManualMinus.addEventListener('click', () => {
+            manualDmgBonus--;
+            manualDmgVal.innerText = manualDmgBonus;
+        });
+        btnManualPlus.addEventListener('click', () => {
+            manualDmgBonus++;
+            manualDmgVal.innerText = manualDmgBonus;
+        });
+    }
+    
     // 攻撃実行
     els.btnAttack.addEventListener('click', () => {
         let hasAttackingSummons = player.deck.summons.some(s => s.stance === 'attack');
@@ -629,6 +646,13 @@ function setupEvents() {
         }, activeCards);
         totalDmg = hookContext.totalDmg;
         // ----------------------------------------------------
+        
+        let manualLog = '';
+        if (manualDmgBonus !== 0) {
+            totalDmg += manualDmgBonus;
+            const sign = manualDmgBonus > 0 ? '＋' : '';
+            manualLog = `<br><span style="color:#4caf50;">（味方からの効果補正 ${sign}${manualDmgBonus} を適用）</span>`;
+        }
 
         // 攻撃実行後、チェックボックスをリセット
         els.chkEnemyNoReact.checked = false;
@@ -636,9 +660,15 @@ function setupEvents() {
         const hasAllTarget = currentCombo.some(c => c.effect.includes('任意の対象全て') || c.effect.includes('任意の対象すべて'));
         const targetLog = hasAllTarget ? '<br><span style="color:#ffcc00; font-weight:bold;">【任意の対象すべてへの攻撃！】</span>' : '';
 
-        logMsg(`使用カード:<br>${cardLogs}<br>${summonLog}コンボ発動！ 合計 <span class="damage">${totalDmg}</span> のダメージを与えた！${targetLog}`, 'important');
+        logMsg(`使用カード:<br>${cardLogs}<br>${summonLog}コンボ発動！ 合計 <span class="damage">${totalDmg}</span> のダメージを与えた！${targetLog}${manualLog}`, 'important');
         showDamagePopup(totalDmg);
         enemyHp -= totalDmg;
+        
+        // 手動ダメージ補正をリセット
+        if (manualDmgBonus !== 0) {
+            manualDmgBonus = 0;
+            if (manualDmgVal) manualDmgVal.innerText = manualDmgBonus;
+        }
         
         const finalizeAttackCombo = (savedCardIdx = -1) => {
             currentCombo.forEach((card, idx) => {
