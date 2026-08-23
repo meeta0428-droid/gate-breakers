@@ -1927,6 +1927,10 @@ function setupEvents() {
                             logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊され、廃棄札に移動した！（残り: ${pendingDamage}）`, 'damage');
                         }
                         
+                        if (s.card.name === '怨樹の角魔') {
+                            logMsg('【怨樹の角魔の効果】廃棄札に移動したため、攻撃者はコスト4以下のカード1枚を廃棄札に移動する！', 'damage');
+                        }
+                        
                         if (s.card.name === 'ライトニングボア') {
                             logMsg('【ライトニングボアの効果】自身がダメージを受けたため、対象へ「1点」のダメージを返す！', 'important');
                             if (typeof enemyHp !== 'undefined') enemyHp -= 1;
