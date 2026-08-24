@@ -599,6 +599,7 @@ function setupEvents() {
         // デッキのセットアップ
         const cardNames = selectedCardsForDeck.map(c => c.name);
         player.deck.start(cardPool, cardNames);
+        player._boostedUsed = false;
         
         logMsg('戦闘開始！パッシブカードは自動的に装備されました。', 'important');
         
@@ -2833,6 +2834,10 @@ function setupEvents() {
                 }
 
                 if (passiveCard.name === '『ブーステッド』') {
+                    if (player._boostedUsed) {
+                        alert('『ブーステッド』の効果は既に使われています。');
+                        return;
+                    }
                     const statList = ['肉体', '知性', '精神'];
                     const chosen = prompt("上昇させる能力値を選択してください（肉体、知性、精神のいずれかを入力）：", "肉体");
                     if (chosen && statList.includes(chosen)) {
@@ -2840,6 +2845,7 @@ function setupEvents() {
                         if (chosen === '知性') { player.stats.int.maxVal += 2; player.stats.int.currentVal += 2; }
                         if (chosen === '精神') { player.stats.men.maxVal += 2; player.stats.men.currentVal += 2; }
                         
+                        player._boostedUsed = true;
                         logMsg(`【『ブーステッド』効果発動】<br><span style="color:#ffcc00; font-weight:bold;">任意の能力値「${chosen}」の最大値・現在値が ＋2 された！</span>`, 'important');
                         updateUI();
                     } else if (chosen) {
@@ -3991,8 +3997,15 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
                     els.btnTriggerPassive.innerText = '効果を発動';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === '『ブーステッド』') {
-                    els.btnTriggerPassive.innerText = '効果を発動（能力値+2）';
-                    els.btnTriggerPassive.classList.remove('hidden');
+                    if (player._boostedUsed) {
+                        els.btnTriggerPassive.innerText = '使用済み';
+                        els.btnTriggerPassive.disabled = true;
+                        els.btnTriggerPassive.classList.remove('hidden');
+                    } else {
+                        els.btnTriggerPassive.innerText = '効果を発動（能力値+2）';
+                        els.btnTriggerPassive.disabled = false;
+                        els.btnTriggerPassive.classList.remove('hidden');
+                    }
                 } else if (card.name === '『キメラドライブ』') {
                     els.btnTriggerPassive.innerText = '効果を発動（合成）';
                     els.btnTriggerPassive.classList.remove('hidden');
