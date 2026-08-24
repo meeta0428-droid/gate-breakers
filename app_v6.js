@@ -669,7 +669,7 @@ function setupEvents() {
     // 攻撃実行
     
     const doAttackProcess = (isPreview = false, gatlingBonus = 0, halberdBonus = 0) => {
-        let hasAttackingSummons = player.deck.summons.some(s => s.stance === 'attack');
+        let hasAttackingSummons = player.deck.summons.some(s => s.stance === 'attack' || s.stance === 'both');
         
         // setCards は preview 時にも分離し、final 時にも分離する。
         // final時にはすでに preview 時点で分離されている可能性もあるが安全のため。
