@@ -1988,7 +1988,11 @@ function setupEvents() {
                         player.deck.summons.splice(idx, 1);
                         pendingDamage -= endurance;
                         
-                        if (s.card.name === 'シルフ') {
+                        if (s.card.isChimera && s.card.originalCards) {
+                            // 合成獣が破壊された場合、素材カードを全て廃棄札へ
+                            s.card.originalCards.forEach(c => player.deck.void.push(c));
+                            logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊された！<br><span style="color:#00ffff; font-weight:bold;">合成素材となっていた全てのカードが廃棄札に移動した！</span>（残り: ${pendingDamage}）`, 'damage');
+                        } else if (s.card.name === 'シルフ') {
                             player.deck.hand.push(s.card);
                             logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊され、<span style="color:#00ffff; font-weight:bold;">手札に戻った！</span>（残り: ${pendingDamage}）`, 'damage');
                         } else if (s.card.name === 'フリップサイド・ヒュドラ') {
@@ -3616,7 +3620,7 @@ function updateUI() {
                     }
                 }
 
-                if (s.card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる')) {
+                if (s.card.isChimera || s.card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる')) {
                     if (s.stance === 'defend' || s.stance === 'both') s.stance = 'both';
                     else s.stance = 'both';
                 } else {
@@ -3712,7 +3716,7 @@ function updateUI() {
                 updateUI();
             });
             sDiv.querySelector('.btn-def').addEventListener('click', () => {
-                if (s.card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる')) {
+                if (s.card.isChimera || s.card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる')) {
                     if (s.stance === 'attack' || s.stance === 'both') s.stance = 'both';
                     else s.stance = 'both';
                 } else {
@@ -3753,7 +3757,11 @@ function updateUI() {
             sDiv.querySelector('.summon-btn-dismiss').addEventListener('click', () => {
                 if (confirm(`${s.card.name} を廃棄札へ移動してよろしいですか？\n（※「廃棄札に移動することで〜」等の効果を発動する場合に使用します）`)) {
                     player.deck.summons.splice(idx, 1);
-                    if (s.card.name === 'シルフ') {
+                    if (s.card.isChimera && s.card.originalCards) {
+                        // 合成獣の場合、素材カードを全て廃棄札へ
+                        s.card.originalCards.forEach(c => player.deck.void.push(c));
+                        logMsg(`合成獣「${s.card.name}」を解体！<br><span style="color:#00ffff; font-weight:bold;">合成素材となっていた全てのカードが廃棄札に移動した！</span>`, 'important');
+                    } else if (s.card.name === 'シルフ') {
                         player.deck.hand.push(s.card);
                         logMsg(`「${s.card.name}」は破壊され、手札に戻った！`);
                     } else {
