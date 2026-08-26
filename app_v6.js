@@ -3338,9 +3338,9 @@ function setupEvents() {
         els.btnComboUseEffect.addEventListener('click', () => {
             if (selectedCardIndex !== null && currentCombo[selectedCardIndex]) {
                 const card = currentCombo[selectedCardIndex];
-                if (card.name === '影刃') {
+                if (card.name === '影刃' || card.name === '破城撃') {
                     card._kagejinUsed = true;
-                    logMsg(`【影刃】の効果発動！敵のリアクションを無効化した！（※カードは攻撃確定後に廃棄札に移動します）`, 'important');
+                    logMsg(`【${card.name}】の効果発動！敵のリアクションを無効化した！（※カードは攻撃確定後に廃棄札に移動します）`, 'important');
                 }
                 els.modal.classList.add('hidden');
                 updateUI();
@@ -4025,7 +4025,7 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
         els.btnComboRight.style.opacity = index === currentCombo.length - 1 ? '0.5' : '1';
         
         if (els.btnComboUseEffect) {
-            if (card.name === '影刃') {
+            if (card.name === '影刃' || card.name === '破城撃') {
                 if (card._kagejinUsed) {
                     els.btnComboUseEffect.innerText = '効果使用済み（廃棄予定）';
                     els.btnComboUseEffect.disabled = true;
