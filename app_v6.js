@@ -619,6 +619,7 @@ function setupEvents() {
         const cardNames = selectedCardsForDeck.map(c => c.name);
         player.deck.start(cardPool, cardNames);
         player._boostedUsed = false;
+        player._hasAttackedThisBattle = false;
         
         logMsg('戦闘開始！パッシブカードは自動的に装備されました。', 'important');
         

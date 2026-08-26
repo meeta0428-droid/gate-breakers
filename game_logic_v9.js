@@ -497,6 +497,13 @@ export function triggerHook(hookName, context, activeCards) {
                 }
             }
         }
+        // --- 2. 個別定義されていない場合の汎用フック ---
+        // (必要に応じて追加)
     }
+    
+    if (hookName === 'onAttack' && currentContext.player && !currentContext.isPreview) {
+        currentContext.player._hasAttackedThisBattle = true;
+    }
+    
     return currentContext;
 }

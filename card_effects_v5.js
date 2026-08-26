@@ -60,6 +60,16 @@ export const cardEffects = {
             return { maxHandSize };
         }
     },
+    "侍": {
+        onAttack: (context) => {
+            let { totalDmg, logMsg, player, card } = context;
+            if (totalDmg > 0 && !player._hasAttackedThisBattle) {
+                totalDmg += 8;
+                if (logMsg) logMsg(`・【パッシブ】${card.name}の効果！戦闘開始時の最初の攻撃のためダメージ＋8！`);
+            }
+            return { totalDmg };
+        }
+    },
     "虚槌スマッシャー": {
         onAttack: (context) => {
             let { totalDmg, logMsg, player, card } = context;
