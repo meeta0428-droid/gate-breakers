@@ -63,9 +63,14 @@ export const cardEffects = {
     "虚槌スマッシャー": {
         onAttack: (context) => {
             let { totalDmg, logMsg, player, card } = context;
-            if (totalDmg > 0 && player.deck.mountain.length === 0) {
-                totalDmg += 5;
-                if (logMsg) logMsg(`・【パッシブ】${card.name}の追加効果（山札0）でさらにダメージ＋5！`);
+            if (totalDmg > 0) {
+                if (player.deck.mountain.length === 0) {
+                    totalDmg += 7;
+                    if (logMsg) logMsg(`・【パッシブ】${card.name}の追加効果（山札0）でダメージ＋7に変更！`);
+                } else {
+                    totalDmg += 2;
+                    if (logMsg) logMsg(`・【パッシブ】${card.name}の効果でダメージ＋2`);
+                }
             }
             return { totalDmg };
         }
