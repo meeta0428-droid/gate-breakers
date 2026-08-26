@@ -144,20 +144,28 @@ function sendDiscordWebhook(msgHtml) {
     }).catch(e => console.error("Discord Webhook Error:", e));
 }
 
-function getDisplayCost(card, playerObj) {
+function getDisplayCost(card, playerObj, isRecovery = false) {
     if (!playerObj || !playerObj.deck) return card.cost;
     let displayCost = card.cost;
     
     // 魔導杖ウィル
-    const hasWill = playerObj.deck.passives.some(p => p.name === '魔導杖ウィル');
+    const hasWill = playerObj.deck.passives.some(p => p.name === '魔導杖ウィル' && !p.isDisabled);
     if (hasWill && card.category.includes('知性') && card.category.includes('アクション')) {
         displayCost = Math.max(0, displayCost - 1);
     }
     
-    // 魔弾銃士
-    const hasMadanjushi = playerObj.deck.passives.some(p => p.name === '魔弾銃士');
-    if (hasMadanjushi && card.effect.includes('弾丸')) {
-        displayCost = Math.max(0, displayCost - 1);
+    if (isRecovery) {
+        // 魔弾銃士
+        const hasMadanjushi = playerObj.deck.passives.some(p => p.name === '魔弾銃士' && !p.isDisabled);
+        if (hasMadanjushi && card.effect.includes('弾丸')) {
+            displayCost = Math.max(0, displayCost - 1);
+        }
+        
+        // 戦士
+        const hasSenshi = playerObj.deck.passives.some(p => p.name === '戦士' && !p.isDisabled);
+        if (hasSenshi && card.category.includes('肉体')) {
+            displayCost = Math.max(0, displayCost - 1);
+        }
     }
     
     return displayCost;
@@ -2359,7 +2367,7 @@ function setupEvents() {
             const cardItem = window._currentRecoverableCards[idx];
             if (!cardItem) return;
             const card = cardItem.card;
-            let actualCost = getDisplayCost(card, player);
+            let actualCost = getDisplayCost(card, player, true);
             if (card.category.includes('肉体')) costBody += actualCost;
             else if (card.category.includes('知性')) costInt += actualCost;
             else if (card.category.includes('精神')) costMen += actualCost;
@@ -2435,7 +2443,7 @@ function setupEvents() {
                     const canUseFromDiscard = card.effect.includes('手札にあるように使用できる');
                     const useBtnHtml = canUseFromDiscard ? `<button class="btn btn-action btn-use-discard" data-idx="${idx}" style="font-size:0.7rem; padding:2px 5px; margin-top:5px; width:100%;">捨札から使用</button>` : '';
 
-                    const dCost = getDisplayCost(card, player);
+                    const dCost = getDisplayCost(card, player, true);
                     let costDisplay = `コスト: ${card.cost}`;
                     if (dCost < card.cost) {
                         costDisplay = `コスト: <span style="text-decoration: line-through;">${card.cost}</span> <span style="color:#ffcc00;">${dCost}</span> <span style="color:#ffcc00; font-size:0.7rem;">(軽減適用)</span>`;
@@ -3513,7 +3521,7 @@ function setupEvents() {
             validCards.forEach(card => {
                 const item = document.createElement('div');
                 item.className = 'discard-item';
-                const dCost = getDisplayCost(card, playerObj);
+                const dCost = getDisplayCost(card, playerObj, true);
                 let costDisplay = `コスト: ${card.cost}`;
                 if (dCost < card.cost) {
                     costDisplay = `コスト: <span style="text-decoration: line-through;">${card.cost}</span> <span style="color:#ffcc00;">${dCost}</span> <span style="color:#ffcc00; font-size:0.7rem;">(軽減適用)</span>`;
