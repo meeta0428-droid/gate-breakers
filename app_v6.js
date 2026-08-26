@@ -88,6 +88,7 @@ const els = {
     btnComboLeft: document.getElementById('btn-combo-left'),
     btnComboReturn: document.getElementById('btn-combo-return'),
     btnComboRight: document.getElementById('btn-combo-right'),
+    btnComboUseEffect: document.getElementById('btn-combo-use-effect'),
     btnComboClose: document.getElementById('btn-combo-close'),
     
     discardModal: document.getElementById('discard-modal'),
@@ -3324,6 +3325,21 @@ function setupEvents() {
     });
 
     els.btnComboClose.addEventListener('click', () => els.modal.classList.add('hidden'));
+    
+    if (els.btnComboUseEffect) {
+        els.btnComboUseEffect.addEventListener('click', () => {
+            if (selectedCardIndex !== null && currentCombo[selectedCardIndex]) {
+                const card = currentCombo[selectedCardIndex];
+                if (card.name === '影刃') {
+                    card._kagejinUsed = true;
+                    logMsg(`【影刃】の効果発動！敵のリアクションを無効化した！（※カードは攻撃確定後に廃棄札に移動します）`, 'important');
+                }
+                els.modal.classList.add('hidden');
+                updateUI();
+            }
+        });
+    }
+
     if (els.btnSetCard) {
         els.btnSetCard.addEventListener('click', () => {
             if (selectedCardIndex !== null) {
@@ -3999,6 +4015,22 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
         els.btnComboLeft.style.opacity = index === 0 ? '0.5' : '1';
         els.btnComboRight.disabled = index === currentCombo.length - 1;
         els.btnComboRight.style.opacity = index === currentCombo.length - 1 ? '0.5' : '1';
+        
+        if (els.btnComboUseEffect) {
+            if (card.name === '影刃') {
+                if (card._kagejinUsed) {
+                    els.btnComboUseEffect.innerText = '効果使用済み（廃棄予定）';
+                    els.btnComboUseEffect.disabled = true;
+                    els.btnComboUseEffect.classList.remove('hidden');
+                } else {
+                    els.btnComboUseEffect.innerText = '効果を使用（リアクション無効化等）';
+                    els.btnComboUseEffect.disabled = false;
+                    els.btnComboUseEffect.classList.remove('hidden');
+                }
+            } else {
+                els.btnComboUseEffect.classList.add('hidden');
+            }
+        }
     } else {
         els.comboActions.classList.add('hidden');
         els.normalActions.classList.remove('hidden');
