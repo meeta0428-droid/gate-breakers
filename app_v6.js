@@ -1524,6 +1524,22 @@ function setupEvents() {
             }
         });
         
+        let passiveDefLog = '';
+        if (player && player.deck && player.deck.passives) {
+            const hasSenshi = player.deck.passives.some(p => p.name === '戦士' && !p.isDisabled);
+            if (hasSenshi) {
+                passiveDefLog += `・【パッシブ】戦士の効果 (軽減 1)<br>`;
+            }
+            const hasSuigetsu = player.deck.passives.some(p => p.name === '水月の構え' && !p.isDisabled);
+            if (hasSuigetsu) {
+                const otherBodyPassives = player.deck.passives.filter(p => p.name !== '水月の構え' && p.category.includes('肉体・パッシブ') && !p.isDisabled).length;
+                if (otherBodyPassives >= 1) {
+                    passiveDefLog += `・【パッシブ】水月の構えの効果 (軽減 ${otherBodyPassives})<br>`;
+                }
+            }
+        }
+        summonLog += passiveDefLog;
+        
         let totalDef = defense + summonDef;
         
         if (ignoreDef) {

@@ -338,8 +338,26 @@ export function calculateDefenseFromCards(cards, player) {
             const voidCost = player.deck.void.reduce((sum, c) => sum + c.cost, 0);
             total += Math.floor((discardCost + voidCost) / 2);
         }
-        
     }
+    
+    // パッシブによる追加軽減
+    if (player && player.deck && player.deck.passives) {
+        // 戦士
+        const hasSenshi = player.deck.passives.some(p => p.name === '戦士' && !p.isDisabled);
+        if (hasSenshi) {
+            total += 1;
+        }
+
+        // 水月の構え
+        const hasSuigetsu = player.deck.passives.some(p => p.name === '水月の構え' && !p.isDisabled);
+        if (hasSuigetsu) {
+            const otherBodyPassives = player.deck.passives.filter(p => p.name !== '水月の構え' && p.category.includes('肉体・パッシブ') && !p.isDisabled).length;
+            if (otherBodyPassives >= 1) {
+                total += otherBodyPassives;
+            }
+        }
+    }
+
     return total;
 }
 

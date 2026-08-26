@@ -86,18 +86,6 @@ export const cardEffects = {
             return { totalDmg };
         }
     },
-    "水月の構え": {
-        onBeforeDamageTaken: (context) => {
-            let { pendingDamage, logMsg, player, card } = context;
-            const otherBodyPassives = player.deck.passives.filter(p => p.name !== '水月の構え' && p.category.includes('肉体・パッシブ')).length;
-            if (otherBodyPassives >= 1 && pendingDamage > 0) {
-                const reduced = Math.max(0, pendingDamage - otherBodyPassives);
-                if (logMsg) logMsg(`・【パッシブ】${card.name}の効果！他の肉体パッシブが ${otherBodyPassives} 枚あるため、ダメージを ${otherBodyPassives} 点軽減！`);
-                pendingDamage = reduced;
-            }
-            return { pendingDamage };
-        }
-    },
     // 不屈：使用時に廃棄札にあるコスト3以下のカードをすべて山札に戻す
     "不屈": {
         onPlay: (context) => {
