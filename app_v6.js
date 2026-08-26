@@ -485,6 +485,13 @@ function renderCardPool() {
                 }
             }
             
+            if (card.effect.includes('◆ジョブカード')) {
+                if (selectedCardsForDeck.some(c => c.name === card.name)) {
+                    alert(`「${card.name}」はジョブカードのため、同じカードを2枚以上入れることはできません。`);
+                    return;
+                }
+            }
+            
             // 「ブーステッド」選択時の特別ルール
             const hasBoosted = selectedCardsForDeck.some(c => c.name === '『ブーステッド』');
             
