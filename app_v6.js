@@ -3194,9 +3194,18 @@ function setupEvents() {
             currentCombo.push(card);
             
             const displayCost = getDisplayCost(card, player);
-            logMsg(`「${card.name}」（コスト:${displayCost} / 強度:${card.strength || 0}）を場に出した！`);
-            if (displayCost < card.cost) {
-                logMsg(`<span style="color:#ffcc00; font-size:0.8rem;">※効果によりコストが軽減されています</span>`);
+            const hasAnki = player.deck.passives.some(p => p.name === '暗器使い' && !p.isDisabled);
+            const isAction = card.category.includes('アクション');
+            
+            if (hasAnki && isAction) {
+                card._isHiddenByAnki = true;
+                logMsg(`${player.name} は、裏返しのカードを場に出した！`);
+            } else {
+                card._isHiddenByAnki = false;
+                logMsg(`「${card.name}」（コスト:${displayCost} / 強度:${card.strength || 0}）を場に出した！`);
+                if (displayCost < card.cost) {
+                    logMsg(`<span style="color:#ffcc00; font-size:0.8rem;">※効果によりコストが軽減されています</span>`);
+                }
             }
             
             // 汎用ドロー効果（山札からX枚引く）
@@ -3811,7 +3820,11 @@ function updateUI() {
         currentCombo.forEach((card, comboIdx) => {
             const cDiv = document.createElement('div');
             cDiv.className = 'passive-card';
-            if (card.isSetReaction) {
+            if (card._isHiddenByAnki) {
+                cDiv.style.borderColor = '#888';
+                cDiv.style.color = '#888';
+                cDiv.innerHTML = `<strong>裏返しのカード</strong><br><small>コスト?</small>`;
+            } else if (card.isSetReaction) {
                 cDiv.style.borderColor = '#ffcc00';
                 cDiv.innerHTML = `<strong><span style="color:#ffcc00;">[セット]</span> ${card.name}</strong><br><small>コスト${card.cost}</small>`;
             } else {
