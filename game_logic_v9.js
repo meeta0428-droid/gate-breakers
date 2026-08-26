@@ -425,6 +425,7 @@ export function triggerHook(hookName, context, activeCards) {
     
     for (const cardObj of activeCards) {
         const actualCard = cardObj.card ? cardObj.card : cardObj;
+        if (actualCard.isDisabled) continue;
         
         // --- 1. 個別定義されたフック（card_effects.js）の実行 ---
         const effectLogic = cardEffects[actualCard.name];
