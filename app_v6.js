@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=258';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=260';
 
 let cardPool = [];
 let player = null;
@@ -204,7 +204,8 @@ function showCharaScreen() {
 }
 
 function updateCharaUI() {
-    document.getElementById('chara-level').innerText = player.level;
+    document.getElementById('chara-level').value = player.level;
+    document.getElementById('chara-boss-deck-pt').value = player.extraDeckCost || 0;
     document.getElementById('chara-points').innerText = player.unspentPoints;
     
     const statMap = { body: '肉体', int: '知性', men: '精神' };
@@ -246,10 +247,19 @@ function setupCharaEvents() {
         });
     });
     
-    // レベルアップボタン
-    document.getElementById('btn-levelup').addEventListener('click', () => {
-        player.levelUp();
-        alert(`レベル${player.level}になりました！ +${player.level}ポイント獲得！`);
+    // レベル変更
+    document.getElementById('chara-level').addEventListener('change', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (val > 0) {
+            player.setLevel(val);
+            updateCharaUI();
+        }
+    });
+
+    // ボス用追加デッキコスト変更
+    document.getElementById('chara-boss-deck-pt').addEventListener('change', (e) => {
+        const val = parseInt(e.target.value, 10) || 0;
+        player.extraDeckCost = Math.max(0, val);
         updateCharaUI();
     });
     
@@ -3510,7 +3520,7 @@ function setupEvents() {
                         }
                     } else {
                         const idx = sourceArray.lastIndexOf(card);
-                        if (idx > -1) {
+                        if (idx > -1 && sourceArray !== cardPool) {
                             sourceArray.splice(idx, 1);
                         }
                     }

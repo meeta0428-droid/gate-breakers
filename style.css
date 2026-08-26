@@ -372,6 +372,7 @@ body {
 .modal-content {
     background-color: var(--bg-panel);
     width: 90%; max-width: 400px;
+    max-height: 85vh; overflow-y: auto;
     border-radius: 12px; padding: 20px;
     border: 1px solid #555;
 }

@@ -113,10 +113,11 @@ export class Character {
         };
         this.deck = new Deck();
         this.initiativeModifier = 0; // 手動イニシアチブ調整値（影縫い等）
+        this.extraDeckCost = 0; // ボス用追加デッキコスト
     }
     
     get deckCapacity() {
-        return 25 + (this.level * 5); // Lv1 = 30
+        return 25 + (this.level * 5) + this.extraDeckCost; // Lv1 = 30
     }
     
     get baseInitiative() {
@@ -196,6 +197,13 @@ export class Character {
     levelUp() {
         this.level++;
         this.unspentPoints += this.level; // 新レベルと同じ点を得る
+    }
+
+    setLevel(newLevel) {
+        if (newLevel < 1) newLevel = 1;
+        this.level = newLevel;
+        const totalPoints = 11 + (this.level + 2) * (this.level - 1) / 2;
+        this.unspentPoints = totalPoints - this.totalStatPoints;
     }
     
     upgradeStat(key) {

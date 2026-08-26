@@ -15,16 +15,18 @@
             <header class="builder-header">
                 <div>
                     <h2 style="font-size: 1.2rem;">キャラクター作成</h2>
-                    <div class="cost-info">Lv.<span id="chara-level">1</span> ｜ 残りpt: <span id="chara-points">11</span> ｜ イニシアチブ: <span id="chara-init-val">3</span></div>
+                    <div class="cost-info">Lv.<input type="number" id="chara-level" value="1" min="1" max="99" style="width:40px; font-size:0.9rem; text-align:center; background:#222; color:#fff; border:1px solid #555; border-radius:4px; margin-right:5px;"> ｜ 残りpt: <span id="chara-points">11</span> ｜ イニシアチブ: <span id="chara-init-val">3</span></div>
                 </div>
                 <div style="display:flex; gap:6px;">
-                    <button id="btn-levelup" class="btn" style="padding:8px 12px; flex:none; font-size:0.8rem;">Lv UP</button>
                     <button id="btn-to-deck" class="btn btn-action" style="padding:8px 16px; flex:none;">デッキ構築へ</button>
                 </div>
             </header>
 
             <div style="padding: 15px; flex:1; overflow-y:auto;">
-                <p style="color:#aaa; font-size:0.85rem; margin-bottom:15px;">能力値を＋ボタンで上昇、－ボタンで下降させることができます。</p>
+                <p style="color:#aaa; font-size:0.85rem; margin-bottom:10px;">能力値を＋ボタンで上昇、－ボタンで下降させることができます。</p>
+                <div style="margin-bottom:15px; font-size:0.85rem; display:flex; align-items:center; gap:5px;">
+                    追加デッキpt (ボス用): <input type="number" id="chara-boss-deck-pt" value="0" min="0" style="width:50px; font-size:0.9rem; text-align:center; background:#222; color:#fff; border:1px solid #555; border-radius:4px;">
+                </div>
 
                 <!-- 肉体 -->
                 <div class="chara-stat-row" id="row-body">
@@ -430,9 +432,9 @@
         </div>
     </div>
 
-    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v307 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v307 確認・更新</button>
+    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v310 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v310 確認・更新</button>
 
-    <script type="module" src="app_v6.js?v=307"></script>
+    <script type="module" src="app_v6.js?v=310"></script>
     <!-- 残心モーダル -->
     <div id="zanshin-modal" class="modal hidden" style="z-index: 2600;">
         <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
