@@ -1919,6 +1919,13 @@ function setupEvents() {
                     <div style="color:#4caf50;">回収</div>
                 `;
                 cDiv.addEventListener('click', () => {
+                    const limit = player.deck.maxHandSize;
+                    const newCount = player.deck.hand.length + 1;
+                    if (newCount > limit) {
+                        if (!confirm(`【警告】手札の上限（${limit}枚）を超えます（回収後: ${newCount}枚）。それでも回収しますか？`)) {
+                            return;
+                        }
+                    }
                     cardArray.splice(idx, 1);
                     player.deck.hand.push(card);
                     logMsg(`ブレイク効果で${sourceName}から「${card.name}」を手札に戻した！`, 'important');
@@ -2489,7 +2496,13 @@ function setupEvents() {
                     item.addEventListener('click', (e) => {
                         if (e.target.classList.contains('btn-return-hand-item')) {
                             e.stopPropagation();
-                            if (confirm(`上限を無視して捨札から「${card.name}」を手札に戻しますか？（※英雄のファンファーレ等のバフ効果用）`)) {
+                            const limit = player.deck.maxHandSize;
+                            const newCount = player.deck.hand.length + 1;
+                            let msg = `捨札から「${card.name}」を手動で手札に戻しますか？（※英雄のファンファーレ等のバフ効果用）`;
+                            if (newCount > limit) {
+                                msg = `【警告】手札の上限（${limit}枚）を超えます（回収後: ${newCount}枚）。それでも捨札から「${card.name}」を手札に戻しますか？`;
+                            }
+                            if (confirm(msg)) {
                                 const targetCard = player.deck.discard.splice(idx, 1)[0];
                                 player.deck.hand.push(targetCard);
                                 logMsg(`味方からの効果等により、捨札から「${targetCard.name}」を手動で手札に戻した。`, 'important');
@@ -2565,6 +2578,14 @@ function setupEvents() {
 
     document.getElementById('btn-execute-recover').addEventListener('click', () => {
         if (recoveringCards.size === 0) return;
+        
+        const limit = player.deck.maxHandSize;
+        const newCount = player.deck.hand.length + recoveringCards.size;
+        if (newCount > limit) {
+            if (!confirm(`【警告】手札の上限（${limit}枚）を超えて回収しようとしています（回収後: ${newCount}枚）。\nこのまま回収を続行しますか？`)) {
+                return;
+            }
+        }
         
         const selectedItems = Array.from(recoveringCards).map(idx => window._currentRecoverableCards[idx]).filter(item => item);
         let recoveredNames = [];
