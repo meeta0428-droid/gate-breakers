@@ -1647,11 +1647,11 @@ function setupEvents() {
                 return;
             }
 
-            if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
+            if (card.category.includes('召喚') || card.effect.includes('召喚・攻') || card.effect.includes('召喚　攻') || card.effect.includes('召喚 攻')) {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
                     player.deck.discard.splice(discardIdx, 1);
-                    const initStance = card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'defend';
+                    const initStance = (card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') || card.effect.includes('このユニットは攻撃と防御を1回ずつ行うことができる')) ? 'both' : 'defend';
                     player.deck.summons.push({ card: card, stance: initStance });
                     if (card.name === 'ウィスプ') {
                         const drawn = player.deck.draw(1);
@@ -2761,7 +2761,7 @@ function setupEvents() {
                     return;
                 }
 
-                if (passiveCard.name === 'バディビースト' || passiveCard.name === '相棒の獣' || passiveCard.name === '相棒の鳥' || passiveCard.name === '相棒の竜') {
+                if (passiveCard.name === 'バディビースト' || passiveCard.name === '相棒の獣' || passiveCard.name === '相棒の鳥' || passiveCard.name === '相棒の竜' || passiveCard.name === 'アニマビークル') {
                     const pIdx = player.deck.passives.findIndex(p => p === passiveCard);
                     if (pIdx > -1) {
                         player.deck.passives.splice(pIdx, 1);
@@ -3731,7 +3731,7 @@ function updateUI() {
                     }
                 }
 
-                if (s.card.isChimera || s.card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる')) {
+                if (s.card.isChimera || s.card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') || s.card.effect.includes('このユニットは攻撃と防御を1回ずつ行うことができる')) {
                     if (s.stance === 'defend' || s.stance === 'both') s.stance = 'both';
                     else s.stance = 'both';
                 } else {
@@ -3827,7 +3827,7 @@ function updateUI() {
                 updateUI();
             });
             sDiv.querySelector('.btn-def').addEventListener('click', () => {
-                if (s.card.isChimera || s.card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる')) {
+                if (s.card.isChimera || s.card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') || s.card.effect.includes('このユニットは攻撃と防御を1回ずつ行うことができる')) {
                     if (s.stance === 'attack' || s.stance === 'both') s.stance = 'both';
                     else s.stance = 'both';
                 } else {
@@ -4149,7 +4149,7 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
                 } else if (card.name === 'ファミリア') {
                     els.btnTriggerPassive.innerText = '効果を発動';
                     els.btnTriggerPassive.classList.remove('hidden');
-                } else if (card.name === 'バディビースト' || card.name === '相棒の獣' || card.name === '相棒の鳥' || card.name === '相棒の竜') {
+                } else if (card.name === 'バディビースト' || card.name === '相棒の獣' || card.name === '相棒の鳥' || card.name === '相棒の竜' || card.name === 'アニマビークル') {
                     els.btnTriggerPassive.innerText = '自身を召喚する';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === '金の加護') {
