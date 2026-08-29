@@ -2582,9 +2582,8 @@ function setupEvents() {
         const limit = player.deck.maxHandSize;
         const newCount = player.deck.hand.length + recoveringCards.size;
         if (newCount > limit) {
-            if (!confirm(`【警告】手札の上限（${limit}枚）を超えて回収しようとしています（回収後: ${newCount}枚）。\nこのまま回収を続行しますか？`)) {
-                return;
-            }
+            alert(`手札の上限（${limit}枚）を超えるため回収できません。\n（現在の手札: ${player.deck.hand.length}枚、選択中: ${recoveringCards.size}枚）`);
+            return;
         }
         
         const selectedItems = Array.from(recoveringCards).map(idx => window._currentRecoverableCards[idx]).filter(item => item);
