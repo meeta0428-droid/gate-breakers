@@ -188,6 +188,17 @@ async function loadCards() {
         const response = await fetch('cards.json?t=' + new Date().getTime());
         if (!response.ok) throw new Error('Network response was not ok');
         cardPool = await response.json();
+        
+        const jobSelect = document.getElementById('filter-job');
+        if (jobSelect) {
+            const uniqueJobs = [...new Set(cardPool.map(c => c.job).filter(j => j))];
+            uniqueJobs.forEach(job => {
+                const opt = document.createElement('option');
+                opt.value = job;
+                opt.innerText = job;
+                jobSelect.appendChild(opt);
+            });
+        }
     } catch (error) {
         console.error('Failed to load cards:', error);
     }
@@ -440,11 +451,16 @@ function openLoadModal() {
 function renderCardPool() {
     els.cardPoolList.innerHTML = '';
     
+    const filterJob = document.getElementById('filter-job') ? document.getElementById('filter-job').value : 'all';
     const filterAttr = document.getElementById('filter-attr') ? document.getElementById('filter-attr').value : 'all';
     const filterType = document.getElementById('filter-type') ? document.getElementById('filter-type').value : 'all';
     const sortCost = document.getElementById('sort-cost') ? document.getElementById('sort-cost').value : 'default';
 
     let displayPool = [...cardPool];
+
+    if (filterJob !== 'all') {
+        displayPool = displayPool.filter(c => c.job === filterJob);
+    }
 
     if (filterAttr !== 'all') {
         displayPool = displayPool.filter(c => c.category.includes(filterAttr));
@@ -528,9 +544,11 @@ function renderCardPool() {
 
 // フィルター・ソート用のイベントリスナーを登録
 setTimeout(() => {
+    const jobSel = document.getElementById('filter-job');
     const attrSel = document.getElementById('filter-attr');
     const typeSel = document.getElementById('filter-type');
     const costSel = document.getElementById('sort-cost');
+    if (jobSel) jobSel.addEventListener('change', renderCardPool);
     if (attrSel) attrSel.addEventListener('change', renderCardPool);
     if (typeSel) typeSel.addEventListener('change', renderCardPool);
     if (costSel) costSel.addEventListener('change', renderCardPool);
