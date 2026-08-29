@@ -1919,7 +1919,7 @@ function setupEvents() {
                     <div style="color:#4caf50;">回収</div>
                 `;
                 cDiv.addEventListener('click', () => {
-                    const limit = player.deck.maxHandSize;
+                    const limit = player.maxHandSize;
                     const newCount = player.deck.hand.length + 1;
                     if (newCount > limit) {
                         if (!confirm(`【警告】手札の上限（${limit}枚）を超えます（回収後: ${newCount}枚）。それでも回収しますか？`)) {
@@ -2496,7 +2496,7 @@ function setupEvents() {
                     item.addEventListener('click', (e) => {
                         if (e.target.classList.contains('btn-return-hand-item')) {
                             e.stopPropagation();
-                            const limit = player.deck.maxHandSize;
+                            const limit = player.maxHandSize;
                             const newCount = player.deck.hand.length + 1;
                             let msg = `捨札から「${card.name}」を手動で手札に戻しますか？（※英雄のファンファーレ等のバフ効果用）`;
                             if (newCount > limit) {
@@ -2579,7 +2579,7 @@ function setupEvents() {
     document.getElementById('btn-execute-recover').addEventListener('click', () => {
         if (recoveringCards.size === 0) return;
         
-        const limit = player.deck.maxHandSize;
+        const limit = player.maxHandSize;
         const newCount = player.deck.hand.length + recoveringCards.size;
         if (newCount > limit) {
             alert(`手札の上限（${limit}枚）を超えるため回収できません。\n（現在の手札: ${player.deck.hand.length}枚、選択中: ${recoveringCards.size}枚）`);
