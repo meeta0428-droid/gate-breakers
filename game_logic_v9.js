@@ -184,6 +184,13 @@ export class Character {
         let baseSize = 2 + this.level; // Lv1 = 3
         if (this.deck) {
             const activeCards = [...this.deck.passives, ...this.deck.summons];
+            for (const card of activeCards) {
+                const matchPlus = card.effect.match(/手札上限\s*[＋\+]\s*([0-9０-９]+)/);
+                if (matchPlus) baseSize += parseInt(matchPlus[1].replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)));
+                
+                const matchMinus = card.effect.match(/手札上限\s*[\-ー\-－]\s*([0-9０-９]+)/);
+                if (matchMinus) baseSize -= parseInt(matchMinus[1].replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)));
+            }
             const hookContext = triggerHook('onCalcMaxHandSize', { maxHandSize: baseSize, player: this }, activeCards);
             return hookContext.maxHandSize;
         }
