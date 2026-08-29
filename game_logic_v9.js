@@ -361,14 +361,14 @@ export function calculateDefenseFromCards(cards, player) {
     return total;
 }
 
-export function executeCardEffects(cards, player, logMsg) {
+export function executeCardEffects(cards, player, logMsg, isPreview = false) {
     let drawn = 0;
     let healed = 0;
     let toVoid = new Set();
     
     for (const [idx, card] of cards.entries()) {
         // --- フックシステムの呼び出し（カード使用時） ---
-        triggerHook('onPlay', { player, logMsg }, [card]);
+        triggerHook('onPlay', { player, logMsg, isPreview }, [card]);
         
         // ドロー効果
         const drawMatch = card.effect.match(/山札から(?:カードを)?([0-9０-９]+)枚.*?手札に加える/);
@@ -378,9 +378,17 @@ export function executeCardEffects(cards, player, logMsg) {
                 return parseInt(str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)));
             };
             const amount = parseFullWidthIntLocal(drawMatch[1]);
-            drawn += player.deck.draw(amount);
+            if (!isPreview) {
+                drawn += player.deck.draw(amount);
+            } else {
+                drawn += Math.min(amount, player.deck.mountain.length + player.deck.discard.length);
+            }
         } else if (card.effect.includes('山札から1枚手札に加える') || card.effect.includes('山札から１枚手札に加える')) {
-            drawn += player.deck.draw(1);
+            if (!isPreview) {
+                drawn += player.deck.draw(1);
+            } else {
+                drawn += Math.min(1, player.deck.mountain.length + player.deck.discard.length);
+            }
         }
         
         // 回復効果
@@ -390,8 +398,10 @@ export function executeCardEffects(cards, player, logMsg) {
             let remainingHeal = amount;
             for (const statKey of ['body', 'int', 'men']) {
                 const stat = player.stats[statKey];
-                while (remainingHeal > 0 && stat.currentVal < stat.maxVal) {
-                    stat.currentVal++;
+                let current = stat.currentVal;
+                while (remainingHeal > 0 && current < stat.maxVal) {
+                    if (!isPreview) stat.currentVal++;
+                    current++;
                     remainingHeal--;
                     healed++;
                 }
@@ -400,7 +410,7 @@ export function executeCardEffects(cards, player, logMsg) {
         
         // 捨札を山札に戻す効果（例: コスト3までの捨札を1枚山札に戻す）
         const returnMatch = card.effect.match(/コスト([0-9０-９]+)までの捨札を([0-9０-９]+)枚山札に戻す/);
-        if (returnMatch) {
+        if (returnMatch && !isPreview) {
             const parseFullWidthIntLocal = (str) => {
                 if (!str) return 0;
                 return parseInt(str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)));
@@ -416,7 +426,6 @@ export function executeCardEffects(cards, player, logMsg) {
         }
         
         // 廃棄札へ移動する効果
-        // ただし「この効果を適用した場合」や「効果を使用すると」などの条件付き廃棄は除外
         if (card.effect.match(/このカードは.*?廃棄札[へに]移動する/) 
             && !card.effect.match(/この効果を適用した場合/)
             && !card.effect.match(/効果を使用すると/)) {

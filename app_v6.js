@@ -788,7 +788,7 @@ function setupEvents() {
         const currentLogMsg = isPreview ? dummyLogMsg : originalLogMsg;
         
         const dmg = calculateDamageFromCards(currentCombo, player);
-        const { toVoid } = executeCardEffects(currentCombo, player, currentLogMsg);
+        const { toVoid } = executeCardEffects(currentCombo, player, currentLogMsg, isPreview);
         
         let nextCardBonus = 0;
         let continuousBonus = 0;
