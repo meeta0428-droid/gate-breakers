@@ -513,6 +513,7 @@ export function triggerHook(hookName, context, activeCards) {
         }
         
         // --- 2. パッシブカードの共通テキスト解析（汎用処理） ---
+        if (actualCard.name === 'ディストラクトオーダー') { hasCustomLogic = true; }
         if (actualCard.category.includes('パッシブ') && !hasCustomLogic) {
             if (hookName === 'onAttack') {
                 if (currentContext.totalDmg > 0) {
