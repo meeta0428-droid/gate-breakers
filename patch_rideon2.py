@@ -2,7 +2,7 @@ with open('app_v6.js', 'r', encoding='utf-8') as f:
     lines = f.readlines()
 
 for i, line in enumerate(lines):
-    if "updateDiscardModalUI();" in line and "els.discardModal.classList.remove('hidden');" in lines[i+1] and "recoveringCards.clear();" in lines[i-1]:
+    if "updateDiscardModalUI();" in line and "els.discardModal.classList.remove('hidden');" in lines[i+1]:
         insert_code = """
         // ライドオンの処理
         const hasRideOn = player.deck.passives.some(p => p.name === 'ライドオン' && !p.isDisabled);
