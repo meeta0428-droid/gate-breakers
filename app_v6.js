@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=366';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=367';
 
 let cardPool = [];
 let player = null;
@@ -1598,6 +1598,9 @@ function setupEvents() {
         
         // 召喚の防御
         let summonDef = 0;
+        let summonStanceDef = 0;
+        let summonAuraDef = 0;
+        const isMulti = els.chkMultiAttack && els.chkMultiAttack.checked;
         let summonLog = '';
         player.deck.summons.forEach(s => {
             if (s.stance === 'defend' || s.stance === 'both') {
@@ -1613,31 +1616,31 @@ function setupEvents() {
                         } else {
                             summonLog += `・召喚「${s.card.name}」の防御 (軽減 ${defVal}) <span style="color:#ff5252; font-size:0.8rem;">※特殊効果は無効化された</span><br>`;
                         }
-                        summonDef += defVal;
+                        summonStanceDef += defVal; s._tempDefVal = defVal;
                     } else {
-                        summonDef += defVal;
+                        summonStanceDef += defVal; s._tempDefVal = defVal;
                         summonLog += `・召喚「${s.card.name}」の防御 (軽減 ${defVal})<br>`;
                     }
                 }
             }
             
             if (s.card.name === 'ノーム') {
-                summonDef += 2;
+                summonAuraDef += 2;
                 summonLog += `・【ノーム】常時効果 (軽減 2)<br>`;
             }
             
             if (s.card.name === 'アイアン・タイガー') {
-                summonDef += 2;
+                summonAuraDef += 2;
                 summonLog += `・【アイアン・タイガー】常時効果 (軽減 2)<br>`;
             }
             
             if (s.card.name === '菌糸の獣骸') {
-                summonDef += 1;
+                summonAuraDef += 1;
                 summonLog += `・【菌糸の獣骸】常時効果 (軽減 1)<br>`;
             }
             
             if (s.card.name === 'セントリードローン') {
-                summonDef += 1;
+                summonAuraDef += 1;
                 summonLog += `・【セントリードローン】常時効果 (軽減 1)<br>`;
             }
         });
@@ -1659,6 +1662,7 @@ function setupEvents() {
                 if (player.deck.discard.some(c => c.name === 'ワイヤートラップ')) {
             summonLog += `<span style="color:#ffcc00; font-weight:bold;">・【ワイヤートラップ】捨札時効果 (攻撃してきた対象のイニシアチブ-2)</span><br>`;
         }
+        if (isMulti) { summonDef = summonAuraDef; } else { summonDef = summonStanceDef + summonAuraDef; }
         summonLog += passiveDefLog;
 
         
@@ -1924,19 +1928,23 @@ function setupEvents() {
             document.body.appendChild(overlay);
         }
         
-        if (actualDmg > 0) {
-            if (els.chkMultiAttack && els.chkMultiAttack.checked) {
-                logMsg(`<span style="color:#ffcc00; font-weight:bold;">【複数攻撃】プレイヤーとすべての召喚ユニットに ${actualDmg} 点のダメージ！</span>`, 'damage');
-                
+        if (els.chkMultiAttack && els.chkMultiAttack.checked) {
+            let baseDmgForSummons = inputDmg;
+            if (nohmBlocked || yosokuTriggered || manaCounterTriggered) {
+                baseDmgForSummons = 0;
+            }
+            if (baseDmgForSummons > 0 && player.deck.summons.length > 0) {
+                logMsg(`<span style="color:#ffcc00; font-weight:bold;">【複数攻撃】すべての召喚ユニットへの個別ダメージ判定（基本 ${baseDmgForSummons} 点）</span>`, 'important');
                 const summonsToDestroy = [];
                 player.deck.summons.forEach((s) => {
-                    let dmgToTake = actualDmg;
+                    let myDef = (s._tempDefVal || 0) + summonAuraDef;
+                    if (ignoreDef) myDef = 0;
+                    let dmgToTake = Math.max(0, baseDmgForSummons - myDef);
                     let endurance = s.card.cost;
                     
                     if (s.card.name === '古の屍竜') {
                         logMsg(`【古の屍竜】※肉体カテゴリーの攻撃ならダメージ3点軽減ですが、自動処理ではそのままダメージ計算されます。`, 'important');
                     }
-                    
                     if (s.card.name === '彷徨う砂塵霊') {
                         summonsToDestroy.push(s);
                         logMsg(`「${s.card.name}」はダメージを0にして廃棄札へ移動した！`, 'important');
@@ -1965,9 +1973,11 @@ function setupEvents() {
                         handleSummonVoided(player, s.card);
                     }
                 });
-                
-                els.chkMultiAttack.checked = false; // Reset
             }
+            els.chkMultiAttack.checked = false;
+        }
+
+        if (actualDmg > 0) {
 
             pendingDamage = actualDmg;
             updateDamageModalUI();
