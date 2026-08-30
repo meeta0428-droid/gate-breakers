@@ -259,6 +259,10 @@ export function calculateDamageFromCards(cards, player) {
         }
 
 
+
+        if (card.name === '神速領域' && player) {
+            cardDamage += player.initiative;
+        }
         if (card.name === 'フルスロットルチャージ' && player) {
             // このカード自身のイニシアチブ+4を加味して判定
             const tempInit = player.initiative;

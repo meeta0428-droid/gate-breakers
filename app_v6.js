@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=347';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=348';
 
 let cardPool = [];
 let player = null;
@@ -818,6 +818,11 @@ function setupEvents() {
             if (match) currentCardDmg += parseInt(match[1]);
             
 
+
+            if (c.name === '神速領域') {
+                currentCardDmg += player.initiative;
+                detail += `（イニシアチブ加算ボーナス＋${player.initiative}）`;
+            }
             if (c.name === 'フルスロットルチャージ') {
                 if (player.initiative > 10) {
                     currentCardDmg += 3;
