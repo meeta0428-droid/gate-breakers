@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=345';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=346';
 
 let cardPool = [];
 let player = null;
@@ -2606,6 +2606,7 @@ function setupEvents() {
         }
         if (autoRecovered.length > 0) {
             logMsg(`【チェイスダウン】イニシアチブ10超過により、捨札から自動回収されました！`, 'important');
+            updateUI();
         }
         recoveringCards.clear();
         manualRecoveryBonus = { body: 0, int: 0, men: 0 };
