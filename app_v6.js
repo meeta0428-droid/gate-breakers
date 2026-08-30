@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=342';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=343';
 
 let cardPool = [];
 let player = null;
@@ -819,7 +819,7 @@ function setupEvents() {
             
 
             if (c.name === 'フルスロットルチャージ') {
-                if (player.initiative + 4 > 10) {
+                if (player.initiative > 10) {
                     currentCardDmg += 3;
                     detail += `（イニシアチブ超過ボーナス＋3）`;
                 }

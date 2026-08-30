@@ -143,7 +143,7 @@ export class Character {
         
         // 捨札で持続する効果からのイニシアチブ
         const checkPersistentBuff = (card, isVoid) => {
-            const isDiscardOnly = (card.effect.includes('捨札にある間') && card.effect.includes('持続')) || card.effect.includes('捨札にある場合');
+            const isDiscardOnly = (card.effect.match(/捨[て]?札にある[間場合]/) && card.effect.match(/(持続|続く)/)) || card.effect.includes('捨札にある場合');
             const isBattleLong = card.effect.includes('戦闘中持続する') && !card.effect.includes('捨札にある間');
             
             if (isBattleLong || (!isVoid && isDiscardOnly)) {
@@ -251,7 +251,7 @@ export function calculateDamageFromCards(cards, player) {
 
         if (card.name === 'フルスロットルチャージ' && player) {
             // このカード自身のイニシアチブ+4を加味して判定
-            const tempInit = player.initiative + 4;
+            const tempInit = player.initiative;
             if (tempInit > 10) {
                 // regex でダメージ+2 が既に加算されているため、+3して合計+5にする
                 cardDamage += 3;
