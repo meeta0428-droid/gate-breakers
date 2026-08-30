@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=359';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=360';
 
 let cardPool = [];
 let player = null;
@@ -652,7 +652,7 @@ function setupEvents() {
         // ウィスプ（他召喚カードを所有）のバリデーション
         const wispCards = selectedCardsForDeck.filter(c => c.name === 'ウィスプ');
         if (wispCards.length > 0) {
-            const hasOtherSummon = selectedCardsForDeck.some(c => c.name !== 'ウィスプ' && (c.category.includes('召喚') || c.effect.includes('召喚・攻')));
+            const hasOtherSummon = selectedCardsForDeck.some(c => c.name !== 'ウィスプ' && (c.category.includes('召喚') || c.effect.includes('召喚・攻') || c.effect.includes('召喚　攻') || c.effect.includes('召喚 攻')));
             if (!hasOtherSummon) {
                 alert('【制限】「ウィスプ」をデッキに入れるには、他に「召喚」カードを入れる必要があります。');
                 return;
@@ -1192,7 +1192,7 @@ function setupEvents() {
                     return;
                 }
                 
-                if (card.category.includes('召喚') || card.effect.includes('召喚・攻')) {
+                if (card.category.includes('召喚') || card.effect.includes('召喚・攻') || card.effect.includes('召喚　攻') || card.effect.includes('召喚 攻')) {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
                     if (discardIdx > -1) {
                         player.deck.discard.splice(discardIdx, 1);
@@ -1715,7 +1715,7 @@ function setupEvents() {
                 return;
             }
 
-            if (card.category.includes('召喚') || card.effect.includes('召喚・攻') || card.effect.includes('召喚　攻') || card.effect.includes('召喚 攻')) {
+            if (card.category.includes('召喚') || card.effect.includes('召喚・攻') || card.effect.includes('召喚　攻') || card.effect.includes('召喚 攻') || card.effect.includes('召喚　攻') || card.effect.includes('召喚 攻')) {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
                     player.deck.discard.splice(discardIdx, 1);
@@ -1763,10 +1763,10 @@ function setupEvents() {
         // 大地の息吹の処理
         const hasDaichi = currentCombo.some(c => c.name === '大地の息吹');
         const daichiTargetCards2 = [...player.deck.void, ...player.deck.discard];
-        if (hasDaichi && daichiTargetCards2.some(c => c.category.includes('召喚') || c.effect.includes('召喚・攻'))) {
+        if (hasDaichi && daichiTargetCards2.some(c => c.category.includes('召喚') || c.effect.includes('召喚・攻') || c.effect.includes('召喚　攻') || c.effect.includes('召喚 攻'))) {
             window.dispatchEvent(new CustomEvent('requestRecoverCard', {
                 detail: {
-                    filterFunc: c => c.category.includes('召喚') || c.effect.includes('召喚・攻'),
+                    filterFunc: c => c.category.includes('召喚') || c.effect.includes('召喚・攻') || c.effect.includes('召喚　攻') || c.effect.includes('召喚 攻'),
                     title: "大地の息吹の効果",
                     desc: "捨札または廃棄札から「召喚」カードを1枚選んで手札に加えます。",
                     source: 'void_or_discard',
@@ -3163,13 +3163,13 @@ function setupEvents() {
                             desc: "山札（全カードリスト）から「召喚」カードを1枚指定して、召喚エリアに配置します。",
                             playerObj: player,
                             source: 'all',
-                            filterFunc: (c) => c.category.includes('召喚'),
+                            filterFunc: (c) => c.category.includes('召喚') || c.effect.includes('召喚'),
                             onSelect: (selectedCard) => {
                                 // 召喚時のスタンス判定
                                 let initStance = 'attack'; // デフォルトは攻撃
                                 if (selectedCard.effect.includes('召喚・防')) {
                                     initStance = 'defend';
-                                } else if (selectedCard.effect.includes('召喚・攻')) {
+                                } else if (selectedCard.effect.includes('召喚・攻') || selectedCard.effect.includes('召喚　攻') || selectedCard.effect.includes('召喚 攻')) {
                                     initStance = 'attack';
                                 }
                                 if (selectedCard.effect.includes('1ターンの間に攻撃と防御を1回ずつ行うことができる')) {
