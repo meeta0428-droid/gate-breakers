@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=360';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=361';
 
 let cardPool = [];
 let player = null;
@@ -974,6 +974,9 @@ function setupEvents() {
                     if (s.card.name === '泥瘴の悪鬼') {
                         extraInfo = '<br><span style="color:#ff5252; font-weight:bold;">※任意の対象全ての回収ポイントを-1する！</span>';
                     }
+                    if (s.card.name === 'オートマトンタレット') {
+                        extraInfo = '<br><span style="color:#ffcc00; font-weight:bold;">※このユニットの攻撃とは別に、任意の対象1体にダメージ1点を与える。</span>';
+                    }
                     summonLog += `・召喚「${s.card.name}」の追撃 (＋${atk})${extraInfo}<br>`;
                 }
             }
@@ -1196,7 +1199,7 @@ function setupEvents() {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
                     if (discardIdx > -1) {
                         player.deck.discard.splice(discardIdx, 1);
-                        const initStance = card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack';
+                        const initStance = card.effect.includes('攻撃行動を行わない') ? 'defend' : (card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack');
                         player.deck.summons.push({ card: card, stance: initStance });
                         if (card.name === 'ウィスプ') {
                             const drawn = player.deck.draw(1);
@@ -1616,6 +1619,11 @@ function setupEvents() {
                 summonDef += 1;
                 summonLog += `・【菌糸の獣骸】常時効果 (軽減 1)<br>`;
             }
+            
+            if (s.card.name === 'セントリードローン') {
+                summonDef += 1;
+                summonLog += `・【セントリードローン】常時効果 (軽減 1)<br>`;
+            }
         });
         
         let passiveDefLog = '';
@@ -1719,7 +1727,7 @@ function setupEvents() {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
                     player.deck.discard.splice(discardIdx, 1);
-                    const initStance = (card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') || card.effect.includes('このユニットは攻撃と防御を1回ずつ行うことができる')) ? 'both' : 'defend';
+                    const initStance = card.effect.includes('攻撃行動を行わない') ? 'defend' : ((card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') || card.effect.includes('このユニットは攻撃と防御を1回ずつ行うことができる')) ? 'both' : 'defend');
                     player.deck.summons.push({ card: card, stance: initStance });
                     if (card.name === 'ウィスプ') {
                         const drawn = player.deck.draw(1);
@@ -2992,7 +3000,7 @@ function setupEvents() {
                             source: 'mountain',
                             filterFunc: (c) => c.effect.includes('召喚'),
                             onSelect: (selectedCard) => {
-                                const initStance = selectedCard.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack';
+                                const initStance = selectedCard.effect.includes('攻撃行動を行わない') ? 'defend' : (selectedCard.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack');
                                 player.deck.summons.push({ card: selectedCard, stance: initStance, isFamiliar: true });
                                 logMsg(`【ファミリア】効果発動！山札から「${selectedCard.name}」を永続召喚しました！`, 'important');
                             }
@@ -3933,7 +3941,13 @@ function updateUI() {
                     }
                 }
 
+                                if (s.card.effect.includes('攻撃行動を行わない')) {
+                    alert('このユニットは攻撃行動を行いません。');
+                    return;
+                }
+                
                 if (s.card.isChimera || s.card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') || s.card.effect.includes('このユニットは攻撃と防御を1回ずつ行うことができる')) {
+
                     if (s.stance === 'defend' || s.stance === 'both') s.stance = 'both';
                     else s.stance = 'both';
                 } else {
@@ -4029,7 +4043,9 @@ function updateUI() {
                 updateUI();
             });
             sDiv.querySelector('.btn-def').addEventListener('click', () => {
+                
                 if (s.card.isChimera || s.card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') || s.card.effect.includes('このユニットは攻撃と防御を1回ずつ行うことができる')) {
+
                     if (s.stance === 'attack' || s.stance === 'both') s.stance = 'both';
                     else s.stance = 'both';
                 } else {
