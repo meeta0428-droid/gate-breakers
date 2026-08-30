@@ -177,6 +177,16 @@ export class Character {
         // 手動調整値（影縫い等の効果）
         total += (this.initiativeModifier || 0);
         
+
+        // 機動騎兵のジョブカード効果：配置されている召喚ユニットの強度をイニシアチブに足す（最大のもの）
+        const hasKidoKihei = this.deck.passives.some(p => p.name === '機動騎兵' && !p.isDisabled);
+        if (hasKidoKihei && this.deck.summons && this.deck.summons.length > 0) {
+            let maxStr = 0;
+            for (const s of this.deck.summons) {
+                if (s.card.strength > maxStr) maxStr = s.card.strength;
+            }
+            total += maxStr;
+        }
         return total;
     }
     
