@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=349';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=350';
 
 let cardPool = [];
 let player = null;
@@ -21,6 +21,7 @@ const els = {
     selectedDeckList: document.getElementById('selected-deck-list'),
     cardPoolList: document.getElementById('card-pool-list'),
     btnStartBattle: document.getElementById('btn-start-battle'),
+    btnExportDeck: document.getElementById('btn-export-deck'),
     btnSaveDeck: document.getElementById('btn-save-deck'),
     btnLoadDeck: document.getElementById('btn-load-deck'),
 
@@ -588,6 +589,33 @@ function setupEvents() {
     
     // デッキ読込ボタン
     els.btnLoadDeck.addEventListener('click', () => openLoadModal());
+
+    // デッキ出力ボタン
+    if (els.btnExportDeck) {
+        els.btnExportDeck.addEventListener('click', () => {
+            let exportText = `【キャラクター情報】\n`;
+            exportText += `肉体: ${player.stats.body.maxVal} / 知性: ${player.stats.int.maxVal} / 精神: ${player.stats.men.maxVal}\n`;
+            exportText += `レベル: ${player.level}\n`;
+            exportText += `イニシアチブ基礎値: ${player.baseInitiative}\n`;
+            exportText += `手札上限: ${player.maxHandSize}枚\n`;
+            const currentCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
+            exportText += `デッキポイント(コスト): ${currentCost} / ${player.deckCapacity}\n\n`;
+            
+            exportText += `【デッキ内容 (${selectedCardsForDeck.length}枚)】\n`;
+            
+            // コスト順に並び替え
+            const sortedDeck = [...selectedCardsForDeck].sort((a, b) => a.cost - b.cost);
+            for (const c of sortedDeck) {
+                exportText += `- ${c.name} (コスト:${c.cost})\n`;
+            }
+            
+            navigator.clipboard.writeText(exportText).then(() => {
+                alert("デッキデータをクリップボードにコピーしました！\n\n" + exportText);
+            }).catch(err => {
+                prompt("クリップボードへのコピーに失敗しました。以下のテキストをコピーしてください:", exportText);
+            });
+        });
+    }
     els.btnCloseLoad.addEventListener('click', () => els.loadModal.classList.add('hidden'));
 
     // イニシアチブ手動調整ボタン（影縫い等の効果用）
