@@ -248,9 +248,10 @@ export function calculateDamageFromCards(cards, player, isNoReact = false) {
     for (const card of cards) {
         let cardDamage = 0;
         
-        const match = card.effect.match(/ダメージ[＋\+](\d+)/);
+        const match = card.effect.match(/ダメージ[＋\+]([0-9０-９]+)/);
         if (match) {
-            cardDamage += parseInt(match[1]);
+            const valStr = match[1].replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+            cardDamage += parseInt(valStr);
         }
         
         

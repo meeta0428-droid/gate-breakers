@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=352';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=353';
 
 let cardPool = [];
 let player = null;
@@ -843,8 +843,11 @@ function setupEvents() {
             let detail = '';
             let currentCardDmg = 0;
             
-            const match = c.effect.match(/ダメージ[＋\+](\d+)/);
-            if (match) currentCardDmg += parseInt(match[1]);
+            const match = c.effect.match(/ダメージ[＋\+]([0-9０-９]+)/);
+            if (match) {
+                const valStr = match[1].replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+                currentCardDmg += parseInt(valStr);
+            }
             
 
 
