@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=344';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=345';
 
 let cardPool = [];
 let player = null;
@@ -2591,6 +2591,22 @@ function setupEvents() {
 
     // 捨札回収モーダルを開く
     els.btnDiscardView.addEventListener('click', () => {
+
+        // チェイスダウンの自動回収
+        let autoRecovered = [];
+        if (player.initiative > 10) {
+            for (let j = player.deck.discard.length - 1; j >= 0; j--) {
+                const c = player.deck.discard[j];
+                if (c.name === 'チェイスダウン') {
+                    player.deck.discard.splice(j, 1);
+                    player.deck.hand.push(c);
+                    autoRecovered.push(c.name);
+                }
+            }
+        }
+        if (autoRecovered.length > 0) {
+            logMsg(`【チェイスダウン】イニシアチブ10超過により、捨札から自動回収されました！`, 'important');
+        }
         recoveringCards.clear();
         manualRecoveryBonus = { body: 0, int: 0, men: 0 };
         updateDiscardModalUI();
@@ -2648,6 +2664,7 @@ function setupEvents() {
             recoveredNames.push(item.card.name);
         }
         
+
         logMsg(`手札に ${recoveredNames.length}枚 回収しました！<br><small>(${recoveredNames.join(', ')})</small>`);
         els.discardModal.classList.add('hidden');
         
