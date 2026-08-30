@@ -3438,10 +3438,7 @@ function setupEvents() {
             els.modal.classList.add('hidden');
             updateUI();
         }
-        } catch (e) {
-            alert("btnUseCard Error: " + e.message + "\n" + e.stack);
-            console.error(e);
-        }
+        } catch (e) { alert('btnUseCard Error: ' + e.message + '\n' + e.stack); console.error(e); }
     });
 
     els.btnComboClose.addEventListener('click', () => els.modal.classList.add('hidden'));
@@ -3508,10 +3505,6 @@ function setupEvents() {
             
             els.modal.classList.add('hidden');
             updateUI();
-        }
-        } catch (e) {
-            alert("btnUseCard Error: " + e.message + "\n" + e.stack);
-            console.error(e);
         }
     });
 
