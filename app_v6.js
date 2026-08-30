@@ -2761,6 +2761,51 @@ function setupEvents() {
                     return;
                 }
 
+                                if (passiveCard.name === '機工士') {
+                    if (passiveCard.hasUsed) {
+                        alert('機工士の効果は戦闘中に1度しか使えません。');
+                        return;
+                    }
+                    window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                        detail: {
+                            title: "機工士の効果",
+                            desc: "廃棄札から手札に戻す召喚ユニットを1枚選んでください。",
+                            playerObj: player,
+                            source: 'void',
+                            filterFunc: (c) => c.category.includes('召喚') || c.effect.includes('召喚'),
+                            onSelect: (selectedCard) => {
+                                player.deck.hand.push(selectedCard);
+                                logMsg(`【機工士】の効果で、廃棄札から「${selectedCard.name}」を手札に戻しました！`, 'important');
+                                passiveCard.hasUsed = true;
+                                updateUI();
+                            }
+                        }
+                    }));
+                    els.cardModal.classList.add('hidden');
+                    return;
+                }
+                                if (passiveCard.name === 'ライドオン') {
+                    if (player.deck.summons.length === 0) {
+                        alert('場に召喚ユニットがいません！');
+                        return;
+                    }
+                    window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                        detail: {
+                            title: "ライドオンの効果",
+                            desc: "捨札または廃棄札から、コスト3以下のカードを1枚選んで手札に加えてください。",
+                            playerObj: player,
+                            source: 'void_or_discard',
+                            filterFunc: (c) => c.cost <= 3,
+                            onSelect: (selectedCard) => {
+                                player.deck.hand.push(selectedCard);
+                                logMsg(`【ライドオン】の効果で、コスト3以下の「${selectedCard.name}」を手札に回収しました！`, 'important');
+                                updateUI();
+                            }
+                        }
+                    }));
+                    els.cardModal.classList.add('hidden');
+                    return;
+                }
                 if (passiveCard.name === 'バディビースト' || passiveCard.name === '相棒の獣' || passiveCard.name === '相棒の鳥' || passiveCard.name === '相棒の竜' || passiveCard.name === 'アニマビークル') {
                     const pIdx = player.deck.passives.findIndex(p => p === passiveCard);
                     if (pIdx > -1) {
@@ -4152,7 +4197,13 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
                 } else if (card.name === 'バディビースト' || card.name === '相棒の獣' || card.name === '相棒の鳥' || card.name === '相棒の竜' || card.name === 'アニマビークル') {
                     els.btnTriggerPassive.innerText = '自身を召喚する';
                     els.btnTriggerPassive.classList.remove('hidden');
-                } else if (card.name === '金の加護') {
+                                } else if (card.name === '機工士') {
+                    els.btnTriggerPassive.innerText = '召喚ユニットを回収 (1/1)';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === 'ライドオン') {
+                    els.btnTriggerPassive.innerText = '回収フェイズ効果発動';
+                    els.btnTriggerPassive.classList.remove('hidden');
+} else if (card.name === '金の加護') {
                     els.btnTriggerPassive.innerText = '効果を発動';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'エレメンタラー') {
