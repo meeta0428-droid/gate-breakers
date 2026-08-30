@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=354';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=355';
 
 let cardPool = [];
 let player = null;
@@ -1935,7 +1935,12 @@ function setupEvents() {
                 return;
             }
             
-            const mitigation = stat.takeDamage();
+            let mitigation = stat.takeDamage();
+            const hasAnimaOverload = player.deck.passives.some(p => p.name === 'アニマオーバーロード' && !p.isDisabled);
+            if (hasAnimaOverload) {
+                mitigation += 2;
+                logMsg(`【アニマオーバーロード】効果発動！能力値による軽減量が ＋2 された！（計 ${mitigation} 点軽減）`, 'important');
+            }
             pendingDamage -= mitigation;
             logMsg(`${stat.name}で受けた！(現在値-1) ダメージを ${mitigation} 点軽減！`);
             
