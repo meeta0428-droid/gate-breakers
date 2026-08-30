@@ -183,8 +183,9 @@ export class Character {
     get maxHandSize() {
         let baseSize = 2 + this.level; // Lv1 = 3
         if (this.deck) {
-            const activeCards = [...this.deck.passives, ...this.deck.summons];
+            const activeCards = [...this.deck.passives, ...this.deck.summons.map(s => s.card ? s.card : s)];
             for (const card of activeCards) {
+                if (!card || !card.effect) continue;
                 const matchPlus = card.effect.match(/手札上限\s*[＋\+]\s*([0-9０-９]+)/);
                 if (matchPlus) baseSize += parseInt(matchPlus[1].replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)));
                 
