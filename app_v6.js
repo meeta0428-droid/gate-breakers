@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=341';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=342';
 
 let cardPool = [];
 let player = null;
@@ -817,6 +817,13 @@ function setupEvents() {
             const match = c.effect.match(/ダメージ[＋\+](\d+)/);
             if (match) currentCardDmg += parseInt(match[1]);
             
+
+            if (c.name === 'フルスロットルチャージ') {
+                if (player.initiative + 4 > 10) {
+                    currentCardDmg += 3;
+                    detail += `（イニシアチブ超過ボーナス＋3）`;
+                }
+            }
             if (c.name === 'ロックオンアサルト' && player.deck.summons.length > 0) {
                 currentCardDmg += 2;
                 detail += `（召喚配置ボーナス＋2 🎯任意のカードにダメージ）`;

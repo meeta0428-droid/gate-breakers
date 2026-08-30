@@ -248,6 +248,15 @@ export function calculateDamageFromCards(cards, player) {
             cardDamage += 2;
         }
 
+
+        if (card.name === 'フルスロットルチャージ' && player) {
+            // このカード自身のイニシアチブ+4を加味して判定
+            const tempInit = player.initiative + 4;
+            if (tempInit > 10) {
+                // regex でダメージ+2 が既に加算されているため、+3して合計+5にする
+                cardDamage += 3;
+            }
+        }
         if (card.name === '獣の戦意' && player && player.deck.summons.length > 0) {
             let maxStr = 0;
             player.deck.summons.forEach(s => {
