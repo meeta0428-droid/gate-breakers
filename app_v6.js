@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=338';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=339';
 
 let cardPool = [];
 let player = null;
@@ -1372,10 +1372,10 @@ function setupEvents() {
                 // ドリフトヴェイド：リアクション選択時に敵のイニシアチブを入力
                 if (c.name === 'ドリフトヴェイド') {
                     let def = 3;
-                    const enemyInitStr = prompt(`【ドリフトヴェイド】の効果：\n攻撃してきた敵のイニシアチブを入力してください。\n（自分のイニシアチブ ${player.totalInitiative} との差分が軽減値に加算されます）`, "0");
+                    const enemyInitStr = prompt(`【ドリフトヴェイド】の効果：\n攻撃してきた敵のイニシアチブを入力してください。\n（自分のイニシアチブ ${player.initiative} との差分が軽減値に加算されます）`, "0");
                     if (enemyInitStr !== null) {
                         const enemyInit = parseInt(enemyInitStr) || 0;
-                        const diff = Math.abs(enemyInit - player.totalInitiative);
+                        const diff = Math.abs(enemyInit - player.initiative);
                         def += diff;
                         logMsg(`【ドリフトヴェイド】基本軽減3 ＋ イニシアチブ差分${diff} ＝ 合計軽減 <b>${def}</b>`, 'important');
                     }
