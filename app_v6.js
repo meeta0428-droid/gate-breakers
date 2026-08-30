@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=364';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=365';
 
 let cardPool = [];
 let player = null;
@@ -920,7 +920,22 @@ function setupEvents() {
                 currentCardDmg += continuousBonus;
             }
             
-            if (match) detail = `（基本ダメージ＋${match[1]}）` + detail;
+                        if (c.name === 'クロス・ファイア') {
+                const cfDmg = player.deck.summons.length * 2;
+                detail = `（召喚連携によりダメージ＋${cfDmg}）` + detail;
+            } else if (c.name === 'ロックオンアサルト' && player.deck.summons.length > 0) {
+                detail = `（召喚ボーナス適用：ダメージ＋4）` + detail;
+            } else if (c.name === '獣の戦意' && player.deck.summons.length > 0) {
+                detail = `（召喚ボーナス適用：ダメージ＋4）` + detail;
+            } else if (c.name === 'フルスロットルチャージ' && player.initiative > 10) {
+                detail = `（イニシアチブボーナス適用：ダメージ＋5）` + detail;
+            } else if (c.name === '神速領域') {
+                detail = `（イニシアチブ加算によりダメージ＋${player.initiative}）` + detail;
+            } else if (match) {
+                detail = `（基本ダメージ＋${match[1]}）` + detail;
+            }
+
+
             
             const nextMatch = c.effect.match(/この次のカードのダメージを[＋\+](\d+)/);
             if (nextMatch) {
