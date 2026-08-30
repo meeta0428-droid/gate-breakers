@@ -2781,7 +2781,7 @@ function setupEvents() {
                             }
                         }
                     }));
-                    els.cardModal.classList.add('hidden');
+                    els.modal.classList.add('hidden');
                     return;
                 }
                                 if (passiveCard.name === 'ライドオン') {
@@ -2803,7 +2803,7 @@ function setupEvents() {
                             }
                         }
                     }));
-                    els.cardModal.classList.add('hidden');
+                    els.modal.classList.add('hidden');
                     return;
                 }
                 if (passiveCard.name === 'バディビースト' || passiveCard.name === '相棒の獣' || passiveCard.name === '相棒の鳥' || passiveCard.name === '相棒の竜' || passiveCard.name === 'アニマビークル') {
@@ -3271,6 +3271,7 @@ function setupEvents() {
     }
     
     els.btnUseCard.addEventListener('click', () => {
+        try {
         if (selectedCardIndex !== null) {
             const card = selectedCardSource === 'psychometry' 
                 ? player.deck.mountain[selectedCardIndex] 
@@ -3437,6 +3438,10 @@ function setupEvents() {
             els.modal.classList.add('hidden');
             updateUI();
         }
+        } catch (e) {
+            alert("btnUseCard Error: " + e.message + "\n" + e.stack);
+            console.error(e);
+        }
     });
 
     els.btnComboClose.addEventListener('click', () => els.modal.classList.add('hidden'));
@@ -3503,6 +3508,10 @@ function setupEvents() {
             
             els.modal.classList.add('hidden');
             updateUI();
+        }
+        } catch (e) {
+            alert("btnUseCard Error: " + e.message + "\n" + e.stack);
+            console.error(e);
         }
     });
 
