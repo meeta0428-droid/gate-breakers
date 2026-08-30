@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=368';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=369';
 
 let cardPool = [];
 let player = null;
@@ -1215,7 +1215,7 @@ function setupEvents() {
                     const discardIdx = player.deck.discard.lastIndexOf(card);
                     if (discardIdx > -1) {
                         player.deck.discard.splice(discardIdx, 1);
-                        const initStance = card.effect.includes('攻撃行動を行わない') ? 'defend' : (card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack');
+                        const initStance = (card.effect.includes('攻撃行動を行わない') || card.name === 'セントリードローン') ? 'defend' : (card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack');
                         player.deck.summons.push({ card: card, stance: initStance });
                         if (card.name === 'ウィスプ') {
                             const drawn = player.deck.draw(1);
@@ -1751,7 +1751,7 @@ function setupEvents() {
                 const discardIdx = player.deck.discard.lastIndexOf(card);
                 if (discardIdx > -1) {
                     player.deck.discard.splice(discardIdx, 1);
-                    const initStance = card.effect.includes('攻撃行動を行わない') ? 'defend' : ((card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') || card.effect.includes('このユニットは攻撃と防御を1回ずつ行うことができる')) ? 'both' : 'defend');
+                    const initStance = (card.effect.includes('攻撃行動を行わない') || card.name === 'セントリードローン') ? 'defend' : ((card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') || card.effect.includes('このユニットは攻撃と防御を1回ずつ行うことができる')) ? 'both' : 'defend');
                     player.deck.summons.push({ card: card, stance: initStance });
                     if (card.name === 'ウィスプ') {
                         const drawn = player.deck.draw(1);
@@ -3076,7 +3076,7 @@ function setupEvents() {
                             source: 'mountain',
                             filterFunc: (c) => c.effect.includes('召喚'),
                             onSelect: (selectedCard) => {
-                                const initStance = selectedCard.effect.includes('攻撃行動を行わない') ? 'defend' : (selectedCard.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack');
+                                const initStance = (selectedCard.effect.includes('攻撃行動を行わない') || selectedCard.name === 'セントリードローン') ? 'defend' : (selectedCard.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack');
                                 player.deck.summons.push({ card: selectedCard, stance: initStance, isFamiliar: true });
                                 logMsg(`【ファミリア】効果発動！山札から「${selectedCard.name}」を永続召喚しました！`, 'important');
                             }
@@ -4017,7 +4017,7 @@ function updateUI() {
                     }
                 }
 
-                                if (s.card.effect.includes('攻撃行動を行わない')) {
+                                if ((s.card.effect.includes('攻撃行動を行わない') || s.card.name === 'セントリードローン')) {
                     alert('このユニットは攻撃行動を行いません。');
                     return;
                 }
