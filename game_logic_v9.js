@@ -310,6 +310,12 @@ export function calculateDamageFromCards(cards, player) {
 export function calculateDefenseFromCards(cards, player) {
     let total = 0;
     for (const card of cards) {
+        if (card.name === 'ドリフトヴェイド') {
+            // リアクションモーダルで事前計算された軽減値を使用
+            const def = card._driftDef || 3;
+            total += def;
+            continue;
+        }
         const match1 = card.effect.match(/(\d+)点軽減/);
         if (match1) {
             total += parseInt(match1[1]);
@@ -327,12 +333,6 @@ export function calculateDefenseFromCards(cards, player) {
         }
         
 
-        if (card.name === 'ドリフトヴェイド') {
-            // リアクションモーダルで事前計算された軽減値を使用
-            const def = card._driftDef || 3;
-            total += def;
-            continue;
-        }
         if (card.name === 'トラップコンボ' && player) {
             let maxStr = 0;
             player.deck.summons.forEach(s => {
