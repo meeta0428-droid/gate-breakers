@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=350';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=351';
 
 let cardPool = [];
 let player = null;
@@ -3372,6 +3372,12 @@ function setupEvents() {
     
     els.btnUseCard.addEventListener('click', () => {
         try {
+
+            // 鈍重な鉄槌の制限チェック
+            if (currentCombo.some(c => c.name === '鈍重な鉄槌')) {
+                alert('「鈍重な鉄槌」が既にコンボに含まれているため、これ以上このコンボに自身のカードを繋ぐことはできません。');
+                return;
+            }
         if (selectedCardIndex !== null) {
             const card = selectedCardSource === 'psychometry' 
                 ? player.deck.mountain[selectedCardIndex] 
