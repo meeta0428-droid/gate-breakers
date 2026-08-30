@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=367';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=368';
 
 let cardPool = [];
 let player = null;
@@ -1951,7 +1951,7 @@ function setupEvents() {
                         return;
                     }
                     
-                    if (dmgToTake > endurance) {
+                    if (dmgToTake >= endurance) {
                         summonsToDestroy.push(s);
                         logMsg(`「${s.card.name}」はダメージ（${dmgToTake}）に耐えきれず破壊された！`, 'damage');
                     } else {
@@ -2209,7 +2209,7 @@ function setupEvents() {
                         player.deck.void.push(s.card); handleSummonVoided(player, s.card);
                         pendingDamage = 0;
                         logMsg(`「${s.card.name}」がダメージを身代わりにした！<br><span style="color:#00ffff; font-weight:bold;">【特殊効果】ダメージを0にし、廃棄札へ移動した！</span>`, 'important');
-                    } else if (dmgToTake > endurance) {
+                    } else if (dmgToTake >= endurance) {
                         // 破壊される
                         player.deck.summons.splice(idx, 1);
                         pendingDamage -= endurance;
