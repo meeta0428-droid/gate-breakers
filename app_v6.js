@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=337';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=338';
 
 let cardPool = [];
 let player = null;
@@ -1369,6 +1369,19 @@ function setupEvents() {
                 currentCombo.push(c);
                 logMsg(`「${c.name}」をリアクションとして場に出した！`);
 
+                // ドリフトヴェイド：リアクション選択時に敵のイニシアチブを入力
+                if (c.name === 'ドリフトヴェイド') {
+                    let def = 3;
+                    const enemyInitStr = prompt(`【ドリフトヴェイド】の効果：\n攻撃してきた敵のイニシアチブを入力してください。\n（自分のイニシアチブ ${player.totalInitiative} との差分が軽減値に加算されます）`, "0");
+                    if (enemyInitStr !== null) {
+                        const enemyInit = parseInt(enemyInitStr) || 0;
+                        const diff = Math.abs(enemyInit - player.totalInitiative);
+                        def += diff;
+                        logMsg(`【ドリフトヴェイド】基本軽減3 ＋ イニシアチブ差分${diff} ＝ 合計軽減 <b>${def}</b>`, 'important');
+                    }
+                    c._driftDef = def;
+                }
+
                 if (c.name === '錬成壁') {
                     if (player.deck.mountain.length > 0) {
                         const drawnCard = player.deck.mountain.shift();
@@ -1498,6 +1511,11 @@ function setupEvents() {
                     if (s.card.strength > maxStr) maxStr = s.card.strength;
                 });
                 detail = `（基本軽減2 ＋ 召喚強度ボーナス${maxStr}）`;
+            }
+            
+            if (c.name === 'ドリフトヴェイド') {
+                const def = c._driftDef || 3;
+                detail = `（合計軽減 ${def}）`;
             }
             
             if (c.effect.includes('捨札と廃棄札の合計コストの半分ダメージを減少')) {

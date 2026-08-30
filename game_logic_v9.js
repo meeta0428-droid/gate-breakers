@@ -328,15 +328,8 @@ export function calculateDefenseFromCards(cards, player) {
         
 
         if (card.name === 'ドリフトヴェイド') {
-            let def = 3;
-            if (player) {
-                const enemyInitStr = prompt(`【ドリフトヴェイド】の効果：\n攻撃してきた敵のイニシアチブを入力してください。\n（自分のイニシアチブ ${player.totalInitiative} との差分が軽減値に加算されます）`, "0");
-                if (enemyInitStr !== null) {
-                    const enemyInit = parseInt(enemyInitStr) || 0;
-                    const diff = Math.abs(enemyInit - player.totalInitiative);
-                    def += diff;
-                }
-            }
+            // リアクションモーダルで事前計算された軽減値を使用
+            const def = card._driftDef || 3;
             total += def;
             continue;
         }
