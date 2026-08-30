@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=353';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=354';
 
 let cardPool = [];
 let player = null;
@@ -2818,6 +2818,18 @@ function setupEvents() {
                 
                 els.modal.classList.add('hidden'); // 詳細モーダルを閉じる
 
+
+                if (passiveCard.name === 'リアクティブアーマー') {
+                    const pIdx = player.deck.passives.findIndex(p => p === passiveCard);
+                    if (pIdx > -1) {
+                        player.deck.passives.splice(pIdx, 1);
+                        player.deck.void.push(passiveCard);
+                        logMsg(`【リアクティブアーマー】効果を発動！ダメージ以外の不利な効果を全て無効化し、自身は廃棄札に移動した！`, 'important');
+                        updateUI();
+                    }
+                    els.modal.classList.add('hidden');
+                    return;
+                }
                 if (passiveCard.name === '武具錬成') {
                     logMsg(`【武具錬成】効果を対象に共有しました！<br><span style="color:#ffcc00; font-size:0.9rem;">（対象の攻撃ダメージ＋1、または受けるダメージ1点軽減）</span>`, 'important');
                     return;
@@ -4298,6 +4310,9 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
                     els.btnTriggerPassive.innerText = '効果を発動（合成）';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === '『アポクリファ』') {
+                    els.btnTriggerPassive.innerText = '効果を発動';
+                    els.btnTriggerPassive.classList.remove('hidden');
+                } else if (card.name === 'リアクティブアーマー') {
                     els.btnTriggerPassive.innerText = '効果を発動';
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === '武具錬成') {
