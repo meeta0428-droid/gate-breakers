@@ -240,7 +240,7 @@ export class Character {
     }
 }
 
-export function calculateDamageFromCards(cards, player) {
+export function calculateDamageFromCards(cards, player, isNoReact = false) {
     let total = 0;
     let nextCardBonus = 0;
     let continuousBonus = 0;
@@ -251,6 +251,11 @@ export function calculateDamageFromCards(cards, player) {
         const match = card.effect.match(/ダメージ[＋\+](\d+)/);
         if (match) {
             cardDamage += parseInt(match[1]);
+        }
+        
+        
+        if (card.name === 'パイルバンカー' && isNoReact) {
+            cardDamage += 9; // 6 + 9 = 15
         }
         
         if (card.name === 'ロックオンアサルト' && player && player.deck.summons.length > 0) {

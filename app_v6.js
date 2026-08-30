@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=351';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=352';
 
 let cardPool = [];
 let player = null;
@@ -833,7 +833,8 @@ function setupEvents() {
         };
         const currentLogMsg = isPreview ? dummyLogMsg : originalLogMsg;
         
-        const dmg = calculateDamageFromCards(currentCombo, player);
+        const isNoReact = document.getElementById('chk-enemy-no-react')?.checked || false;
+        const dmg = calculateDamageFromCards(currentCombo, player, isNoReact);
         const { toVoid } = executeCardEffects(currentCombo, player, currentLogMsg, isPreview);
         
         let nextCardBonus = 0;
@@ -847,6 +848,11 @@ function setupEvents() {
             
 
 
+            
+            if (c.name === 'パイルバンカー' && isNoReact) {
+                currentCardDmg += 9;
+                detail += `（ノーリアクションボーナス＋9）`;
+            }
             if (c.name === '神速領域') {
                 currentCardDmg += player.initiative;
                 detail += `（イニシアチブ加算ボーナス＋${player.initiative}）`;
@@ -3401,7 +3407,8 @@ function setupEvents() {
                     return;
                 }
                 const prevCard = currentCombo[currentCombo.length - 1];
-                const prevDmg = calculateDamageFromCards([prevCard], player);
+                const isNoReactTmp = document.getElementById('chk-enemy-no-react')?.checked || false;
+                const prevDmg = calculateDamageFromCards([prevCard], player, isNoReactTmp);
                 if (prevDmg <= 0 && !prevCard.effect.includes('ダメージ')) {
                     alert(`【${card.name}】はダメージを発生させるカードの次にしか出せません。`);
                     return;
