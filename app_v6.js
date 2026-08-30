@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=356';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=357';
 
 let cardPool = [];
 let player = null;
@@ -1504,7 +1504,7 @@ function setupEvents() {
             if (doNohmBlock) {
                 const nohmCard = player.deck.summons[nohmIdx].card;
                 player.deck.summons.splice(nohmIdx, 1);
-                player.deck.void.push(nohmCard);
+                player.deck.void.push(nohmCard); checkScrapRecycle(player);
                 nohmBlocked = true;
             }
         }
@@ -2122,7 +2122,7 @@ function setupEvents() {
                     if (s.card.name === '彷徨う砂塵霊') {
                         // ダメージを全て無効化し、廃棄札へ移動する
                         player.deck.summons.splice(idx, 1);
-                        player.deck.void.push(s.card);
+                        player.deck.void.push(s.card); checkScrapRecycle(player);
                         pendingDamage = 0;
                         logMsg(`「${s.card.name}」がダメージを身代わりにした！<br><span style="color:#00ffff; font-weight:bold;">【特殊効果】ダメージを0にし、廃棄札へ移動した！</span>`, 'important');
                     } else if (dmgToTake > endurance) {
@@ -2132,7 +2132,7 @@ function setupEvents() {
                         
                         if (s.card.isChimera && s.card.originalCards) {
                             // 合成獣が破壊された場合、素材カードを全て廃棄札へ
-                            s.card.originalCards.forEach(c => player.deck.void.push(c));
+                            s.card.originalCards.forEach(c => player.deck.void.push(c)); checkScrapRecycle(player);
                             logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊された！<br><span style="color:#00ffff; font-weight:bold;">合成素材となっていた全てのカードが廃棄札に移動した！</span>（残り: ${pendingDamage}）`, 'damage');
                         } else if (s.card.name === 'シルフ') {
                             player.deck.hand.push(s.card);
@@ -2143,11 +2143,11 @@ function setupEvents() {
                                 player.deck.deck.unshift(s.card);
                                 logMsg(`「${s.card.name}」が破壊されたが、<span style="color:#00ffff; font-weight:bold;">『超再生』により山札の一番上に戻った！</span><br>（※捨札からコスト8分を手動で廃棄してください）`, 'important');
                             } else {
-                                player.deck.void.push(s.card);
+                                player.deck.void.push(s.card); checkScrapRecycle(player);
                                 logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊され、廃棄札に移動した！（残り: ${pendingDamage}）`, 'damage');
                             }
                         } else {
-                            player.deck.void.push(s.card);
+                            player.deck.void.push(s.card); checkScrapRecycle(player);
                             logMsg(`「${s.card.name}」で受けたが、ダメージに耐えきれず破壊され、廃棄札に移動した！（残り: ${pendingDamage}）`, 'damage');
                         }
                         
@@ -3006,7 +3006,7 @@ function setupEvents() {
                     if (summonIdx > -1) {
                         const nohmCard = player.deck.summons[summonIdx].card;
                         player.deck.summons.splice(summonIdx, 1);
-                        player.deck.void.push(nohmCard);
+                        player.deck.void.push(nohmCard); checkScrapRecycle(player);
                         logMsg(`【ノーム】ユニットを廃棄して効果発動！<br><span style="color:#00ffff; font-weight:bold;">※ダメージを無効化した！</span>`, 'important');
                         updateUI();
                     }
@@ -3190,7 +3190,7 @@ function setupEvents() {
                     if (summonIdx > -1) {
                         const salamanderCard = player.deck.summons[summonIdx].card;
                         player.deck.summons.splice(summonIdx, 1);
-                        player.deck.void.push(salamanderCard);
+                        player.deck.void.push(salamanderCard); checkScrapRecycle(player);
                         logMsg(`【サラマンダー】ユニットを廃棄札に送って効果発動！<br><span style="color:#ff5252; font-weight:bold;">※ダメージ＋9！この攻撃にはリアクションできない！</span>`, 'important');
                         updateUI();
                     }
@@ -3202,7 +3202,7 @@ function setupEvents() {
                     if (summonIdx > -1) {
                         const undineCard = player.deck.summons[summonIdx].card;
                         player.deck.summons.splice(summonIdx, 1);
-                        player.deck.void.push(undineCard);
+                        player.deck.void.push(undineCard); checkScrapRecycle(player);
                         logMsg(`【ウンディーネ】ユニットを廃棄札に送って効果発動！`, 'important');
                         
                         let remainingCount = 2;
@@ -3816,6 +3816,28 @@ function setupEvents() {
     });
 }
 
+
+function checkScrapRecycle(player) {
+    const hasScrapRecycle = player.deck.passives.some(p => p.name === 'スクラップリサイクル' && !p.isDisabled);
+    if (hasScrapRecycle) {
+        const drawn = player.deck.draw(1);
+        if (drawn > 0) {
+            // setTimeout to avoid interfering with current log output flow
+            setTimeout(() => {
+                const originalLogMsg = typeof window.logMsg === 'function' ? window.logMsg : console.log;
+                const logEl = document.getElementById('battle-log');
+                if (logEl) {
+                    const el = document.createElement('div');
+                    el.className = 'log-msg log-important';
+                    el.innerHTML = `【スクラップリサイクル】の効果発動！召喚ユニットが廃棄札に移動したため、山札から1枚引いた！`;
+                    logEl.appendChild(el);
+                    logEl.scrollTop = logEl.scrollHeight;
+                }
+                updateUI();
+            }, 50);
+        }
+    }
+}
 function updateUI() {
     els.statBody.innerText = `${player.stats.body.currentVal}/${player.stats.body.maxVal}`;
     els.statInt.innerText = `${player.stats.int.currentVal}/${player.stats.int.maxVal}`;
@@ -3927,7 +3949,7 @@ function updateUI() {
                 if (s.card.name === 'シャドウストーカー') {
                     logMsg(`【シャドウストーカーの攻撃】相手の手札を全て公開させ、その中から1枚を指定して捨札に移動させる！<br><span style="color:#aaa; font-size:0.8rem;">（※対象以外が代わりに受けることはできない）</span>`, 'damage');
                     player.deck.summons.splice(idx, 1);
-                    player.deck.void.push(s.card);
+                    player.deck.void.push(s.card); checkScrapRecycle(player);
                     logMsg(`「シャドウストーカー」は攻撃使用後、自身の効果によって廃棄札に移動した。`, 'important');
                     updateUI();
                     return;
@@ -4052,13 +4074,13 @@ function updateUI() {
                     player.deck.summons.splice(idx, 1);
                     if (s.card.isChimera && s.card.originalCards) {
                         // 合成獣の場合、素材カードを全て廃棄札へ
-                        s.card.originalCards.forEach(c => player.deck.void.push(c));
+                        s.card.originalCards.forEach(c => player.deck.void.push(c)); checkScrapRecycle(player);
                         logMsg(`合成獣「${s.card.name}」を解体！<br><span style="color:#00ffff; font-weight:bold;">合成素材となっていた全てのカードが廃棄札に移動した！</span>`, 'important');
                     } else if (s.card.name === 'シルフ') {
                         player.deck.hand.push(s.card);
                         logMsg(`「${s.card.name}」は破壊され、手札に戻った！`);
                     } else {
-                        player.deck.void.push(s.card);
+                        player.deck.void.push(s.card); checkScrapRecycle(player);
                         let effectText = s.card.effect;
                         if (s.card.name === 'スプリガン') {
                             effectText = `<span style="color:#ffcc00; font-weight:bold;">※現在の「攻」の数値： ${atk} </span><br>` + effectText;
