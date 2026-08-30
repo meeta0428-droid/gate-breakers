@@ -143,7 +143,7 @@ export class Character {
         
         // 捨札で持続する効果からのイニシアチブ
         const checkPersistentBuff = (card, isVoid) => {
-            const isDiscardOnly = card.effect.includes('捨札にある間') && card.effect.includes('持続');
+            const isDiscardOnly = (card.effect.includes('捨札にある間') && card.effect.includes('持続')) || card.effect.includes('捨札にある場合');
             const isBattleLong = card.effect.includes('戦闘中持続する') && !card.effect.includes('捨札にある間');
             
             if (isBattleLong || (!isVoid && isDiscardOnly)) {
