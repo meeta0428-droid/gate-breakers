@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=362';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=363';
 
 let cardPool = [];
 let player = null;
@@ -1640,7 +1640,11 @@ function setupEvents() {
                 }
             }
         }
+                if (player.deck.discard.some(c => c.name === 'ワイヤートラップ')) {
+            summonLog += `<span style="color:#ffcc00; font-weight:bold;">・【ワイヤートラップ】捨札時効果 (攻撃してきた対象のイニシアチブ-2)</span><br>`;
+        }
         summonLog += passiveDefLog;
+
         
         let totalDef = defense + summonDef;
         
