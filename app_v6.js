@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=355';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=356';
 
 let cardPool = [];
 let player = null;
@@ -2900,6 +2900,8 @@ function setupEvents() {
                             source: 'void',
                             filterFunc: (c) => c.category.includes('召喚') || c.effect.includes('召喚'),
                             onSelect: (selectedCard) => {
+                                const voidIdx = player.deck.void.indexOf(selectedCard);
+                                if (voidIdx > -1) player.deck.void.splice(voidIdx, 1);
                                 player.deck.hand.push(selectedCard);
                                 logMsg(`【機工士】の効果で、廃棄札から「${selectedCard.name}」を手札に戻しました！`, 'important');
                                 passiveCard.hasUsed = true;
@@ -4335,8 +4337,14 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
                 } else if (card.name === 'バディビースト' || card.name === '相棒の獣' || card.name === '相棒の鳥' || card.name === '相棒の竜' || card.name === 'アニマビークル') {
                     els.btnTriggerPassive.innerText = '自身を召喚する';
                     els.btnTriggerPassive.classList.remove('hidden');
-                                } else if (card.name === '機工士') {
-                    els.btnTriggerPassive.innerText = '召喚ユニットを回収 (1/1)';
+                } else if (card.name === '機工士') {
+                    if (card.hasUsed) {
+                        els.btnTriggerPassive.innerText = '使用済み (0/1)';
+                        els.btnTriggerPassive.disabled = true;
+                    } else {
+                        els.btnTriggerPassive.innerText = '召喚ユニットを回収 (1/1)';
+                        els.btnTriggerPassive.disabled = false;
+                    }
                     els.btnTriggerPassive.classList.remove('hidden');
                 } else if (card.name === 'ライドオン') {
                     els.btnTriggerPassive.innerText = '回収フェイズ効果発動';
