@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=370';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=371';
 
 let cardPool = [];
 let player = null;
@@ -594,6 +594,8 @@ function setupEvents() {
     // デッキ出力ボタン
     if (els.btnExportDeck) {
         els.btnExportDeck.addEventListener('click', () => {
+            const orderChoice = confirm("デッキの並び順を選択してください。\n\n「OK」→ コスト順\n「キャンセル」→ カードを選んだ順");
+            
             let exportText = `【キャラクター情報】\n`;
             exportText += `肉体: ${player.stats.body.maxVal} / 知性: ${player.stats.int.maxVal} / 精神: ${player.stats.men.maxVal}\n`;
             exportText += `レベル: ${player.level}\n`;
@@ -602,12 +604,19 @@ function setupEvents() {
             const currentCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
             exportText += `デッキポイント(コスト): ${currentCost} / ${player.deckCapacity}\n\n`;
             
-            exportText += `【デッキ内容 (${selectedCardsForDeck.length}枚)】\n`;
-            
-            // コスト順に並び替え
-            const sortedDeck = [...selectedCardsForDeck].sort((a, b) => a.cost - b.cost);
-            for (const c of sortedDeck) {
-                exportText += `- ${c.name} (コスト:${c.cost})\n`;
+            if (orderChoice) {
+                // コスト順
+                exportText += `【デッキ内容 (${selectedCardsForDeck.length}枚) ― コスト順】\n`;
+                const sortedDeck = [...selectedCardsForDeck].sort((a, b) => a.cost - b.cost);
+                for (const c of sortedDeck) {
+                    exportText += `- ${c.name} (コスト:${c.cost})\n`;
+                }
+            } else {
+                // 選んだ順
+                exportText += `【デッキ内容 (${selectedCardsForDeck.length}枚) ― 選択順】\n`;
+                selectedCardsForDeck.forEach((c, i) => {
+                    exportText += `${i + 1}. ${c.name} (コスト:${c.cost})\n`;
+                });
             }
             
             navigator.clipboard.writeText(exportText).then(() => {
