@@ -411,6 +411,11 @@ body {
         transform-origin: top center;
     }
     
+    .print-page:last-child {
+        page-break-after: avoid;
+        break-after: avoid;
+    }
+    
     .print-row {
         width: 100%;
         clear: both;
