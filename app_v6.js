@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=371';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=372';
 
 let cardPool = [];
 let player = null;
@@ -594,36 +594,56 @@ function setupEvents() {
     // デッキ出力ボタン
     if (els.btnExportDeck) {
         els.btnExportDeck.addEventListener('click', () => {
-            const orderChoice = confirm("デッキの並び順を選択してください。\n\n「OK」→ コスト順\n「キャンセル」→ カードを選んだ順");
+            // カスタム選択UIを表示
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; justify-content:center; align-items:center; z-index:9999;';
+            const box = document.createElement('div');
+            box.style.cssText = 'background:#222; border-radius:10px; padding:20px; text-align:center; min-width:280px;';
+            box.innerHTML = '<div style="color:#fff; font-size:1rem; margin-bottom:15px; font-weight:bold;">デッキの並び順を選択</div>'
+                + '<button class="exp-btn-cost" style="display:block; width:100%; padding:12px; margin-bottom:8px; font-size:0.9rem; background:#4a90d9; color:#fff; border:none; border-radius:6px; cursor:pointer;">コスト順</button>'
+                + '<button class="exp-btn-sel" style="display:block; width:100%; padding:12px; margin-bottom:8px; font-size:0.9rem; background:#d9a04a; color:#fff; border:none; border-radius:6px; cursor:pointer;">カード選択順</button>'
+                + '<button class="exp-btn-cancel" style="display:block; width:100%; padding:10px; font-size:0.8rem; background:#555; color:#ccc; border:none; border-radius:6px; cursor:pointer;">キャンセル</button>';
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
             
-            let exportText = `【キャラクター情報】\n`;
-            exportText += `肉体: ${player.stats.body.maxVal} / 知性: ${player.stats.int.maxVal} / 精神: ${player.stats.men.maxVal}\n`;
-            exportText += `レベル: ${player.level}\n`;
-            exportText += `イニシアチブ基礎値: ${player.baseInitiative}\n`;
-            exportText += `手札上限: ${player.maxHandSize}枚\n`;
-            const currentCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
-            exportText += `デッキポイント(コスト): ${currentCost} / ${player.deckCapacity}\n\n`;
-            
-            if (orderChoice) {
-                // コスト順
-                exportText += `【デッキ内容 (${selectedCardsForDeck.length}枚) ― コスト順】\n`;
-                const sortedDeck = [...selectedCardsForDeck].sort((a, b) => a.cost - b.cost);
-                for (const c of sortedDeck) {
-                    exportText += `- ${c.name} (コスト:${c.cost})\n`;
+            const doExport = (isCostOrder) => {
+                document.body.removeChild(overlay);
+                let exportText = '【キャラクター情報】\n';
+                exportText += '肉体: ' + player.stats.body.maxVal + ' / 知性: ' + player.stats.int.maxVal + ' / 精神: ' + player.stats.men.maxVal + '\n';
+                exportText += 'レベル: ' + player.level + '\n';
+                exportText += 'イニシアチブ基礎値: ' + player.baseInitiative + '\n';
+                exportText += '手札上限: ' + player.maxHandSize + '枚\n';
+                const curCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
+                exportText += 'デッキポイント(コスト): ' + curCost + ' / ' + player.deckCapacity + '\n\n';
+                if (isCostOrder) {
+                    exportText += '【デッキ内容 (' + selectedCardsForDeck.length + '枚) ― コスト順】\n';
+                    const sorted = [...selectedCardsForDeck].sort((a, b) => a.cost - b.cost);
+                    sorted.forEach(c => { exportText += '- ' + c.name + ' (コスト:' + c.cost + ')\n'; });
+                } else {
+                    exportText += '【デッキ内容 (' + selectedCardsForDeck.length + '枚) ― 選択順】\n';
+                    selectedCardsForDeck.forEach((c, i) => { exportText += (i + 1) + '. ' + c.name + ' (コスト:' + c.cost + ')\n'; });
                 }
-            } else {
-                // 選んだ順
-                exportText += `【デッキ内容 (${selectedCardsForDeck.length}枚) ― 選択順】\n`;
-                selectedCardsForDeck.forEach((c, i) => {
-                    exportText += `${i + 1}. ${c.name} (コスト:${c.cost})\n`;
-                });
-            }
-            
-            navigator.clipboard.writeText(exportText).then(() => {
-                alert("デッキデータをクリップボードにコピーしました！\n\n" + exportText);
-            }).catch(err => {
-                prompt("クリップボードへのコピーに失敗しました。以下のテキストをコピーしてください:", exportText);
-            });
+                // クリップボードコピー（フォールバック付き）
+                let copied = false;
+                try {
+                    const ta = document.createElement('textarea');
+                    ta.value = exportText;
+                    ta.style.cssText = 'position:fixed; left:-9999px; top:-9999px;';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    ta.setSelectionRange(0, ta.value.length);
+                    copied = document.execCommand('copy');
+                    document.body.removeChild(ta);
+                } catch (e) { copied = false; }
+                if (copied) {
+                    alert('デッキデータをクリップボードにコピーしました！\n\n' + exportText);
+                } else {
+                    alert('デッキデータ:\n\n' + exportText);
+                }
+            };
+            box.querySelector('.exp-btn-cost').addEventListener('click', () => doExport(true));
+            box.querySelector('.exp-btn-sel').addEventListener('click', () => doExport(false));
+            box.querySelector('.exp-btn-cancel').addEventListener('click', () => document.body.removeChild(overlay));
         });
     }
     els.btnCloseLoad.addEventListener('click', () => els.loadModal.classList.add('hidden'));
