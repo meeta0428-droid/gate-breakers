@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=373';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=374';
 
 let cardPool = [];
 let player = null;
@@ -647,6 +647,91 @@ function setupEvents() {
         });
     }
     els.btnCloseLoad.addEventListener('click', () => els.loadModal.classList.add('hidden'));
+
+    // テキストからデッキ読込
+    const btnImportText = document.getElementById('btn-import-text');
+    if (btnImportText) {
+        btnImportText.addEventListener('click', () => {
+            const textArea = document.getElementById('import-text-area');
+            const text = textArea.value;
+            if (!text.trim()) {
+                alert("テキストを入力してください。");
+                return;
+            }
+
+            try {
+                // 能力値のパース
+                const statsMatch = text.match(/肉体:\s*(\d+)\s*\/\s*知性:\s*(\d+)\s*\/\s*精神:\s*(\d+)/);
+                if (statsMatch) {
+                    player.stats.body.maxVal = parseInt(statsMatch[1]);
+                    player.stats.body.currentVal = player.stats.body.maxVal;
+                    player.stats.int.maxVal = parseInt(statsMatch[2]);
+                    player.stats.int.currentVal = player.stats.int.maxVal;
+                    player.stats.men.maxVal = parseInt(statsMatch[3]);
+                    player.stats.men.currentVal = player.stats.men.maxVal;
+                }
+
+                // レベルのパース
+                const levelMatch = text.match(/レベル:\s*(\d+)/);
+                if (levelMatch) player.level = parseInt(levelMatch[1]);
+
+                // イニシアチブ基礎値のパース
+                const initMatch = text.match(/イニシアチブ基礎値:\s*(\d+)/);
+                if (initMatch) player.baseInitiative = parseInt(initMatch[1]);
+
+                // 手札上限のパース
+                const handMatch = text.match(/手札上限:\s*(\d+)/);
+                if (handMatch) player.maxHandSize = parseInt(handMatch[1]);
+
+                // デッキのパース (コスト順: "- カード名" または 選択順: "1. カード名")
+                const newDeck = [];
+                const lines = text.split('\n');
+                let inDeckSection = false;
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    if (line.startsWith('【デッキ内容')) {
+                        inDeckSection = true;
+                        continue;
+                    }
+                    if (inDeckSection) {
+                        // "- カード名 (コスト:X)" or "1. カード名 (コスト:X)" の形式にマッチさせる
+                        const cardMatch = line.match(/^(?:-|\d+\.)\s+(.+?)\s+\(コスト:/);
+                        if (cardMatch) {
+                            const cardName = cardMatch[1].trim();
+                            // cardPoolから検索
+                            const cardData = cardPool.find(c => c.name === cardName);
+                            if (cardData) {
+                                newDeck.push({ ...cardData });
+                            } else {
+                                console.warn(`カードが見つかりません: ${cardName}`);
+                            }
+                        }
+                    }
+                }
+
+                if (newDeck.length > 0) {
+                    selectedCardsForDeck = newDeck;
+                    document.getElementById('stat-body').innerText = player.stats.body.maxVal;
+                    document.getElementById('stat-int').innerText = player.stats.int.maxVal;
+                    document.getElementById('stat-men').innerText = player.stats.men.maxVal;
+                    document.getElementById('stat-level').innerText = player.level;
+                    document.getElementById('stat-init').innerText = player.baseInitiative;
+                    document.getElementById('stat-hand-limit').innerText = player.maxHandSize;
+                    
+                    renderSelectedDeck();
+                    els.loadModal.classList.add('hidden');
+                    textArea.value = '';
+                    alert(`デッキの構築に成功しました！（${newDeck.length}枚のカードを読み込みました）`);
+                } else {
+                    alert("テキストからカードを読み取れませんでした。フォーマットが正しいか確認してください。");
+                }
+            } catch (e) {
+                alert("読み込みエラーが発生しました。");
+                console.error(e);
+            }
+        });
+    }
 
     // イニシアチブ手動調整ボタン（影縫い等の効果用）
     document.getElementById('btn-init-up').addEventListener('click', () => {
