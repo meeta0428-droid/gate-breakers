@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=374';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=375';
 
 let cardPool = [];
 let player = null;
@@ -334,7 +334,8 @@ function saveDeckToSlot(slotIndex, deckName) {
                 int: { maxVal: player.stats.int.maxVal, currentVal: player.stats.int.currentVal, spent: player.stats.int.spent },
                 men: { maxVal: player.stats.men.maxVal, currentVal: player.stats.men.currentVal, spent: player.stats.men.spent }
             }
-        }
+        },
+        profile: player.profile || {}
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(saved));
 }
@@ -366,6 +367,8 @@ function loadDeckFromSlot(slotIndex) {
         }
         updateCharaUI(); // 更新しておく
     }
+    
+    player.profile = slot.profile || {};
     
     renderSelectedDeck();
     return true;
@@ -587,6 +590,53 @@ function setupEvents() {
     // デッキ保存ボタン
     els.btnSaveDeck.addEventListener('click', () => openSaveModal());
     els.btnCloseSave.addEventListener('click', () => els.saveModal.classList.add('hidden'));
+
+    // キャラ設定モーダル
+    const btnCharaProfile = document.getElementById('btn-chara-profile');
+    const profileModal = document.getElementById('profile-modal');
+    if (btnCharaProfile && profileModal) {
+        btnCharaProfile.addEventListener('click', () => {
+            if (!player.profile) player.profile = {};
+            
+            // Load current profile into inputs
+            document.getElementById('prof-name').value = player.profile.name || player.name || '';
+            document.getElementById('prof-gender').value = player.profile.gender || '';
+            document.getElementById('prof-age').value = player.profile.age || '';
+            document.getElementById('prof-important').value = player.profile.important || '';
+            document.getElementById('prof-dislike').value = player.profile.dislike || '';
+            document.getElementById('prof-appearance').value = player.profile.appearance || '';
+            document.getElementById('prof-memo').value = player.profile.memo || '';
+            for (let i = 1; i <= 10; i++) {
+                document.getElementById('prof-q' + i).value = player.profile['q' + i] || '';
+            }
+            
+            profileModal.classList.remove('hidden');
+        });
+        
+        document.getElementById('btn-close-profile').addEventListener('click', () => {
+            profileModal.classList.add('hidden');
+        });
+        
+        document.getElementById('btn-save-profile').addEventListener('click', () => {
+            if (!player.profile) player.profile = {};
+            
+            player.profile.name = document.getElementById('prof-name').value;
+            player.name = player.profile.name; // player.nameにも反映
+            player.profile.gender = document.getElementById('prof-gender').value;
+            player.profile.age = document.getElementById('prof-age').value;
+            player.profile.important = document.getElementById('prof-important').value;
+            player.profile.dislike = document.getElementById('prof-dislike').value;
+            player.profile.appearance = document.getElementById('prof-appearance').value;
+            player.profile.memo = document.getElementById('prof-memo').value;
+            for (let i = 1; i <= 10; i++) {
+                player.profile['q' + i] = document.getElementById('prof-q' + i).value;
+            }
+            
+            alert('キャラクター設定を保存しました。\n※デッキを保存（またはバトル開始）するまで永続化されません。');
+            profileModal.classList.add('hidden');
+        });
+    }
+
     
     // デッキ読込ボタン
     els.btnLoadDeck.addEventListener('click', () => openLoadModal());
@@ -622,6 +672,23 @@ function setupEvents() {
                 } else {
                     exportText += '【デッキ内容 (' + selectedCardsForDeck.length + '枚) ― 選択順】\n';
                     selectedCardsForDeck.forEach((c, i) => { exportText += (i + 1) + '. ' + c.name + ' (コスト:' + c.cost + ')\n'; });
+                }
+                
+                if (player.profile) {
+                    exportText += '\n【キャラクター設定】\n';
+                    if (player.profile.name) exportText += '名前: ' + player.profile.name + '\n';
+                    if (player.profile.gender) exportText += '性別: ' + player.profile.gender + '\n';
+                    if (player.profile.age) exportText += '年齢: ' + player.profile.age + '\n';
+                    if (player.profile.important) exportText += '大事なもの: ' + player.profile.important + '\n';
+                    if (player.profile.dislike) exportText += '嫌いなもの: ' + player.profile.dislike + '\n';
+                    if (player.profile.appearance) exportText += '身長・体重・外見: ' + player.profile.appearance + '\n';
+                    if (player.profile.memo) exportText += 'メモ: ' + player.profile.memo + '\n';
+                    
+                    for (let i = 1; i <= 10; i++) {
+                        if (player.profile['q' + i]) {
+                            exportText += 'Q' + i + ': ' + player.profile['q' + i] + '\n';
+                        }
+                    }
                 }
                 // クリップボードコピー（フォールバック付き）
                 let copied = false;

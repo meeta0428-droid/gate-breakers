@@ -1,38 +1,36 @@
-with open('app_v6.js', 'r', encoding='utf-8') as f:
-    lines = f.readlines()
+import re
 
-for i, line in enumerate(lines):
-    if "els.btnLoadDeck.addEventListener('click', () => openLoadModal());" in line:
-        insert_code = """
-    // デッキ出力ボタン
-    if (els.btnExportDeck) {
-        els.btnExportDeck.addEventListener('click', () => {
-            let exportText = `【キャラクター情報】\\n`;
-            exportText += `肉体: ${player.stats.body.maxVal} / 知性: ${player.stats.int.maxVal} / 精神: ${player.stats.men.maxVal}\\n`;
-            exportText += `レベル: ${player.level}\\n`;
-            exportText += `イニシアチブ基礎値: ${player.baseInitiative}\\n`;
-            exportText += `手札上限: ${player.maxHandSize}枚\\n`;
-            const currentCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
-            exportText += `デッキポイント(コスト): ${currentCost} / ${player.deckCapacity}\\n\\n`;
-            
-            exportText += `【デッキ内容 (${selectedCardsForDeck.length}枚)】\\n`;
-            
-            // コスト順に並び替え
-            const sortedDeck = [...selectedCardsForDeck].sort((a, b) => a.cost - b.cost);
-            for (const c of sortedDeck) {
-                exportText += `- ${c.name} (コスト:${c.cost})\\n`;
-            }
-            
-            navigator.clipboard.writeText(exportText).then(() => {
-                alert("デッキデータをクリップボードにコピーしました！\\n\\n" + exportText);
-            }).catch(err => {
-                prompt("クリップボードへのコピーに失敗しました。以下のテキストをコピーしてください:", exportText);
-            });
-        });
-    }
+with open('app_v6.js', 'r', encoding='utf-8') as f:
+    js = f.read()
+
+# Find the doExport function
+# It has: exportText += '手札上限: ' + player.maxHandSize + '枚\n';
+# Let's add the profile to the exportText after the deck list.
+
+export_addition = """
+                if (player.profile) {
+                    exportText += '\\n【キャラクター設定】\\n';
+                    if (player.profile.name) exportText += '名前: ' + player.profile.name + '\\n';
+                    if (player.profile.gender) exportText += '性別: ' + player.profile.gender + '\\n';
+                    if (player.profile.age) exportText += '年齢: ' + player.profile.age + '\\n';
+                    if (player.profile.important) exportText += '大事なもの: ' + player.profile.important + '\\n';
+                    if (player.profile.dislike) exportText += '嫌いなもの: ' + player.profile.dislike + '\\n';
+                    if (player.profile.appearance) exportText += '身長・体重・外見: ' + player.profile.appearance + '\\n';
+                    if (player.profile.memo) exportText += 'メモ: ' + player.profile.memo + '\\n';
+                    
+                    for (let i = 1; i <= 10; i++) {
+                        if (player.profile['q' + i]) {
+                            exportText += 'Q' + i + ': ' + player.profile['q' + i] + '\\n';
+                        }
+                    }
+                }
 """
-        lines.insert(i+1, insert_code)
-        break
+
+js = js.replace(
+    "// クリップボードコピー（フォールバック付き）",
+    export_addition + "                // クリップボードコピー（フォールバック付き）"
+)
 
 with open('app_v6.js', 'w', encoding='utf-8') as f:
-    f.writelines(lines)
+    f.write(js)
+
