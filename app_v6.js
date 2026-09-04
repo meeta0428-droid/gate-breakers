@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=375';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=376';
 
 let cardPool = [];
 let player = null;
@@ -2565,7 +2565,7 @@ function setupEvents() {
     });
 
     els.btnBattleToChara.addEventListener('click', () => {
-        if (!confirm('バトルを中断してキャラクター作成に戻りますか？\n（※デッキや手札はリセットされます）')) return;
+        if (!confirm('バトルを中断して能力値決定に戻りますか？\n（※デッキや手札はリセットされます）')) return;
         els.battleScreen.classList.add('hidden');
         showCharaScreen();
     });
