@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=372';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=373';
 
 let cardPool = [];
 let player = null;
@@ -2852,35 +2852,35 @@ function setupEvents() {
         logMsg(`手札に ${recoveredNames.length}枚 回収しました！<br><small>(${recoveredNames.join(', ')})</small>`);
         els.discardModal.classList.add('hidden');
         
-        // パッシブ「武術家」のチェック
-        const hasBujutsuka = player.deck.passives.some(p => (p.name === '武術家' || p.effect.includes('回収タイミングで肉体カテゴリーのコスト3以下')) && !p.isDisabled);
-        if (hasBujutsuka) {
-            const validCards = player.deck.discard.filter(c => c.category.includes('肉体') && c.cost <= 3);
-            if (validCards.length > 0) {
-                window.dispatchEvent(new CustomEvent('requestBujutsukaRecover', {
-                    detail: { playerObj: player }
-                }));
-                // ここでリターンすると戦術解析士のログが出なくなるので注意
-            }
-        }
-        
         // パッシブ「戦術解析士」のチェック
         const hasSenjutsu = player.deck.passives.some(p => p.name === '戦術解析士' && !p.isDisabled);
         if (hasSenjutsu) {
             logMsg(`【戦術解析士】情報のアドバンテージ！<br><span style="color:#ffcc00; font-weight:bold;">※任意の対象の手札1枚を公開状態にしてください！</span><br>（公開状態にした場合は、画面下部の「敵手札オープン中」にチェックを入れてください）`, 'important');
         }
         
-        // 武術家のモーダル表示がある場合は updateUI を呼ばずにリターンしていたが、
-        // 武術家の処理がある場合でも戦術解析士のログは出すべき。
-        // updateUIのタイミングが変わるため、武術家チェックの中の return を除去または条件付きにする。
+        // まず基本の回収分を画面に反映
+        updateUI();
+        
+        // パッシブ「武術家 / 鉄鋼獣身」のチェック (追加回収)
+        const hasBujutsuka = player.deck.passives.some(p => (p.name === '武術家' || p.effect.includes('回収タイミングで肉体カテゴリーのコスト3以下')) && !p.isDisabled);
         if (hasBujutsuka) {
             const validCards = player.deck.discard.filter(c => c.category.includes('肉体') && c.cost <= 3);
             if (validCards.length > 0) {
-                return; // 武術家のモーダルが開くため、ここではUI更新しない
+                window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                    detail: { 
+                        playerObj: player,
+                        title: "【武術家 / 鉄鋼獣身】追加回収",
+                        desc: "肉体カテゴリのコスト3以下のカードを1枚追加で手札に回収できます。（外側クリックでキャンセル）",
+                        filterFunc: c => c.category.includes('肉体') && c.cost <= 3,
+                        onSelect: (card) => {
+                            player.deck.hand.push(card);
+                            logMsg(`【パッシブ効果】追加回収発動！「${card.name}」を手札に戻しました！`, 'important');
+                            // updateUIは requestRecoverCard 側で自動的に呼ばれる
+                        }
+                    }
+                }));
             }
         }
-        
-        updateUI();
     });
     
     els.btnCloseDiscard.addEventListener('click', () => {
