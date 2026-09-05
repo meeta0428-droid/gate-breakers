@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=380';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=381';
 
 let cardPool = [];
 let player = null;
@@ -951,6 +951,10 @@ function setupEvents() {
         
         // setCards は preview 時にも分離し、final 時にも分離する。
         // final時にはすでに preview 時点で分離されている可能性もあるが安全のため。
+                if (card.category.includes('召喚') || card.effect.includes('召喚・攻') || card.effect.includes('召喚　攻') || card.effect.includes('召喚 攻')) {
+                    if (!canSummonCard(card, player)) return;
+                }
+
         const setCards = currentCombo.filter(c => c.isSetReaction);
         currentCombo = currentCombo.filter(c => !c.isSetReaction);
         
@@ -1520,6 +1524,10 @@ function setupEvents() {
             const selects = els.attackConfirmList.querySelectorAll('.confirm-action-select');
             
             // setCards は除外して処理するため分離
+                if (card.category.includes('召喚') || card.effect.includes('召喚・攻') || card.effect.includes('召喚　攻') || card.effect.includes('召喚 攻')) {
+                    if (!canSummonCard(card, player)) return;
+                }
+
             const setCards = currentCombo.filter(c => c.isSetReaction);
             let activeCards = currentCombo.filter(c => !c.isSetReaction);
             
@@ -3113,6 +3121,7 @@ function setupEvents() {
 
                 if (passiveCard.name === 'リアクティブアーマー') {
                     const pIdx = player.deck.passives.findIndex(p => p === passiveCard);
+                    if (!canSummonCard(passiveCard, player)) return;
                     if (pIdx > -1) {
                         player.deck.passives.splice(pIdx, 1);
                         player.deck.void.push(passiveCard);
@@ -3223,6 +3232,7 @@ function setupEvents() {
                 }
                 if (passiveCard.name === 'バディビースト' || passiveCard.name === '相棒の獣' || passiveCard.name === '相棒の鳥' || passiveCard.name === '相棒の竜' || passiveCard.name === 'アニマビークル') {
                     const pIdx = player.deck.passives.findIndex(p => p === passiveCard);
+                    if (!canSummonCard(passiveCard, player)) return;
                     if (pIdx > -1) {
                         player.deck.passives.splice(pIdx, 1);
                         player.deck.summons.push({ card: passiveCard, stance: 'both' });
@@ -3279,7 +3289,9 @@ function setupEvents() {
                             source: 'mountain',
                             filterFunc: (c) => c.effect.includes('召喚'),
                             onSelect: (selectedCard) => {
+                                if (!canSummonCard(selectedCard, player)) return;
                                 const initStance = (selectedCard.effect.includes('攻撃行動を行わない') || selectedCard.name === 'セントリードローン') ? 'defend' : (selectedCard.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack');
+
                                 player.deck.summons.push({ card: selectedCard, stance: initStance, isFamiliar: true });
                                 logMsg(`【ファミリア】効果発動！山札から「${selectedCard.name}」を永続召喚しました！`, 'important');
                             }
@@ -3324,6 +3336,7 @@ function setupEvents() {
                             
                             // エレメンタラーをパッシブから削除して廃棄札へ
                             const pIdx = player.deck.passives.findIndex(p => p === passiveCard);
+                    if (!canSummonCard(passiveCard, player)) return;
                             if (pIdx > -1) {
                                 const elemCard = player.deck.passives[pIdx];
                                 player.deck.passives.splice(pIdx, 1);
@@ -3452,6 +3465,7 @@ function setupEvents() {
                             source: 'all',
                             filterFunc: (c) => c.category.includes('召喚') || c.effect.includes('召喚'),
                             onSelect: (selectedCard) => {
+                                if (!canSummonCard(selectedCard, player)) return;
                                 // 召喚時のスタンス判定
                                 let initStance = 'attack'; // デフォルトは攻撃
                                 if (selectedCard.effect.includes('召喚・防')) {
@@ -3685,6 +3699,36 @@ function setupEvents() {
         });
     }
     
+
+function canSummonCard(card, player) {
+    let statVal = 0;
+    let statName = "";
+    if (card.category.includes('肉体')) {
+        statVal = player.stats.body.maxVal;
+        statName = "肉体";
+    } else if (card.category.includes('知性')) {
+        statVal = player.stats.int.maxVal;
+        statName = "知性";
+    } else if (card.category.includes('精神')) {
+        statVal = player.stats.men.maxVal;
+        statName = "精神";
+    } else {
+        const body = player.stats.body.maxVal;
+        const intVal = player.stats.int.maxVal;
+        const men = player.stats.men.maxVal;
+        statVal = Math.max(body, intVal, men);
+        if (statVal === body) statName = "最も高い能力値(肉体)";
+        else if (statVal === intVal) statName = "最も高い能力値(知性)";
+        else statName = "最も高い能力値(精神)";
+    }
+    
+    const limit = statVal + player.level;
+    if (card.cost > limit) {
+        alert(`【召喚不可】\n召喚ユニット「${card.name}」のコスト(${card.cost})が、指定能力値[${statName}]＋レベル(${limit})を超えているため召喚できません。`);
+        return false;
+    }
+    return true;
+}
     els.btnUseCard.addEventListener('click', () => {
         try {
 
@@ -3724,6 +3768,13 @@ function setupEvents() {
                 }
             }
             
+
+            // 召喚コストチェック
+            if (card.category.includes('召喚') || card.effect.includes('召喚・攻') || card.effect.includes('召喚　攻') || card.effect.includes('召喚 攻')) {
+                if (!canSummonCard(card, player)) {
+                    return;
+                }
+            }
             if (selectedCardSource === 'psychometry') {
                 player.deck.mountain.splice(selectedCardIndex, 1);
             } else {
@@ -3884,6 +3935,10 @@ function setupEvents() {
             if (selectedCardIndex !== null) {
                 const card = player.deck.hand[selectedCardIndex];
                 
+                if (card.category.includes('召喚') || card.effect.includes('召喚・攻') || card.effect.includes('召喚　攻') || card.effect.includes('召喚 攻')) {
+                    if (!canSummonCard(card, player)) return;
+                }
+
                 const setCards = currentCombo.filter(c => c.isSetReaction);
                 if (setCards.length >= 1) {
                     alert('「闘禅一致」の効果でセットできるのは1枚までです。');
