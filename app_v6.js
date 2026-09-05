@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=393';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=394';
 
 let cardPool = [];
 let player = null;
@@ -3755,11 +3755,21 @@ function canSummonCard(card, player) {
         });
     }
 
-    const limit = statVal + player.level;
+    let summonerBonus = 0;
+    if (player.deck && player.deck.passives) {
+        const hasSummoner = player.deck.passives.some(p => p.name === '召喚士' && !p.isDisabled);
+        if (hasSummoner) {
+            summonerBonus = 2;
+        }
+    }
+
+    const limit = statVal + player.level + summonerBonus;
     const totalCost = currentSummonCost + card.cost;
 
     if (totalCost > limit) {
-        alert(`【召喚不可】\n召喚ユニットの合計コスト(${totalCost})が、指定能力値[${statName}]＋レベル(${limit})を超えてしまうため、「${card.name}」を召喚できません。\n（※現在の盤面・発動待機の合計コスト: ${currentSummonCost} / 追加コスト: ${card.cost}）`);
+        let limitDetails = `指定能力値[${statName}]＋レベル`;
+        if (summonerBonus > 0) limitDetails += `＋召喚士ボーナス`;
+        alert(`【召喚不可】\n召喚ユニットの合計コスト(${totalCost})が、${limitDetails}の上限(${limit})を超えてしまうため、「${card.name}」を召喚できません。\n（※現在の盤面・発動待機の合計コスト: ${currentSummonCost} / 追加コスト: ${card.cost}）`);
         return false;
     }
     return true;
