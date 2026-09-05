@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=381';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=382';
 
 let cardPool = [];
 let player = null;
@@ -3700,31 +3700,41 @@ function setupEvents() {
     }
     
 
+
 function canSummonCard(card, player) {
     let statVal = 0;
     let statName = "";
-    if (card.category.includes('肉体')) {
-        statVal = player.stats.body.maxVal;
-        statName = "肉体";
-    } else if (card.category.includes('知性')) {
-        statVal = player.stats.int.maxVal;
-        statName = "知性";
-    } else if (card.category.includes('精神')) {
-        statVal = player.stats.men.maxVal;
-        statName = "精神";
-    } else {
-        const body = player.stats.body.maxVal;
-        const intVal = player.stats.int.maxVal;
-        const men = player.stats.men.maxVal;
-        statVal = Math.max(body, intVal, men);
-        if (statVal === body) statName = "最も高い能力値(肉体)";
-        else if (statVal === intVal) statName = "最も高い能力値(知性)";
-        else statName = "最も高い能力値(精神)";
-    }
     
+    // 指定能力値はプレイヤーの最も高い能力値を使用する
+    const body = player.stats.body.maxVal;
+    const intVal = player.stats.int.maxVal;
+    const men = player.stats.men.maxVal;
+    statVal = Math.max(body, intVal, men);
+    
+    if (statVal === body) statName = "最も高い能力値(肉体)";
+    else if (statVal === intVal) statName = "最も高い能力値(知性)";
+    else statName = "最も高い能力値(精神)";
+
+    // 既に場に出ている召喚ユニットのコスト合計
+    let currentSummonCost = 0;
+    player.deck.summons.forEach(s => {
+        currentSummonCost += s.card.cost;
+    });
+
+    // 発動中のコンボ（これから召喚される予定のカード）のコストも加算
+    if (typeof currentCombo !== 'undefined') {
+        currentCombo.forEach(c => {
+            if (c.category.includes('召喚') || c.effect.includes('召喚・攻') || c.effect.includes('召喚　攻') || c.effect.includes('召喚 攻')) {
+                currentSummonCost += c.cost;
+            }
+        });
+    }
+
     const limit = statVal + player.level;
-    if (card.cost > limit) {
-        alert(`【召喚不可】\n召喚ユニット「${card.name}」のコスト(${card.cost})が、指定能力値[${statName}]＋レベル(${limit})を超えているため召喚できません。`);
+    const totalCost = currentSummonCost + card.cost;
+
+    if (totalCost > limit) {
+        alert(`【召喚不可】\n召喚ユニットの合計コスト(${totalCost})が、指定能力値[${statName}]＋レベル(${limit})を超えてしまうため、「${card.name}」を召喚できません。\n（※現在の盤面・発動待機の合計コスト: ${currentSummonCost} / 追加コスト: ${card.cost}）`);
         return false;
     }
     return true;
