@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=385';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=386';
 
 let cardPool = [];
 let player = null;
@@ -1195,7 +1195,7 @@ function setupEvents() {
                         extraInfo = '<br><span style="color:#ff5252; font-weight:bold;">※任意の対象全ての回収ポイントを-1する！</span>';
                     }
                     if (s.card.name === 'オートマトンタレット') {
-                        extraInfo = '<br><span style="color:#ffcc00; font-weight:bold;">※このユニットの攻撃とは別に、任意の対象1体にダメージ1点を与える。</span>';
+                        extraInfo = '<br><span style="color:#ffcc00; font-weight:bold;">※このユニットの攻撃とは別に、任意の対象１体にダメージ１点を与える。</span>';
                     }
                     summonLog += `・召喚「${s.card.name}」の追撃 (＋${atk})${extraInfo}<br>`;
                 }
