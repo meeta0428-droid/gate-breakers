@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=376';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=377';
 
 let cardPool = [];
 let player = null;
@@ -777,14 +777,33 @@ function setupEvents() {
                     }
                 }
 
+                // キャラクター設定のパース
+                const profileMatch = text.match(/【キャラクター設定】([\s\S]*)/);
+                if (profileMatch) {
+                    const profileText = profileMatch[1];
+                    if (!player.profile) player.profile = {};
+                    
+                    const pMatch = (key, regex) => {
+                        const m = profileText.match(regex);
+                        if (m) player.profile[key] = m[1].trim();
+                    };
+                    pMatch('name', /名前:\s*(.+)/);
+                    if (player.profile.name) player.name = player.profile.name;
+                    pMatch('gender', /性別:\s*(.+)/);
+                    pMatch('age', /年齢:\s*(.+)/);
+                    pMatch('important', /大事なもの:\s*(.+)/);
+                    pMatch('dislike', /嫌いなもの:\s*(.+)/);
+                    pMatch('appearance', /身長・体重・外見:\s*(.+)/);
+                    pMatch('memo', /メモ:\s*(.+)/);
+                    
+                    for (let i = 1; i <= 10; i++) {
+                        pMatch('q' + i, new RegExp(`Q${i}:\\s*(.+)`));
+                    }
+                }
+
                 if (newDeck.length > 0) {
                     selectedCardsForDeck = newDeck;
-                    document.getElementById('stat-body').innerText = player.stats.body.maxVal;
-                    document.getElementById('stat-int').innerText = player.stats.int.maxVal;
-                    document.getElementById('stat-men').innerText = player.stats.men.maxVal;
-                    document.getElementById('stat-level').innerText = player.level;
-                    document.getElementById('stat-init').innerText = player.baseInitiative;
-                    document.getElementById('stat-hand-limit').innerText = player.maxHandSize;
+                    updateCharaUI(); // これでステータスUIを更新
                     
                     renderSelectedDeck();
                     els.loadModal.classList.add('hidden');
