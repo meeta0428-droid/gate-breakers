@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=378';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=379';
 
 let cardPool = [];
 let player = null;
@@ -719,108 +719,112 @@ function setupEvents() {
     const btnImportText = document.getElementById('btn-import-text');
     if (btnImportText) {
         btnImportText.addEventListener('click', () => {
-            const textArea = document.getElementById('import-text-area');
-            const text = textArea.value;
-            if (!text.trim()) {
-                alert("テキストを入力してください。");
-                return;
-            }
-
-            // 全角記号を半角に正規化
-            const normalizedText = text.replace(/\uff1a/g, ':').replace(/\uff08/g, '(').replace(/\uff09/g, ')');
-
-            // 能力値のパース
-            const statsMatch = normalizedText.match(/肉体:\s*(\d+)\s*\/\s*知性:\s*(\d+)\s*\/\s*精神:\s*(\d+)/);
-            if (statsMatch) {
-                player.stats.body.maxVal = parseInt(statsMatch[1]);
-                player.stats.body.currentVal = player.stats.body.maxVal;
-                player.stats.int.maxVal = parseInt(statsMatch[2]);
-                player.stats.int.currentVal = player.stats.int.maxVal;
-                player.stats.men.maxVal = parseInt(statsMatch[3]);
-                player.stats.men.currentVal = player.stats.men.maxVal;
-            }
-
-            // レベルのパース
-            const levelMatch = normalizedText.match(/レベル:\s*(\d+)/);
-            if (levelMatch) player.level = parseInt(levelMatch[1]);
-
-            // 手札上限のパース
-            const handMatch = normalizedText.match(/手札上限:\s*(\d+)/);
-            if (handMatch) player.maxHandSize = parseInt(handMatch[1]);
-
-            // デッキのパース
-            const newDeck = [];
-            const notFound = [];
-            const dLines = normalizedText.split('\n');
-            let inDeckSection = false;
-            
-            for (let line of dLines) {
-                line = line.trim();
-                if (line.startsWith('【デッキ内容')) {
-                    inDeckSection = true;
-                    continue;
+            try {
+                const textArea = document.getElementById('import-text-area');
+                const text = textArea.value;
+                if (!text.trim()) {
+                    alert("テキストを入力してください。");
+                    return;
                 }
-                if (inDeckSection && line.startsWith('【')) {
-                    inDeckSection = false;
-                    continue;
+
+                // 全角記号を半角に正規化
+                const normalizedText = text.replace(/\uff1a/g, ':').replace(/\uff08/g, '(').replace(/\uff09/g, ')');
+
+                // 能力値のパース
+                const statsMatch = normalizedText.match(/肉体:\s*(\d+)\s*\/\s*知性:\s*(\d+)\s*\/\s*精神:\s*(\d+)/);
+                if (statsMatch) {
+                    player.stats.body.maxVal = parseInt(statsMatch[1]);
+                    player.stats.body.currentVal = player.stats.body.maxVal;
+                    player.stats.int.maxVal = parseInt(statsMatch[2]);
+                    player.stats.int.currentVal = player.stats.int.maxVal;
+                    player.stats.men.maxVal = parseInt(statsMatch[3]);
+                    player.stats.men.currentVal = player.stats.men.maxVal;
                 }
-                if (inDeckSection) {
-                    const cardMatch = line.match(/^(?:-|\d+\.)\s+(.+?)\s+\(コスト:/);
-                    if (cardMatch) {
-                        const cardName = cardMatch[1].trim();
-                        const cardData = cardPool.find(c => c.name === cardName);
-                        if (cardData) {
-                            newDeck.push({ ...cardData });
-                        } else {
-                            notFound.push(cardName);
+
+                // レベルのパース
+                const levelMatch = normalizedText.match(/レベル:\s*(\d+)/);
+                if (levelMatch) player.level = parseInt(levelMatch[1]);
+
+                // 手札上限のパース
+                const handMatch = normalizedText.match(/手札上限:\s*(\d+)/);
+                if (handMatch) player.maxHandSize = parseInt(handMatch[1]);
+
+                // デッキのパース
+                const newDeck = [];
+                const notFound = [];
+                const dLines = normalizedText.split(/\r\n|\r|\n/);
+                let inDeckSection = false;
+                
+                for (let line of dLines) {
+                    line = line.trim();
+                    if (line.startsWith('【デッキ内容')) {
+                        inDeckSection = true;
+                        continue;
+                    }
+                    if (inDeckSection && line.startsWith('【')) {
+                        inDeckSection = false;
+                        continue;
+                    }
+                    if (inDeckSection) {
+                        const cardMatch = line.match(/^(?:-|\d+[.\uFF0E])\s*(.+?)\s*\(コスト:/);
+                        if (cardMatch) {
+                            const cardName = cardMatch[1].trim();
+                            const cardData = cardPool.find(c => c.name === cardName);
+                            if (cardData) {
+                                newDeck.push({ ...cardData });
+                            } else {
+                                notFound.push(cardName);
+                            }
                         }
                     }
                 }
-            }
 
-            // キャラクター設定のパース
-            const profileSection = normalizedText.match(/【キャラクター設定】([\s\S]*)/);
-            if (profileSection) {
-                const profileText = profileSection[1];
-                if (!player.profile) player.profile = {};
-                
-                const pMatch = (key, regex) => {
-                    const m = profileText.match(regex);
-                    if (m) player.profile[key] = m[1].trim();
-                };
-                pMatch('name', /名前:\s*(.+)/);
-                if (player.profile.name) player.name = player.profile.name;
-                pMatch('gender', /性別:\s*(.+)/);
-                pMatch('age', /年齢:\s*(.+)/);
-                pMatch('important', /大事なもの:\s*(.+)/);
-                pMatch('dislike', /嫌いなもの:\s*(.+)/);
-                pMatch('appearance', /身長・体重・外見:\s*(.+)/);
-                pMatch('memo', /メモ:\s*(.+)/);
-                
-                for (let i = 1; i <= 10; i++) {
-                    pMatch('q' + i, new RegExp('Q' + i + ':\\s*(.+)'));
+                // キャラクター設定のパース
+                const profileSection = normalizedText.match(/【キャラクター設定】([\s\S]*)/);
+                if (profileSection) {
+                    const profileText = profileSection[1];
+                    if (!player.profile) player.profile = {};
+                    
+                    const pMatch = (key, regex) => {
+                        const m = profileText.match(regex);
+                        if (m) player.profile[key] = m[1].trim();
+                    };
+                    pMatch('name', /名前:\s*(.+)/);
+                    if (player.profile.name) player.name = player.profile.name;
+                    pMatch('gender', /性別:\s*(.+)/);
+                    pMatch('age', /年齢:\s*(.+)/);
+                    pMatch('important', /大事なもの:\s*(.+)/);
+                    pMatch('dislike', /嫌いなもの:\s*(.+)/);
+                    pMatch('appearance', /身長・体重・外見:\s*(.+)/);
+                    pMatch('memo', /メモ:\s*(.+)/);
+                    
+                    for (let i = 1; i <= 10; i++) {
+                        pMatch('q' + i, new RegExp('Q' + i + ':\\s*(.+)'));
+                    }
                 }
-            }
 
-            if (newDeck.length > 0) {
-                selectedCardsForDeck = newDeck;
-                
-                try { updateCharaUI(); } catch(e) { console.warn('updateCharaUI skipped:', e); }
-                renderSelectedDeck();
-                els.loadModal.classList.add('hidden');
-                textArea.value = '';
-                
-                let msg = 'デッキの構築に成功しました！（' + newDeck.length + '枚のカードを読み込みました）';
-                if (notFound.length > 0) {
-                    msg += '\n\n⚠ 以下のカードは見つかりませんでした:\n' + notFound.join('\n');
+                if (newDeck.length > 0) {
+                    selectedCardsForDeck = newDeck;
+                    
+                    try { updateCharaUI(); } catch(e) { console.warn('updateCharaUI skipped:', e); }
+                    renderSelectedDeck();
+                    els.loadModal.classList.add('hidden');
+                    textArea.value = '';
+                    
+                    let msg = 'デッキの構築に成功しました！（' + newDeck.length + '枚のカードを読み込みました）';
+                    if (notFound.length > 0) {
+                        msg += '\n\n⚠ 以下のカードは見つかりませんでした:\n' + notFound.join('\n');
+                    }
+                    alert(msg);
+                } else {
+                    alert("【エラー】カードが読み取れませんでした。\n※「【デッキ内容」の行が含まれているか確認してください。");
                 }
-                alert(msg);
-            } else {
-                alert("テキストからカードを読み取れませんでした。\nフォーマットが正しいか確認してください。");
+            } catch (err) {
+                alert("予期せぬエラー: " + err.message);
+                console.error(err);
             }
         });
     }
-
     // イニシアチブ手動調整ボタン（影縫い等の効果用）
     document.getElementById('btn-init-up').addEventListener('click', () => {
         player.initiativeModifier = (player.initiativeModifier || 0) + 1;
