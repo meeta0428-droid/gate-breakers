@@ -479,3 +479,4 @@ body {
     }
 }
 
+.sortable-ghost { opacity: 0.4; background-color: #555; }
