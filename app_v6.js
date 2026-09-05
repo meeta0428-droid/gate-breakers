@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=384';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=385';
 
 let cardPool = [];
 let player = null;
@@ -3182,24 +3182,28 @@ function setupEvents() {
                         alert('機工士の効果は戦闘中に1度しか使えません。');
                         return;
                     }
-                    window.dispatchEvent(new CustomEvent('requestRecoverCard', {
-                        detail: {
-                            title: "機工士の効果",
-                            desc: "廃棄札から手札に戻す召喚ユニットを1枚選んでください。",
-                            playerObj: player,
-                            source: 'void',
-                            filterFunc: (c) => c.category.includes('召喚') || c.effect.includes('召喚'),
-                            onSelect: (selectedCard) => {
-                                const voidIdx = player.deck.void.indexOf(selectedCard);
-                                if (voidIdx > -1) player.deck.void.splice(voidIdx, 1);
-                                player.deck.hand.push(selectedCard);
-                                logMsg(`【機工士】の効果で、廃棄札から「${selectedCard.name}」を手札に戻しました！`, 'important');
-                                passiveCard.hasUsed = true;
-                                updateUI();
-                            }
+                    
+                    const targets = player.deck.void.filter(c => (c.category.includes('召喚') || c.effect.includes('召喚・攻') || c.effect.includes('召喚　攻') || c.effect.includes('召喚 攻')) && c.cost <= 3);
+                    if (targets.length === 0) {
+                        alert('廃棄札にコスト3以下の召喚ユニットがありません。');
+                        return;
+                    }
+                    
+                    let recoveredNames = [];
+                    // 後ろからループしてspliceする安全策か、あるいは対象外のカードだけをvoidに残す方法
+                    player.deck.void = player.deck.void.filter(c => {
+                        if (targets.includes(c)) {
+                            player.deck.hand.push(c);
+                            recoveredNames.push(c.name);
+                            return false; // voidから削除
                         }
-                    }));
+                        return true;
+                    });
+                    
+                    logMsg(`【機工士】の効果発動！廃棄札からコスト3以下の召喚ユニット（${recoveredNames.join('、')}）を全て手札に戻しました！`, 'important');
+                    passiveCard.hasUsed = true;
                     els.modal.classList.add('hidden');
+                    updateUI();
                     return;
                 }
                                 if (passiveCard.name === 'ライドオン') {
@@ -4716,7 +4720,7 @@ function openCardModal(card, index, isPassive = false, isCombo = false, isPsycho
                         els.btnTriggerPassive.innerText = '使用済み (0/1)';
                         els.btnTriggerPassive.disabled = true;
                     } else {
-                        els.btnTriggerPassive.innerText = '召喚ユニットを回収 (1/1)';
+                        els.btnTriggerPassive.innerText = 'C3以下の召喚全て回収 (1/1)';
                         els.btnTriggerPassive.disabled = false;
                     }
                     els.btnTriggerPassive.classList.remove('hidden');
