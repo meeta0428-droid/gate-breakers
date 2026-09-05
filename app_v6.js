@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=391';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=392';
 
 let cardPool = [];
 let player = null;
@@ -571,10 +571,42 @@ function renderSelectedDeck() {
     selectedCardsForDeck.forEach((card, idx) => {
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card';
+        cardDiv.style.position = 'relative';
         cardDiv.innerHTML = `
             <div class="card-name" style="font-size:0.8rem">${card.name}</div>
             <div class="card-stats" style="margin-top:auto;"><span>C:${card.cost}</span></div>
+            <div class="reorder-controls" style="position:absolute; bottom:2px; right:2px; display:flex; gap:2px; z-index: 10;">
+                <button class="btn-move-left" style="background:#444; color:#fff; border:1px solid #666; border-radius:3px; padding:2px 5px; font-size:10px; cursor:pointer;" ${idx === 0 ? 'disabled' : ''}>◀</button>
+                <button class="btn-move-right" style="background:#444; color:#fff; border:1px solid #666; border-radius:3px; padding:2px 5px; font-size:10px; cursor:pointer;" ${idx === selectedCardsForDeck.length - 1 ? 'disabled' : ''}>▶</button>
+            </div>
         `;
+        
+        const btnLeft = cardDiv.querySelector('.btn-move-left');
+        if (btnLeft) {
+            btnLeft.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (idx > 0) {
+                    const temp = selectedCardsForDeck[idx];
+                    selectedCardsForDeck[idx] = selectedCardsForDeck[idx - 1];
+                    selectedCardsForDeck[idx - 1] = temp;
+                    renderSelectedDeck();
+                }
+            });
+        }
+        
+        const btnRight = cardDiv.querySelector('.btn-move-right');
+        if (btnRight) {
+            btnRight.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (idx < selectedCardsForDeck.length - 1) {
+                    const temp = selectedCardsForDeck[idx];
+                    selectedCardsForDeck[idx] = selectedCardsForDeck[idx + 1];
+                    selectedCardsForDeck[idx + 1] = temp;
+                    renderSelectedDeck();
+                }
+            });
+        }
+
         cardDiv.addEventListener('click', () => {
             selectedCardsForDeck.splice(idx, 1);
             renderSelectedDeck();
