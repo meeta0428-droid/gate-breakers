@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=387';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=388';
 
 let cardPool = [];
 let player = null;
@@ -1126,7 +1126,7 @@ function setupEvents() {
             }
             
                         if (c.name === 'クロス・ファイア') {
-                const cfDmg = player.deck.summons.length * 2;
+                const cfDmg = player.deck.summons.length * 3;
                 detail = `（召喚連携によりダメージ＋${cfDmg}）` + detail;
             } else if (c.name === 'ロックオンアサルト' && player.deck.summons.length > 0) {
                 detail = `（召喚ボーナス適用：ダメージ＋4）` + detail;

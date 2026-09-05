@@ -260,8 +260,8 @@ export function calculateDamageFromCards(cards, player, isNoReact = false) {
         }
         
                 if (card.name === 'クロス・ファイア' && player) {
-            cardDamage -= 2;
-            cardDamage += player.deck.summons.length * 2;
+            cardDamage -= 3;
+            cardDamage += player.deck.summons.length * 3;
         }
         if (card.name === 'ロックオンアサルト' && player && player.deck.summons.length > 0) {
             // "ダメージ+2"で+2されているので、"ダメージ+4に変更"とするため +2 を追加
