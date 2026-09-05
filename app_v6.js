@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=382';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=383';
 
 let cardPool = [];
 let player = null;
@@ -1524,9 +1524,6 @@ function setupEvents() {
             const selects = els.attackConfirmList.querySelectorAll('.confirm-action-select');
             
             // setCards は除外して処理するため分離
-                if (card.category.includes('召喚') || card.effect.includes('召喚・攻') || card.effect.includes('召喚　攻') || card.effect.includes('召喚 攻')) {
-                    if (!canSummonCard(card, player)) return;
-                }
 
             const setCards = currentCombo.filter(c => c.isSetReaction);
             let activeCards = currentCombo.filter(c => !c.isSetReaction);
