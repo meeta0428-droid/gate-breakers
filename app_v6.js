@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=388';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=389';
 
 let cardPool = [];
 let player = null;
@@ -4178,12 +4178,12 @@ function handleSummonVoided(player, voidedCard) {
     
     const hasDistractOrder = player.deck.passives.some(p => p.name === 'ディストラクトオーダー' && !p.isDisabled);
     if (hasDistractOrder) {
-        const dmg = 5 + (voidedCard ? voidedCard.cost : 0);
+        const dmg = 7 + (voidedCard ? voidedCard.cost : 0);
         enemyHp -= dmg;
         if (typeof showDamagePopup === 'function') {
             showDamagePopup(dmg);
         }
-        logMsg(`【ディストラクトオーダー】の効果発動！召喚ユニットが廃棄札に移動したため、対象に <span class="damage">${dmg}</span> 点のダメージを与えた！（基礎5＋コスト${voidedCard ? voidedCard.cost : 0}）`, 'important');
+        logMsg(`【ディストラクトオーダー】の効果発動！召喚ユニットが廃棄札に移動したため、対象に <span class="damage">${dmg}</span> 点のダメージを与えた！（基礎7＋コスト${voidedCard ? voidedCard.cost : 0}）`, 'important');
     }
 }
 function updateUI() {
