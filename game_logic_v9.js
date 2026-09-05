@@ -563,5 +563,13 @@ export function triggerHook(hookName, context, activeCards) {
         currentContext.player._hasAttackedThisBattle = true;
     }
     
+
+    if (hookName === 'onBeforeDamageTaken' && currentContext.player && currentContext.player._scrapRecycleCount && currentContext.pendingDamage > 0) {
+        const scrapReduce = currentContext.player._scrapRecycleCount * 2;
+        currentContext.pendingDamage = Math.max(0, currentContext.pendingDamage - scrapReduce);
+        if (currentContext.logMsg) {
+            currentContext.logMsg(`・【スクラップリサイクル】の累積効果でダメージを ${scrapReduce} 点軽減！`);
+        }
+    }
     return currentContext;
 }

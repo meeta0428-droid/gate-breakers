@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=390';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=391';
 
 let cardPool = [];
 let player = null;
@@ -877,6 +877,7 @@ function setupEvents() {
         player.deck.start(cardPool, cardNames);
         player._boostedUsed = false;
         player._hasAttackedThisBattle = false;
+        player._scrapRecycleCount = 0;
         
         logMsg('戦闘開始！パッシブカードは自動的に装備されました。', 'important');
         
@@ -4170,10 +4171,9 @@ function canSummonCard(card, player) {
 function handleSummonVoided(player, voidedCard) {
     const hasScrapRecycle = player.deck.passives.some(p => p.name === 'スクラップリサイクル' && !p.isDisabled);
     if (hasScrapRecycle) {
-        const drawn = player.deck.draw(1);
-        if (drawn > 0) {
-            logMsg(`【スクラップリサイクル】の効果発動！召喚ユニットが廃棄札に移動したため、山札から1枚引いた！`, 'important');
-        }
+        player._scrapRecycleCount = (player._scrapRecycleCount || 0) + 1;
+        const totalReduce = player._scrapRecycleCount * 2;
+        logMsg(`【スクラップリサイクル】の効果発動！召喚ユニットが廃棄札に移動したため、以降受けるダメージをさらに2点軽減する！（現在の累積軽減量: 計${totalReduce}点）`, 'important');
     }
     
     const hasDistractOrder = player.deck.passives.some(p => p.name === 'ディストラクトオーダー' && !p.isDisabled);
