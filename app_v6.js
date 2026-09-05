@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=379';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=380';
 
 let cardPool = [];
 let player = null;
@@ -745,9 +745,6 @@ function setupEvents() {
                 const levelMatch = normalizedText.match(/レベル:\s*(\d+)/);
                 if (levelMatch) player.level = parseInt(levelMatch[1]);
 
-                // 手札上限のパース
-                const handMatch = normalizedText.match(/手札上限:\s*(\d+)/);
-                if (handMatch) player.maxHandSize = parseInt(handMatch[1]);
 
                 // デッキのパース
                 const newDeck = [];
