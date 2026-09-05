@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=383';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=384';
 
 let cardPool = [];
 let player = null;
@@ -951,9 +951,6 @@ function setupEvents() {
         
         // setCards は preview 時にも分離し、final 時にも分離する。
         // final時にはすでに preview 時点で分離されている可能性もあるが安全のため。
-                if (card.category.includes('召喚') || card.effect.includes('召喚・攻') || card.effect.includes('召喚　攻') || card.effect.includes('召喚 攻')) {
-                    if (!canSummonCard(card, player)) return;
-                }
 
         const setCards = currentCombo.filter(c => c.isSetReaction);
         currentCombo = currentCombo.filter(c => !c.isSetReaction);
