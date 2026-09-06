@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=397';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=398';
 
 let cardPool = [];
 let player = null;
@@ -3346,23 +3346,30 @@ function setupEvents() {
                 }
 
                 if (passiveCard.name === 'ファミリア') {
-                    if (player.deck.mountain.length === 0) {
-                        alert('山札がありません。');
+                    if (player.deck.mountain.length === 0 && player.deck.hand.length === 0) {
+                        alert('手札にも山札にもカードがありません。');
                         return;
                     }
                     window.dispatchEvent(new CustomEvent('requestRecoverCard', {
                         detail: {
                             title: "ファミリア：召喚ユニットを選択",
-                            desc: "山札から「召喚」カードを1枚選んでください。",
+                            desc: "手札・山札から「召喚」カードを1枚選んでください。",
                             playerObj: player,
-                            source: 'mountain',
+                            source: 'hand_or_mountain',
                             filterFunc: (c) => c.effect.includes('召喚'),
                             onSelect: (selectedCard) => {
-                                if (!canSummonCard(selectedCard, player)) return;
+                                if (!canSummonCard(selectedCard, player)) {
+                                    // 召喚できなかった場合は元の場所に戻す処理が必要だが、簡略化のため手札に入れるか、元に戻すか
+                                    // キャンセルされた場合、すでにhand_or_mountainからspliceされている。
+                                    // 取り急ぎ手札に戻しておく
+                                    player.deck.hand.push(selectedCard);
+                                    alert('コスト超過のため召喚できませんでした。カードは手札に移動します。');
+                                    return;
+                                }
                                 const initStance = (selectedCard.effect.includes('攻撃行動を行わない') || selectedCard.name === 'セントリードローン') ? 'defend' : (selectedCard.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack');
 
                                 player.deck.summons.push({ card: selectedCard, stance: initStance, isFamiliar: true });
-                                logMsg(`【ファミリア】効果発動！山札から「${selectedCard.name}」を永続召喚しました！`, 'important');
+                                logMsg(`【ファミリア】効果発動！手札または山札から「${selectedCard.name}」を永続召喚しました！`, 'important');
                             }
                         }
                     }));
@@ -4180,6 +4187,7 @@ function canSummonCard(card, player) {
         else if (source === 'all') sourceArray = cardPool;
         else if (source === 'void_or_discard') sourceArray = [...playerObj.deck.void, ...playerObj.deck.discard];
         else if (source === 'hand_or_discard') sourceArray = [...playerObj.deck.hand, ...playerObj.deck.discard];
+        else if (source === 'hand_or_mountain') sourceArray = [...playerObj.deck.hand, ...playerObj.deck.mountain];
         else sourceArray = playerObj.deck.discard;
 
         const validCards = sourceArray.filter(filterFunc);
@@ -4225,6 +4233,14 @@ function canSummonCard(card, player) {
                         } else {
                             const dIdx = playerObj.deck.discard.lastIndexOf(card);
                             if (dIdx > -1) playerObj.deck.discard.splice(dIdx, 1);
+                        }
+                    } else if (source === 'hand_or_mountain') {
+                        const hIdx = playerObj.deck.hand.lastIndexOf(card);
+                        if (hIdx > -1) {
+                            playerObj.deck.hand.splice(hIdx, 1);
+                        } else {
+                            const mIdx = playerObj.deck.mountain.lastIndexOf(card);
+                            if (mIdx > -1) playerObj.deck.mountain.splice(mIdx, 1);
                         }
                     } else {
                         const idx = sourceArray.lastIndexOf(card);
