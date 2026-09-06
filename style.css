@@ -304,7 +304,7 @@ body {
 /* 手札 */
 #hand-area {
     flex: 1;
-    min-height: 120px;
+    min-height: 160px;
     background-color: #111;
     padding: 10px 8px;
     overflow-x: auto;
@@ -316,8 +316,8 @@ body {
     height: 100%;
 }
 .card {
-    min-width: 110px;
-    max-width: 110px;
+    min-width: 130px;
+    max-width: 130px;
     height: 100%;
     background: linear-gradient(135deg, #3a3a3a, #222);
     border: 2px solid #555;
@@ -338,7 +338,7 @@ body {
 .card-name { font-weight: bold; font-size: 0.8rem; margin-bottom: 3px; border-bottom: 1px solid #555; padding-bottom: 3px;}
 .card-cat { font-size: 0.6rem; color: #aaa; margin-bottom: 3px;}
 .card-stats { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: bold;}
-.card-effect { font-size: 0.6rem; margin-top: auto; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.card-effect { font-size: 0.7rem; line-height: 1.25; margin-top: auto; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; }
 
 /* ダメージポップアップ */
 .damage-popup {
