@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=394';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=395';
 
 let cardPool = [];
 let player = null;
@@ -48,6 +48,7 @@ const els = {
     btnVoidView: document.getElementById('btn-void-view'),
     btnRefresh: document.getElementById('btn-refresh'),
     btnAttack: document.getElementById('btn-attack'),
+    btnSummonOnly: document.getElementById('btn-summon-only'),
     btnReact: document.getElementById('btn-react'),
     incomingDmg: document.getElementById('incoming-dmg'),
     chkIgnoreDef: document.getElementById('chk-ignore-def'),
@@ -1539,6 +1540,46 @@ function setupEvents() {
     els.btnAttack.addEventListener('click', () => {
         doAttackProcess(true);
     });
+
+    if (els.btnSummonOnly) {
+        els.btnSummonOnly.addEventListener('click', () => {
+            const summonsToDeploy = currentCombo.filter(c => c.category.includes('召喚') || c.effect.includes('召喚・攻') || c.effect.includes('召喚　攻') || c.effect.includes('召喚 攻'));
+            
+            if (summonsToDeploy.length === 0) {
+                alert('発動中のカード（コンボエリア）に召喚ユニットがありません。');
+                return;
+            }
+
+            // コンボから召喚カードを取り除く
+            currentCombo = currentCombo.filter(c => !summonsToDeploy.includes(c));
+            
+            // 盤面に配置
+            let deployedNames = [];
+            summonsToDeploy.forEach(card => {
+                const discardIdx = player.deck.discard.lastIndexOf(card);
+                if (discardIdx > -1) {
+                    player.deck.discard.splice(discardIdx, 1);
+                    const initStance = (card.effect.includes('攻撃行動を行わない') || card.name === 'セントリードローン') ? 'defend' : (card.effect.includes('このユニットは1ターンの間に攻撃と防御を1回ずつ行うことができる') ? 'both' : 'attack');
+                    player.deck.summons.push({ card: card, stance: initStance, hasAttacked: false, hasDefended: false });
+                    deployedNames.push(card.name);
+                    
+                    if (card.name === 'ウィスプ') {
+                        const drawn = player.deck.draw(1);
+                        if (drawn > 0) logMsg(`【ウィスプ】召喚時効果：山札からカードを1枚引いた！`, 'important');
+                    }
+                    if (card.name === 'ケットシー') {
+                        const drawn = player.deck.draw(2);
+                        if (drawn > 0) logMsg(`【ケットシー】召喚時効果：山札からカードを${drawn}枚引いた！`, 'important');
+                    }
+                }
+            });
+            
+            if (deployedNames.length > 0) {
+                logMsg(`【召喚配置】「${deployedNames.join('」、「')}」を場に配置しました！`, 'important');
+            }
+            updateUI();
+        });
+    }
 
     if (els.btnConfirmAttackFinal) {
         els.btnConfirmAttackFinal.addEventListener('click', () => {
