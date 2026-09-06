@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=398';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=399';
 
 let cardPool = [];
 let player = null;
@@ -3186,7 +3186,6 @@ function setupEvents() {
 
                 if (passiveCard.name === 'リアクティブアーマー') {
                     const pIdx = player.deck.passives.findIndex(p => p === passiveCard);
-                    if (!canSummonCard(passiveCard, player)) return;
                     if (pIdx > -1) {
                         player.deck.passives.splice(pIdx, 1);
                         player.deck.void.push(passiveCard);
@@ -3412,7 +3411,6 @@ function setupEvents() {
                             
                             // エレメンタラーをパッシブから削除して廃棄札へ
                             const pIdx = player.deck.passives.findIndex(p => p === passiveCard);
-                    if (!canSummonCard(passiveCard, player)) return;
                             if (pIdx > -1) {
                                 const elemCard = player.deck.passives[pIdx];
                                 player.deck.passives.splice(pIdx, 1);
