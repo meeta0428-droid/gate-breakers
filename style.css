@@ -312,7 +312,7 @@ body {
 }
 .hand-container {
     display: flex;
-    gap: -30px;
+    gap: 5px;
     height: 100%;
 }
 .card {
@@ -325,7 +325,7 @@ body {
     padding: 8px;
     display: flex;
     flex-direction: column;
-    margin-right: -30px;
+    margin-right: 0px;
     transition: transform 0.2s, z-index 0.2s;
     box-shadow: -2px 0 10px rgba(0,0,0,0.5);
     white-space: normal;
