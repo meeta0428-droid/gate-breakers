@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=396';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=397';
 
 let cardPool = [];
 let player = null;
@@ -1792,7 +1792,7 @@ function setupEvents() {
         let nohmBlocked = false;
         const nohmIdx = player.deck.summons.findIndex(s => s.card.name === 'ノーム');
         if (nohmIdx > -1) {
-            const doNohmBlock = confirm(`【ノーム】が場にいます。\nノームを廃棄して、今回の攻撃を阻止（ダメージ無効化）しますか？\n（※OKを押すとノームが廃棄され、最終ダメージが0になります）`);
+            const doNohmBlock = confirm(`【ノーム】が場にいます。\nノームを廃棄して、今回の攻撃によるダメージを15点軽減しますか？`);
             if (doNohmBlock) {
                 const nohmCard = player.deck.summons[nohmIdx].card;
                 player.deck.summons.splice(nohmIdx, 1);
@@ -1948,7 +1948,7 @@ function setupEvents() {
         actualDmg = Math.max(0, inputDmg - totalDef);
         
         if (nohmBlocked) {
-            actualDmg = 0;
+            actualDmg = Math.max(0, actualDmg - 15);
         }
         
 
@@ -1976,7 +1976,7 @@ function setupEvents() {
 
         const cardStr = currentCombo.length > 0 ? `使用カード:<br>${cardLogs}<br>` : 'カード使用なし<br>';
         const yosokuMsg = yosokuTriggered ? `<br><span style="color:#00ffff; font-weight:bold;">【予測防壁】攻撃元が公開状態だったため、ダメージを完全に無効化！</span>` : '';
-        const nohmMsg = nohmBlocked ? `<br><span style="color:#00ffff; font-weight:bold;">【ノーム】ユニットを廃棄し、ダメージを無効化（阻止）した！</span>` : '';
+        const nohmMsg = nohmBlocked ? `<br><span style="color:#00ffff; font-weight:bold;">【ノーム】ユニットを廃棄し、ダメージを15点軽減した！</span>` : '';
         const manaCounterMsg = manaCounterTriggered ? `<br><span style="color:#ffcc00; font-weight:bold;">【『マナカウンター』】ダメージを完全に無効化（0にする）！<br>さらに、相手に「${counterDamage}点」のカウンターダメージを反射！</span>` : '';
         const additionalMsg = yosokuMsg + nohmMsg + manaCounterMsg;
         
@@ -2203,8 +2203,11 @@ function setupEvents() {
         
         if (els.chkMultiAttack && els.chkMultiAttack.checked) {
             let baseDmgForSummons = inputDmg;
-            if (nohmBlocked || yosokuTriggered || manaCounterTriggered) {
+            if (yosokuTriggered || manaCounterTriggered) {
                 baseDmgForSummons = 0;
+            }
+            if (nohmBlocked) {
+                baseDmgForSummons = Math.max(0, baseDmgForSummons - 15);
             }
             if (baseDmgForSummons > 0 && player.deck.summons.length > 0) {
                 logMsg(`<span style="color:#ffcc00; font-weight:bold;">【複数攻撃】すべての召喚ユニットへの個別ダメージ判定（基本 ${baseDmgForSummons} 点）</span>`, 'important');
@@ -3372,7 +3375,7 @@ function setupEvents() {
                         const nohmCard = player.deck.summons[summonIdx].card;
                         player.deck.summons.splice(summonIdx, 1);
                         player.deck.void.push(nohmCard); handleSummonVoided(player, nohmCard);
-                        logMsg(`【ノーム】ユニットを廃棄して効果発動！<br><span style="color:#00ffff; font-weight:bold;">※ダメージを無効化した！</span>`, 'important');
+                        logMsg(`【ノーム】ユニットを廃棄して効果発動！<br><span style="color:#00ffff; font-weight:bold;">※ダメージを15点軽減した！</span>`, 'important');
                         updateUI();
                     }
                     return;
