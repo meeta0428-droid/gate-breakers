@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=402';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=403';
 
 let cardPool = [];
 let player = null;
@@ -120,6 +120,8 @@ const els = {
 };
 
 let selectedCardIndex = null;
+let rawCardData = [];
+const DEFAULT_TRIAL_JOBS = ['戦士', '魔弾銃士', '召喚士', '汎用', 'NPC'];
 let currentCombo = [];
 let isGeneralMode = false;
 
@@ -186,14 +188,34 @@ function logMsg(msg, type = '') {
     sendDiscordWebhook(prefix + msg);
 }
 
+function applyUnlockStatus() {
+    const isFullUnlocked = localStorage.getItem('gatebreakers_full_unlocked') === 'true';
+    if (isFullUnlocked) {
+        cardPool = [...rawCardData];
+        const btnUnlock = document.getElementById('btn-unlock-code');
+        if (btnUnlock) {
+            btnUnlock.innerText = "全ジョブ解放済み";
+            btnUnlock.style.background = "#4caf50";
+            btnUnlock.style.borderColor = "#4caf50";
+            btnUnlock.disabled = true;
+        }
+    } else {
+        cardPool = rawCardData.filter(c => DEFAULT_TRIAL_JOBS.includes(c.job));
+    }
+}
+
 async function loadCards() {
     try {
         const response = await fetch('cards.json?t=' + new Date().getTime());
         if (!response.ok) throw new Error('Network response was not ok');
-        cardPool = await response.json();
+        rawCardData = await response.json();
+        
+        applyUnlockStatus();
         
         const jobSelect = document.getElementById('filter-job');
         if (jobSelect) {
+            // 既存のオプションを「全ジョブ・汎用」以外クリア
+            jobSelect.innerHTML = '<option value="all">全ジョブ・汎用</option>';
             const uniqueJobs = [...new Set(cardPool.map(c => c.job).filter(j => j))];
             uniqueJobs.forEach(job => {
                 const opt = document.createElement('option');
