@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=406';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=407';
 
 let cardPool = [];
 let player = null;
@@ -122,6 +122,7 @@ const els = {
 let selectedCardIndex = null;
 let rawCardData = [];
 const DEFAULT_TRIAL_JOBS = ['戦士', '魔弾銃士', '召喚士', '汎用', 'NPC'];
+const EXPANSION_MECHA_JOBS = ['機動騎兵', '重機兵', '機工士'];
 let currentCombo = [];
 let isGeneralMode = false;
 
@@ -190,17 +191,39 @@ function logMsg(msg, type = '') {
 
 function applyUnlockStatus() {
     const isFullUnlocked = localStorage.getItem('gatebreakers_full_unlocked') === 'true';
+    const isMechaUnlocked = localStorage.getItem('gatebreakers_ex_mecha') === 'true';
+    
+    let allowedJobs = [...DEFAULT_TRIAL_JOBS];
+    
     if (isFullUnlocked) {
-        cardPool = [...rawCardData];
-        const btnUnlock = document.getElementById('btn-unlock-code');
-        if (btnUnlock) {
-            btnUnlock.innerText = "全ジョブ解放済み";
+        const allJobs = [...new Set(rawCardData.map(c => c.job).filter(j => j))];
+        allowedJobs = allJobs.filter(j => !EXPANSION_MECHA_JOBS.includes(j));
+    }
+    
+    if (isMechaUnlocked) {
+        allowedJobs.push(...EXPANSION_MECHA_JOBS);
+    }
+    
+    cardPool = rawCardData.filter(c => allowedJobs.includes(c.job));
+    
+    const btnUnlock = document.getElementById('btn-unlock-code');
+    if (btnUnlock) {
+        if (isFullUnlocked && isMechaUnlocked) {
+            btnUnlock.innerText = "全拡張解放済み";
             btnUnlock.style.background = "#4caf50";
             btnUnlock.style.borderColor = "#4caf50";
-            btnUnlock.disabled = true;
+            btnUnlock.disabled = false; // keep it clickable in case there are more codes? No, let's keep it clickable to show "already unlocked" or to add future ones.
+        } else if (isFullUnlocked) {
+            btnUnlock.innerText = "製品版解放済（追加コード入力）";
+            btnUnlock.style.background = "#2196f3";
+            btnUnlock.style.borderColor = "#2196f3";
+            btnUnlock.disabled = false;
+        } else {
+            btnUnlock.innerText = "特典コード入力";
+            btnUnlock.style.background = "#663399";
+            btnUnlock.style.borderColor = "#9932cc";
+            btnUnlock.disabled = false;
         }
-    } else {
-        cardPool = rawCardData.filter(c => DEFAULT_TRIAL_JOBS.includes(c.job));
     }
 }
 
