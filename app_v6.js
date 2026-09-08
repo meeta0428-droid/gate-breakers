@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=408';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=409';
 
 let cardPool = [];
 let player = null;
@@ -527,6 +527,18 @@ function openLoadModal() {
     els.loadModal.classList.remove('hidden');
 }
 
+
+let activeTooltipTarget = null;
+document.addEventListener('touchstart', (e) => {
+    const tooltipEl = document.getElementById('hover-tooltip');
+    if (tooltipEl && !tooltipEl.classList.contains('hidden')) {
+        if (!activeTooltipTarget || !activeTooltipTarget.contains(e.target)) {
+            tooltipEl.classList.add('hidden');
+            activeTooltipTarget = null;
+        }
+    }
+}, {passive: true});
+
 let tooltipTimeout;
 function addTooltip(element, card) {
     const tooltipEl = document.getElementById('hover-tooltip');
@@ -556,6 +568,7 @@ function addTooltip(element, card) {
         
         tooltipEl.style.top = top + 'px';
         tooltipEl.style.left = left + 'px';
+        activeTooltipTarget = element;
     };
 
     const hideTooltip = () => {
@@ -578,8 +591,12 @@ function addTooltip(element, card) {
         }, 500);
     }, {passive: true});
     
-    element.addEventListener('touchend', hideTooltip);
-    element.addEventListener('touchmove', hideTooltip, {passive: true});
+    // 長押し後、指を離しても消えないようにする
+    // element.addEventListener('touchend', hideTooltip); を削除
+    element.addEventListener('touchmove', () => {
+        if (!isLongPressFired) hideTooltip();
+    }, {passive: true});
+    
     element.addEventListener('contextmenu', (e) => {
         if (isLongPressFired || !tooltipEl.classList.contains('hidden')) {
             e.preventDefault();
@@ -592,8 +609,10 @@ function addTooltip(element, card) {
             e.stopPropagation();
             e.stopImmediatePropagation();
             isLongPressFired = false;
+            activeTooltipTarget = element; // keep track so global tap outside can close it
+        } else {
+            hideTooltip();
         }
-        hideTooltip();
     }, true);
 }
 
