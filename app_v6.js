@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=407';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=408';
 
 let cardPool = [];
 let player = null;
@@ -527,6 +527,76 @@ function openLoadModal() {
     els.loadModal.classList.remove('hidden');
 }
 
+let tooltipTimeout;
+function addTooltip(element, card) {
+    const tooltipEl = document.getElementById('hover-tooltip');
+    if (!tooltipEl) return;
+    
+    const showTooltip = (e) => {
+        let x, y;
+        if (e.touches && e.touches.length > 0) {
+            x = e.touches[0].clientX;
+            y = e.touches[0].clientY;
+        } else {
+            x = e.clientX;
+            y = e.clientY;
+        }
+        
+        let effectText = card.effect || '効果なし';
+        effectText = effectText.replace(/\n/g, '<br>');
+        
+        tooltipEl.innerHTML = `<strong style="color:#ffcc00">${card.name}</strong><br><span style="color:#ccc; font-size:0.75rem">${card.category} / コスト:${card.cost} / 強度:+${card.strength}</span><div style="margin-top:6px; padding-top:6px; border-top:1px solid #555;">${effectText}</div>`;
+        tooltipEl.classList.remove('hidden');
+        
+        let top = y - 10 - tooltipEl.offsetHeight;
+        let left = x + 10;
+        
+        if (top < 10) top = y + 20; 
+        if (left + tooltipEl.offsetWidth > window.innerWidth) left = window.innerWidth - tooltipEl.offsetWidth - 10;
+        
+        tooltipEl.style.top = top + 'px';
+        tooltipEl.style.left = left + 'px';
+    };
+
+    const hideTooltip = () => {
+        tooltipEl.classList.add('hidden');
+        clearTimeout(tooltipTimeout);
+    };
+
+    element.addEventListener('mouseenter', (e) => {
+        tooltipTimeout = setTimeout(() => showTooltip(e), 400);
+    });
+    element.addEventListener('mouseleave', hideTooltip);
+    element.addEventListener('click', hideTooltip);
+    
+    let isLongPressFired = false;
+    element.addEventListener('touchstart', (e) => {
+        isLongPressFired = false;
+        tooltipTimeout = setTimeout(() => {
+            isLongPressFired = true;
+            showTooltip(e);
+        }, 500);
+    }, {passive: true});
+    
+    element.addEventListener('touchend', hideTooltip);
+    element.addEventListener('touchmove', hideTooltip, {passive: true});
+    element.addEventListener('contextmenu', (e) => {
+        if (isLongPressFired || !tooltipEl.classList.contains('hidden')) {
+            e.preventDefault();
+        }
+    });
+    
+    element.addEventListener('click', (e) => {
+        if (isLongPressFired) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            isLongPressFired = false;
+        }
+        hideTooltip();
+    }, true);
+}
+
 function renderCardPool() {
     els.cardPoolList.innerHTML = '';
     
@@ -567,6 +637,7 @@ function renderCardPool() {
                 コスト:${card.cost} / 強度:+${card.strength}
             </div>
         `;
+        addTooltip(div, card);
         div.addEventListener('click', () => {
             const currentCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
             if (currentCost + card.cost > player.deckCapacity) {
@@ -653,6 +724,7 @@ function renderSelectedDeck() {
         cardDiv.dataset.id = card.name + "_" + idx; // unique enough for key if needed
         cardDiv.dataset.idx = idx;
         
+        addTooltip(cardDiv, card);
         cardDiv.addEventListener('click', () => {
             // SortableJSのドラッグ終了時のクリック誤爆を防ぐ
             if (cardDiv.classList.contains('sortable-drag')) return;
@@ -4981,7 +5053,8 @@ init();
                 const div = document.createElement('div');
                 div.className = 'card';
                 div.innerHTML = `<div class="card-title">${card.name} (コスト${card.cost})</div><div class="card-effect">${card.effect}</div>`;
-                div.addEventListener('click', () => {
+                addTooltip(div, card);
+        div.addEventListener('click', () => {
                     modal.classList.add('hidden');
                     callback(idx);
                 });
