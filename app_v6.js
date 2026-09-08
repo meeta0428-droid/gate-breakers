@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=405';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=406';
 
 let cardPool = [];
 let player = null;
@@ -240,15 +240,26 @@ async function init() {
     const btnUnlockCode = document.getElementById('btn-unlock-code');
     if (btnUnlockCode) {
         btnUnlockCode.addEventListener('click', () => {
-            const isFull = localStorage.getItem('gatebreakers_full_unlocked') === 'true';
-            if (isFull) return;
+            const code = prompt("購入特典などの各種解放コードを入力してください：");
+            if (!code) return;
             
-            const code = prompt("ルールブック購入特典コードを入力してください：\n（※製品版の全ジョブが解放されます）");
             if (code === "GATE-BREAKER-FULL") {
-                localStorage.setItem('gatebreakers_full_unlocked', 'true');
-                alert("コードが承認されました！全ジョブが解放されました。");
-                location.reload();
-            } else if (code) {
+                if (localStorage.getItem('gatebreakers_full_unlocked') === 'true') {
+                    alert("製品版はすでに解放済みです！");
+                } else {
+                    localStorage.setItem('gatebreakers_full_unlocked', 'true');
+                    alert("コードが承認されました！製品版のジョブが解放されました。");
+                    location.reload();
+                }
+            } else if (code === "EXPANSION-MECHA") {
+                if (localStorage.getItem('gatebreakers_ex_mecha') === 'true') {
+                    alert("機甲拡張版はすでに解放済みです！");
+                } else {
+                    localStorage.setItem('gatebreakers_ex_mecha', 'true');
+                    alert("コードが承認されました！「機動騎兵」「重機兵」「機工士」が解放されました。");
+                    location.reload();
+                }
+            } else {
                 alert("コードが間違っています。");
             }
         });
