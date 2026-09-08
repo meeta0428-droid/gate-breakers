@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=404';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=405';
 
 let cardPool = [];
 let player = null;
@@ -638,6 +638,9 @@ function setupEvents() {
     if (typeof Sortable !== 'undefined' && els.selectedDeckList) {
         new Sortable(els.selectedDeckList, {
             animation: 150,
+            delay: 200,
+            delayOnTouchOnly: true,
+            touchStartThreshold: 5,
             ghostClass: 'sortable-ghost',
             onEnd: function (evt) {
                 // Update the array based on the new DOM order
