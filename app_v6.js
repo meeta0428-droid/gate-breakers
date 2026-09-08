@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=403';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=404';
 
 let cardPool = [];
 let player = null;
@@ -236,6 +236,23 @@ async function init() {
     showCharaScreen();
     setupCharaEvents();
     setupEvents();
+    
+    const btnUnlockCode = document.getElementById('btn-unlock-code');
+    if (btnUnlockCode) {
+        btnUnlockCode.addEventListener('click', () => {
+            const isFull = localStorage.getItem('gatebreakers_full_unlocked') === 'true';
+            if (isFull) return;
+            
+            const code = prompt("ルールブック購入特典コードを入力してください：\n（※製品版の全ジョブが解放されます）");
+            if (code === "GATE-BREAKER-FULL") {
+                localStorage.setItem('gatebreakers_full_unlocked', 'true');
+                alert("コードが承認されました！全ジョブが解放されました。");
+                location.reload();
+            } else if (code) {
+                alert("コードが間違っています。");
+            }
+        });
+    }
 }
 
 // ---------------------------
