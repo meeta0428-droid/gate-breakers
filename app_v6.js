@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=409';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=410';
 
 let cardPool = [];
 let player = null;
@@ -247,6 +247,18 @@ async function loadCards() {
                 jobSelect.appendChild(opt);
             });
         }
+        
+        const jobPackSelect = document.getElementById('job-pack-select');
+        if (jobPackSelect) {
+            jobPackSelect.innerHTML = '<option value="">ジョブパック選択</option>';
+            const uniqueJobs = [...new Set(cardPool.map(c => c.job).filter(j => j))];
+            uniqueJobs.forEach(job => {
+                const opt = document.createElement('option');
+                opt.value = job;
+                opt.innerText = job;
+                jobPackSelect.appendChild(opt);
+            });
+        }
     } catch (error) {
         console.error('Failed to load cards:', error);
     }
@@ -260,6 +272,77 @@ async function init() {
     setupCharaEvents();
     setupEvents();
     
+    const btnAddJobPack = document.getElementById('btn-add-job-pack');
+    const jobPackSelect = document.getElementById('job-pack-select');
+    if (btnAddJobPack && jobPackSelect) {
+        btnAddJobPack.addEventListener('click', () => {
+            const job = jobPackSelect.value;
+            if (!job) {
+                alert('ジョブパックを選択してください。');
+                return;
+            }
+            
+            const packCards = cardPool.filter(c => c.job === job);
+            if (packCards.length === 0) return;
+            
+            let addedCount = 0;
+            let skippedCount = 0;
+            let overCost = false;
+            
+            packCards.forEach(card => {
+                const currentCost = selectedCardsForDeck.reduce((sum, c) => sum + c.cost, 0);
+                if (currentCost + card.cost > player.deckCapacity) {
+                    overCost = true;
+                    return; // Skip this card
+                }
+                const effect = card.effect || '';
+                if (effect.includes('制限：デッキ1枚') || effect.includes('【制限：デッキ1枚')) {
+                    if (selectedCardsForDeck.some(c => c.name === card.name)) {
+                        skippedCount++;
+                        return;
+                    }
+                }
+                if (effect.includes('◆ジョブカード')) {
+                    if (selectedCardsForDeck.some(c => c.name === card.name)) {
+                        skippedCount++;
+                        return;
+                    }
+                }
+                
+                const hasBoosted = selectedCardsForDeck.some(c => c.name === '『ブーステッド』');
+                const isProhibitedByBoosted = (c) => {
+                    if (c.effect && c.effect.includes('【メビウス専用】')) return false;
+                    const isTargetCat = c.category.includes('アクション') || c.category.includes('リアクション') || c.category.includes('召喚') || c.category.includes('弾丸');
+                    if (isTargetCat && c.cost >= 4) return true;
+                    return false;
+                };
+                
+                if (card.name === '『ブーステッド』') {
+                    const originalLength = selectedCardsForDeck.length;
+                    selectedCardsForDeck = selectedCardsForDeck.filter(c => !isProhibitedByBoosted(c));
+                    if (selectedCardsForDeck.length < originalLength) {
+                        alert('【ブーステッド制限】デッキに入っていたコスト4以上の対象カードが自動除外されました。');
+                    }
+                } else if (hasBoosted) {
+                    if (isProhibitedByBoosted(card)) {
+                        skippedCount++;
+                        return;
+                    }
+                }
+                
+                selectedCardsForDeck.push(card);
+                addedCount++;
+            });
+            
+            renderSelectedDeck();
+            
+            let msg = `${job}パックから ${addedCount} 枚追加しました。`;
+            if (overCost) msg += '\n※コスト上限に達したため、一部のカードは追加されませんでした。';
+            else if (skippedCount > 0) msg += '\n※重複制限等により一部のカードはスキップされました。';
+            alert(msg);
+        });
+    }
+
     const btnUnlockCode = document.getElementById('btn-unlock-code');
     if (btnUnlockCode) {
         btnUnlockCode.addEventListener('click', () => {
