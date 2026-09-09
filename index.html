@@ -35,8 +35,8 @@
                 </div>
 
                 <!-- 肉体 -->
-                <div class="chara-stat-row" id="row-body">
-                    <div class="chara-stat-name">肉体</div>
+                <div class="chara-stat-row" id="row-body" style="background-color: rgba(255, 80, 80, 0.2); border-color: #ff6666;">
+                    <div class="chara-stat-name" style="color: #ffcccc;">肉体</div>
                     <div class="chara-stat-detail">
                         <div class="chara-stat-vals">
                             最高値: <b id="chara-body-max">1</b> ｜ 現在値: <b id="chara-body-cur">1</b>
@@ -48,8 +48,8 @@
                 </div>
 
                 <!-- 知性 -->
-                <div class="chara-stat-row" id="row-int">
-                    <div class="chara-stat-name">知性</div>
+                <div class="chara-stat-row" id="row-int" style="background-color: rgba(80, 150, 255, 0.2); border-color: #6699ff;">
+                    <div class="chara-stat-name" style="color: #cceeff;">知性</div>
                     <div class="chara-stat-detail">
                         <div class="chara-stat-vals">
                             最高値: <b id="chara-int-max">1</b> ｜ 現在値: <b id="chara-int-cur">1</b>
@@ -61,8 +61,8 @@
                 </div>
 
                 <!-- 精神 -->
-                <div class="chara-stat-row" id="row-men">
-                    <div class="chara-stat-name">精神</div>
+                <div class="chara-stat-row" id="row-men" style="background-color: rgba(80, 255, 120, 0.2); border-color: #66ff99;">
+                    <div class="chara-stat-name" style="color: #ccffcc;">精神</div>
                     <div class="chara-stat-detail">
                         <div class="chara-stat-vals">
                             最高値: <b id="chara-men-max">1</b> ｜ 現在値: <b id="chara-men-cur">1</b>
@@ -530,9 +530,9 @@
         </div>
     </div>
 
-    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v333 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v412 確認・更新</button>
+    <button id="btn-check-version" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.75rem; color: #eee; background: rgba(50,50,50,0.8); border: 1px solid #777; border-radius: 4px; padding: 6px 10px; z-index: 9999; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer;" onclick="if(confirm('現在のバージョンは v333 です。\\n画面を強制リロードして最新版を読み込みますか？ (未保存のデータは消えます)')){window.location.href = window.location.pathname + '?t=' + new Date().getTime();}">v413 確認・更新</button>
 
-    <script type="module" src="app_v6.js?v=412"></script>
+    <script type="module" src="app_v6.js?v=413"></script>
     <!-- 残心モーダル -->
     <div id="zanshin-modal" class="modal hidden" style="z-index: 2600;">
         <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
