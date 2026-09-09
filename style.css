@@ -146,7 +146,8 @@ body {
 #battle-screen {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
 }
 
 #battle-header {
@@ -187,6 +188,7 @@ body {
     flex-direction: column;
     gap: 6px;
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
 }
 
