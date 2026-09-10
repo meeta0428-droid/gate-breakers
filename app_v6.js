@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=413';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=414';
 
 let cardPool = [];
 let player = null;
@@ -272,6 +272,26 @@ async function init() {
     setupCharaEvents();
     setupEvents();
     
+    
+    // 使い方ヘルプモーダル
+    const btnHelp = document.getElementById('btn-help');
+    const helpModal = document.getElementById('help-modal');
+    const btnCloseHelp = document.getElementById('btn-close-help');
+
+    if (btnHelp && helpModal && btnCloseHelp) {
+        btnHelp.addEventListener('click', () => {
+            helpModal.classList.remove('hidden');
+        });
+        btnCloseHelp.addEventListener('click', () => {
+            helpModal.classList.add('hidden');
+        });
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) {
+                helpModal.classList.add('hidden');
+            }
+        });
+    }
+
     const btnAddJobPack = document.getElementById('btn-add-job-pack');
     const jobPackSelect = document.getElementById('job-pack-select');
     if (btnAddJobPack && jobPackSelect) {
