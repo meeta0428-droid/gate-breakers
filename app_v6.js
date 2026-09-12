@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=415';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=416';
 
 let cardPool = [];
 let player = null;
@@ -4618,12 +4618,18 @@ function updateUI() {
                 def = defVal;
             }
             
+            let durability = s.card.cost;
+            const hasBeastTamer = player.deck.passives.some(p => p.name === '魔獣使い' && !p.isDisabled);
+            if (hasBeastTamer) {
+                durability += 2;
+            }
+            
             const sDiv = document.createElement('div');
             sDiv.className = 'summon-card';
             sDiv.innerHTML = `
                 <div class="summon-card-header" style="cursor: pointer;">
                     <span class="summon-card-name">${s.card.name}</span>
-                    <span class="summon-card-stats">攻${atk}/防${def}</span>
+                    <span class="summon-card-stats">攻${atk}/防${def} (耐久${durability})</span>
                 </div>
                 <div class="summon-controls">
                     <button class="summon-btn btn-atk ${s.stance === 'attack' || s.stance === 'both' ? 'active-attack' : ''}">攻撃</button>
