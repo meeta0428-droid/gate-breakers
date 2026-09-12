@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=418';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=419';
 
 let cardPool = [];
 let player = null;
@@ -3420,6 +3420,13 @@ function setupEvents() {
     els.btnCloseDiscard.addEventListener('click', () => {
         els.discardModal.classList.add('hidden');
     });
+    
+    const btnCloseDiscardBottom = document.getElementById('btn-close-discard-bottom');
+    if (btnCloseDiscardBottom) {
+        btnCloseDiscardBottom.addEventListener('click', () => {
+            els.discardModal.classList.add('hidden');
+        });
+    }
 
     // カード詳細モーダル
     els.btnCloseModal.addEventListener('click', () => {
