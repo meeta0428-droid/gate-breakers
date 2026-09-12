@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=416';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=417';
 
 let cardPool = [];
 let player = null;
@@ -2734,12 +2734,18 @@ function setupEvents() {
             els.dmgSummonList.innerHTML = '<span style="color:#555; font-size:0.75rem;">召喚ユニットがいません</span>';
         } else {
             player.deck.summons.forEach((s, idx) => {
+                let currentEndurance = s.card.cost;
+                const hasBeastTamer = player.deck.passives.some(p => p.name === '魔獣使い' && !p.isDisabled);
+                if (hasBeastTamer) {
+                    currentEndurance += 2;
+                }
+
                 const cDiv = document.createElement('div');
                 cDiv.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#111; padding:5px; border-radius:3px; font-size:0.8rem;';
-                cDiv.innerHTML = `<span>${s.card.name} (コスト${s.card.cost})</span> <button class="btn btn-primary" style="padding:2px 6px; font-size:0.7rem;">ダメージを受ける</button>`;
+                cDiv.innerHTML = `<span>${s.card.name} (耐久${currentEndurance})</span> <button class="btn btn-primary" style="padding:2px 6px; font-size:0.7rem;">ダメージを受ける</button>`;
                 cDiv.querySelector('button').addEventListener('click', () => {
                     let dmgToTake = pendingDamage;
-                    let endurance = s.card.cost;
+                    let endurance = currentEndurance;
                     
                     if (s.card.name === '古の屍竜') {
                         const isFlesh = confirm("【古の屍竜】の特殊効果について確認します。\nこの攻撃によるダメージは「肉体カテゴリー」によるものですか？\n（※「OK」を押すと、自身に対するダメージを3点軽減して判定します）");
