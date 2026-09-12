@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=417';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=418';
 
 let cardPool = [];
 let player = null;
@@ -2150,6 +2150,17 @@ function setupEvents() {
                 const match = s.card.effect.match(/攻(\d+)\s*[／/]\s*(?:防)?(\d+)/);
                 if (match) {
                     let defVal = parseInt(match[2]);
+                    
+                    // Buffs
+                    const honnouBuff = player.deck.discard.filter(c => c.name === '本能の覚醒').length * 2;
+                    const jusoBuff = player.deck.passives.filter(c => c.name === '獣操棍' && !c.isDisabled).length * 1;
+                    if (s.elementalerBuff) defVal += 2 * s.elementalerBuff;
+                    defVal += honnouBuff + jusoBuff;
+                    
+                    if (s.card.name === 'スプリガン') {
+                        const passiveStrSum = player.deck.passives.reduce((sum, p) => sum + (p.isDisabled ? 0 : (p.strength || 0)), 0);
+                        defVal += passiveStrSum;
+                    }
                     
                     if (s.card.name === '骸鎧の暴君') {
                         const isCost4Over = confirm("【骸鎧の暴君】の特殊効果について確認します。\n相手が使用したカードの中に「コスト4以上」のカードはありましたか？\n（※「キャンセル/いいえ」を押すと、防＋5が適用され合計8軽減になります）");
