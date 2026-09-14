@@ -191,9 +191,10 @@ export const cardEffects = {
                 }
 
                 if (discardCount > 0) {
+                    const dmgBonus = Math.min(10, discardCount);
                     context._majutsushiApplied = true; // 重複防止
-                    context.logMsg(`【魔術師】知識を力に変換！捨札 ${discardCount}枚 につきダメージ ＋${discardCount}！`, 'important');
-                    return { totalDmg: context.totalDmg + discardCount, _majutsushiApplied: true };
+                    context.logMsg(`【魔術師】知識を力に変換！捨札 ${discardCount}枚 につきダメージ ＋${dmgBonus}！`, 'important');
+                    return { totalDmg: context.totalDmg + dmgBonus, _majutsushiApplied: true };
                 }
             }
             return {};
