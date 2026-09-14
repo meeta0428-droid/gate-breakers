@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=419';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=420';
 
 let cardPool = [];
 let player = null;
@@ -1677,6 +1677,12 @@ function setupEvents() {
         if (manualDmgBonus !== 0) {
             manualDmgBonus = 0;
             if (manualDmgVal) manualDmgVal.innerText = manualDmgBonus;
+        }
+        
+        if (totalDmg > 0) {
+            if (currentCombo.some(c => c.name === 'サンダーボルト')) {
+                originalLogMsg(`【サンダーボルト】ダメージを与えた！<br><span style="color:#ffcc00; font-size:0.8rem;">対象の任意の手札一枚を選び、コストよりもこのダメージ（${totalDmg}）が高ければそのカードを捨札へと移動してください。</span>`, 'damage');
+            }
         }
         
         const finalizeAttackCombo = (savedCardIdx = -1) => {
