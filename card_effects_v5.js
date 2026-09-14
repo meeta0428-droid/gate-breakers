@@ -162,6 +162,22 @@ export const cardEffects = {
             return {};
         }
     },
+
+    "魔導書": {
+        onAttack: (context) => {
+            if (context.totalDmg > 0 && context.currentCombo) {
+                // コンボ内に「知性・アクション」が含まれているかチェック
+                const hasIntAction = context.currentCombo.some(c => c.category.includes('知性・アクション'));
+                if (hasIntAction) {
+                    if (context.logMsg) {
+                        context.logMsg(`・【魔導書】のパッシブ効果で「知性・アクション」のダメージ ＋1`);
+                    }
+                    return { totalDmg: context.totalDmg + 1 };
+                }
+            }
+            return {};
+        }
+    },
     // 魔術師：捨札1枚につきダメージ＋1
     "魔術師": {
         onAttack: (context) => {

@@ -1,4 +1,4 @@
-import { cardEffects } from "./card_effects_v5.js?v=336";
+import { cardEffects } from "./card_effects_v5.js?v=337";
 
 export class Card {
     constructor(data) {
