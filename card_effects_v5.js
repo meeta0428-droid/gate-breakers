@@ -211,11 +211,51 @@ export const cardEffects = {
                     discardCount = context.player.deck.discard.filter(c => !comboSet.has(c)).length;
                 }
                 
-                // キュアライトの基本強度は3
                 const finalStrength = 3 + discardCount;
-                
                 context._curelightApplied = true;
-                context.logMsg(`【キュアライト】癒やしの光！現在の捨札は ${discardCount} 枚。<br>強度が <b>${finalStrength}</b> になりました！<br><span style="color:#ff66cc;">※味方（または自分）は廃棄札から <b>コスト${finalStrength} 以下</b> のカードを1枚、山札に戻してください。</span>`, 'important');
+
+                if (context.logMsg) {
+                    context.logMsg(`【キュアライト】癒やしの光！現在の捨札は ${discardCount} 枚。<br>強度が <b>${finalStrength}</b> になりました！`, 'important');
+                }
+
+                if (!context.isPreview && typeof window !== 'undefined') {
+                    const validCards = context.player.deck.void.filter(c => c.cost <= finalStrength);
+                    if (validCards.length > 0) {
+                        setTimeout(() => {
+                            window.dispatchEvent(new CustomEvent('requestRecoverCard', {
+                                detail: {
+                                    title: "キュアライト：山札に戻すカードを選択",
+                                    desc: `コスト ${finalStrength} 以下の廃棄札を1枚選んでください。（右上の×でキャンセル）`,
+                                    playerObj: context.player,
+                                    source: 'void',
+                                    filterFunc: (c) => c.cost <= finalStrength,
+                                    onSelect: (selectedCard) => {
+                                        context.player.deck.mountain.push(selectedCard);
+                                        // 確実にグローバルのlogMsg（またはイベント元の関数）を呼ぶため CustomEvent などに頼る手もあるが、
+                                        // app_v6.js 内の updateUI() などを叩くなら document.dispatchEvent が安全
+                                        // 这里简单使用 document の updateUI イベントなどが無いか確認
+                                        // なければ、とりあえず console.log して、画面の表示更新は手動（あるいはグローバル updateUI 呼び出し）に頼る
+                                        // 幸い、requestRecoverCardの処理側で回収後に updateUI() が呼ばれる（※呼び出し側に依存するが）
+                                        // いや、app_v6.js 内に onSelect 後は呼ばれないものもあるので、明示的に updateUI() を呼ぶ。
+                                        const msg = `【キュアライト】「${selectedCard.name}」を廃棄札から山札に戻しました。`;
+                                        // 既存の global の logMsg / updateUI へのアクセス
+                                        if (typeof window.logMsgToApp === 'function') {
+                                            window.logMsgToApp(msg, 'important');
+                                            window.updateUIApp();
+                                        } else {
+                                            // fallback: triggerHook に渡された context.logMsg が originalLogMsg の場合はそのまま使える
+                                            if (context.logMsg) context.logMsg(msg, 'important');
+                                        }
+                                    }
+                                }
+                            }));
+                        }, 200);
+                    } else {
+                        if (context.logMsg) {
+                            context.logMsg(`【キュアライト】戻せる廃棄札（コスト${finalStrength}以下）がありませんでした。`);
+                        }
+                    }
+                }
                 return { _curelightApplied: true };
             }
             return {};
