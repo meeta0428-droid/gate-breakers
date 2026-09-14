@@ -1,4 +1,4 @@
-import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=421';
+import { Character, calculateDamageFromCards, calculateDefenseFromCards, executeCardEffects, triggerHook } from './game_logic_v9.js?v=422';
 
 let cardPool = [];
 let player = null;
@@ -1962,8 +1962,9 @@ function setupEvents() {
         reactionComboCount.innerText = currentCombo.length;
         
         // 手札のリアクションカード
+        const hasLightning = currentCombo.some(c => c.name === 'ライトニングランス');
         const reactionCards = player.deck.hand.map((c, i) => ({ card: c, originalIndex: i }))
-                                             .filter(item => item.card.category.includes('リアクション'));
+                                             .filter(item => item.card.category.includes('リアクション') || (hasLightning && item.card.category.includes('アクション')));
         
         // 闘禅一致でセット済みのカード（currentCombo内のisSetReaction）
         const setCards = currentCombo.map((c, i) => ({ card: c, comboIndex: i }))
@@ -2085,6 +2086,30 @@ function setupEvents() {
         const defense = calculateDefenseFromCards(currentCombo, player);
         const { toVoid } = executeCardEffects(currentCombo, player, logMsg);
         
+        // --- ライトニングランスの反撃判定 ---
+        let lightningMsg = '';
+        const hasLightningLance = currentCombo.some(c => c.name === 'ライトニングランス');
+        if (hasLightningLance) {
+            let totalLightningDmg = calculateDamageFromCards(currentCombo, player);
+            const hookContext = triggerHook('onAttack', {
+                totalDmg: totalLightningDmg,
+                logMsg: () => {}, // プレビューではないが一旦ログは無視するか、必要なら入れる
+                player,
+                enemyOpen: els.chkEnemyOpen ? els.chkEnemyOpen.checked : false,
+                currentCombo
+            }, [...player.deck.passives, ...player.deck.summons]);
+            totalLightningDmg = hookContext.totalDmg;
+            
+            if (totalLightningDmg > inputDmg) {
+                lightningMsg = `<br><span style="color:#00ffff; font-weight:bold;">【ライトニングランス】攻撃ダメージ（${inputDmg}）を上回るコンボダメージ（${totalLightningDmg}）を出したため、相手の攻撃を完全に失敗させ、対象に ${totalLightningDmg} 点のダメージを与えた！</span>`;
+                inputDmg = 0; // 攻撃失敗
+                enemyHp -= totalLightningDmg;
+                if (typeof showDamagePopup === 'function') showDamagePopup(totalLightningDmg);
+            } else {
+                lightningMsg = `<br><span style="color:#ff5252; font-weight:bold;">【ライトニングランス】コンボダメージ（${totalLightningDmg}）が攻撃ダメージ（${inputDmg}）を上回らなかったため、迎撃は失敗した。</span>`;
+            }
+        }
+
         // --- 闘禅一致などのアクションカード（セット）による反撃ダメージ計算 ---
         // モーダルで選択されたセットカードのみ反撃ダメージを計算
         const activatedSetCards = currentCombo.filter(c => c.isSetReaction && c._addedToReaction);
@@ -2265,7 +2290,7 @@ function setupEvents() {
         const yosokuMsg = yosokuTriggered ? `<br><span style="color:#00ffff; font-weight:bold;">【予測防壁】攻撃元が公開状態だったため、ダメージを完全に無効化！</span>` : '';
         const nohmMsg = nohmBlocked ? `<br><span style="color:#00ffff; font-weight:bold;">【ノーム】ユニットを廃棄し、ダメージを15点軽減した！</span>` : '';
         const manaCounterMsg = manaCounterTriggered ? `<br><span style="color:#ffcc00; font-weight:bold;">【『マナカウンター』】ダメージを完全に無効化（0にする）！<br>さらに、相手に「${counterDamage}点」のカウンターダメージを反射！</span>` : '';
-        const additionalMsg = yosokuMsg + nohmMsg + manaCounterMsg;
+        const additionalMsg = yosokuMsg + nohmMsg + manaCounterMsg + (typeof lightningMsg !== 'undefined' ? lightningMsg : '');
         
         if (ignoreDef) {
             logMsg(`${cardStr}${summonLog}敵からの攻撃（<span style="color:#cc44ff;">軽減無視！</span>）<br>元ダメージ: ${inputDmg}${additionalMsg}<br><span style="color:#ff5252;">最終ダメージ: ${actualDmg}</span>`, 'important');
